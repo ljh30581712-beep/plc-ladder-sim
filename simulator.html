@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>시뮬레이터 · Q03UDV 래더 시뮬레이터</title>
+<meta name="description" content="GX Works2처럼 래더를 입력하고 브라우저에서 바로 실행해 보는 미쓰비시 Q03UDV PLC 연습용 시뮬레이터">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f6ee0'/%3E%3Cpath d='M6 16h7M19 16h7M13 9v14M19 9v14' stroke='white' stroke-width='2.6' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --chrome:#e3e8ef;
+  --panel:#f5f7fa;
+  --paper:#ffffff;
+  --line:#c3cbd6;
+  --ink:#18202b;
+  --muted:#5b6878;
+  --accent:#1f5fbf;
+  --on:#1f5fff;
+  --run:#12a150;
+  --err:#d32f2f;
+  --lamp:#ff4b36;
+  --title:#1c2a3e;
+  --font-ui:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",Consolas,"D2Coding",monospace;
+  /* layout: 제목 / 메뉴 / 툴바 2줄 / [프로젝트 트리 | 래더 + 출력창 | 시뮬레이터·I/O·모니터] / 상태바 */
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--chrome);color:var(--ink);font:13px/1.45 var(--font-ui);overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;border:1px solid #d1d9e3;border-radius:3px;padding:2px 3px;margin-left:4px}
+.btn{border:1px solid var(--line);background:linear-gradient(#ffffff,#edf1f6);border-radius:4px;padding:4px 10px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:#94a6bd;background:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--err)}
+.btn:disabled{opacity:.45;cursor:default}
+
+#app{display:grid;grid-template-rows:auto auto auto auto minmax(0,1fr) auto;height:100%}
+#titlebar{background:var(--title);color:#e7eef8;display:flex;align-items:center;gap:10px;padding:6px 12px;font-size:13px;min-width:0}
+#titlebar .logo{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:4px;background:#2f6ee0;color:#fff;font:700 11px var(--font-mono)}
+#titlebar b{font-weight:600;letter-spacing:.01em}
+#ttlInfo{color:#b9c7da;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#titlebar .grow{flex:1}
+#titlebar .note{color:#8fa3bf;font-size:11.5px;white-space:nowrap}
+#titlebar .tlink{color:#d5e1f2;text-decoration:none;font-size:12.5px;padding:2px 9px;border:1px solid rgba(255,255,255,.18);border-radius:4px;white-space:nowrap}
+#titlebar .tlink:hover{background:rgba(255,255,255,.1);color:#fff}
+#titlebar a.home{color:inherit;text-decoration:none;display:flex;align-items:center;gap:10px}
+
+#menubar{display:flex;gap:2px;padding:2px 6px;background:#f2f4f8;border-bottom:1px solid var(--line);position:relative;z-index:30}
+.menu{position:relative}
+.menu>button{border:1px solid transparent;background:none;padding:3px 10px;border-radius:3px;cursor:pointer}
+.menu.open>button,.menu>button:hover{background:#dde6f3;border-color:#c3d2e8}
+.drop{display:none;position:absolute;left:0;top:100%;min-width:250px;background:#fff;border:1px solid #aab6c6;box-shadow:0 6px 18px rgba(20,35,60,.18);padding:4px 0;border-radius:3px}
+.menu.open .drop{display:block}
+.drop button{display:flex;width:100%;align-items:center;gap:8px;border:0;background:none;padding:5px 14px 5px 10px;text-align:left;cursor:pointer}
+.drop button:hover{background:#e3ecf9}
+.drop .ck{width:14px;color:var(--accent);font-weight:700}
+.drop .sc{margin-left:auto;color:var(--muted);font:11px var(--font-mono);padding-left:18px}
+.drop hr{border:0;border-top:1px solid #e1e6ed;margin:4px 0}
+
+.tb{display:flex;align-items:center;gap:4px;padding:4px 8px;background:linear-gradient(#f8fafc,#eceff4);border-bottom:1px solid var(--line);flex-wrap:wrap;min-width:0}
+.tb .sep{width:1px;height:22px;background:#cdd5df;margin:0 4px}
+.tb .grow{flex:1}
+.tb .btn{padding:3px 8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{border:0;border-right:1px solid var(--line);background:#fff;padding:3px 9px;cursor:pointer}
+.seg button:last-child{border-right:0}
+.seg button.active{background:var(--accent);color:#fff}
+.seg button.active kbd{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.3);color:#fff}
+#btnSim{font-weight:600;border-color:#7fb79a;background:linear-gradient(#f3fbf6,#ddf1e5);color:#0d6a35}
+#btnSim.running{border-color:#e3a3a3;background:linear-gradient(#fff4f4,#fbe0e0);color:#a32020}
+.chk{display:inline-flex;align-items:center;gap:4px;padding:0 6px;cursor:pointer;color:var(--muted)}
+.symbtn{display:inline-flex;flex-direction:column;align-items:center;gap:0;border:1px solid transparent;background:none;padding:1px 4px 2px;border-radius:4px;cursor:pointer;color:#18202b;min-width:44px}
+.symbtn:hover{background:#fff;border-color:#b9c6d8}
+.symbtn svg{display:block}
+.symbtn span{font:600 9.5px/1.1 var(--font-mono);color:var(--muted)}
+.symbtn.del svg{color:#b23b3b}
+#tb2 .lbl{color:var(--muted);font-size:12px;margin-right:4px}
+
+#main{display:grid;grid-template-columns:184px minmax(0,1fr) 316px;grid-template-rows:minmax(0,1fr);min-height:0}
+#main>*{min-height:0}
+#nav{background:var(--panel);border-right:1px solid var(--line);overflow:auto;padding:8px 0;font-size:12.5px}
+#nav .t{display:flex;align-items:center;gap:6px;padding:3px 10px;cursor:pointer;white-space:nowrap;border:0;background:none;width:100%;text-align:left}
+#nav .t:hover{background:#e3ebf6}
+#nav .t.sel{background:#d3e1f6}
+#nav .l1{padding-left:22px}#nav .l2{padding-left:34px}#nav .l3{padding-left:46px}
+#nav .ic{width:14px;text-align:center;color:#6a7d95;font-size:11px}
+#nav .head{padding:3px 10px;color:var(--muted);font-weight:600}
+#nav .foot{margin:14px 10px 0;padding-top:10px;border-top:1px solid #dde3ea;color:var(--muted);font-size:11.5px;line-height:1.5}
+
+#center{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0;min-height:0;background:var(--paper)}
+#tabs{display:flex;gap:2px;padding:4px 6px 0;background:#e9edf2;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:1px solid var(--line);border-bottom:0;background:#dfe5ec;padding:4px 12px;border-radius:4px 4px 0 0;cursor:pointer;white-space:nowrap;font-size:12.5px;color:#3b4757}
+.tab.active{background:#fff;color:var(--ink);font-weight:600;position:relative;top:1px}
+#views{position:relative;min-height:0}
+.view{position:absolute;inset:0;display:none}
+.view.active{display:block}
+#viewLadder{overflow:hidden}
+#ladderScroll{position:absolute;inset:0;overflow:auto;outline:none}
+#ladderScroll:focus-visible{box-shadow:inset 0 0 0 2px rgba(31,95,191,.35)}
+#ladderSpacer{width:1px;height:1px}
+#ladderCanvas{position:absolute;left:0;top:0;pointer-events:none}
+#viewList,#viewComments{overflow:auto;padding:12px 16px}
+.dtable{border-collapse:collapse;font-size:12.5px;min-width:520px}
+.dtable th{background:#eef2f7;text-align:left;font-weight:600;color:#3b4757;padding:5px 10px;border:1px solid #d5dce5;position:sticky;top:-12px}
+.dtable td{padding:3px 10px;border:1px solid #e1e6ec;font-variant-numeric:tabular-nums}
+.dtable td.num{color:var(--muted);text-align:right;font-family:var(--font-mono)}
+.dtable td.mn{font:600 12.5px var(--font-mono);color:#0b3f9c}
+.dtable td.ops{font-family:var(--font-mono)}
+.dtable tr.click{cursor:pointer}.dtable tr.click:hover td{background:#f1f6fd}
+.dtable td.empty{color:var(--muted);padding:16px}
+.dtable input{width:100%;border:1px solid transparent;padding:3px 4px;border-radius:3px;background:none}
+.dtable input:hover{border-color:#d0d8e2}.dtable input:focus{border-color:var(--accent);background:#fff}
+.view h2{font-size:14px;margin:0 0 4px}
+.view p.sub{color:var(--muted);margin:0 0 10px;font-size:12.5px}
+
+#inDlg{position:absolute;z-index:20;background:#fff;border:1px solid #8ea2bd;box-shadow:0 8px 24px rgba(20,35,60,.25);border-radius:5px;padding:8px;width:min(470px,calc(100% - 16px))}
+#inDlg .ttl{font-size:11.5px;color:var(--muted);margin-bottom:5px;display:flex;justify-content:space-between}
+#inDlg .row{display:flex;gap:5px}
+#inSym{border:1px solid var(--line);border-radius:4px;padding:3px 4px;background:#fff;max-width:150px}
+#inText{flex:1;min-width:0;border:1px solid var(--accent);border-radius:4px;padding:4px 8px;font:600 14px var(--font-mono);text-transform:uppercase}
+#inHint{margin-top:6px;font-size:12px;color:#2d5a2d;min-height:18px}
+#inHint.err{color:var(--err)}
+
+#outPane{border-top:1px solid var(--line);background:#fbfcfe;height:118px;display:grid;grid-template-rows:auto minmax(0,1fr)}
+#outPane.collapsed{height:27px}
+#outHead{display:flex;align-items:center;gap:8px;padding:3px 10px;background:#eef2f6;border-bottom:1px solid #dde3ea;font-size:12px;font-weight:600;color:#3b4757}
+#outHead .grow{flex:1}
+#outHead button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 4px}
+#outList{overflow:auto;font:12px/1.55 var(--font-mono);padding:4px 10px}
+#outList div{white-space:pre-wrap}
+#outList .err{color:var(--err);cursor:pointer}
+#outList .err:hover{text-decoration:underline}
+#outList .ok{color:#137a3b}
+#outList .info{color:#3b4757}
+#outList .tm{color:#9aa6b4;margin-right:8px}
+
+#side .card{background:#fff;border:1px solid #d3dae4;border-radius:6px;padding:10px}
+#side h3{margin:0 0 8px;font-size:12.5px;display:flex;align-items:center;gap:6px;color:#26313f}
+#side h3 .grow{flex:1}
+#side h3 small{font-weight:400;color:var(--muted)}
+.cpu{font:700 11px var(--font-mono);background:#22324a;color:#d9e5f5;padding:2px 6px;border-radius:3px}
+.leds{display:flex;gap:10px;margin-bottom:8px;font:600 10.5px var(--font-mono);color:var(--muted)}
+.led{display:flex;align-items:center;gap:4px}
+.led i{width:10px;height:10px;border-radius:50%;background:#c9cfd8;box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.led.on.g i{background:#22c55e;box-shadow:0 0 6px #22c55e}
+.led.on.r i{background:#ef4444;box-shadow:0 0 6px #ef4444}
+.led.on.y i{background:#f2b705;box-shadow:0 0 6px #f2b705}
+.led.blink i{animation:blink .6s steps(1) infinite}
+@keyframes blink{50%{opacity:.25}}
+.swrow{display:flex;gap:4px;margin-bottom:6px}
+.swrow .btn{flex:1;font:600 11.5px var(--font-mono);padding:4px 0}
+.swrow .btn.active{background:#22324a;color:#fff;border-color:#22324a}
+#simInfo{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+#simBig{width:100%;margin-top:8px;padding:6px 0;font-weight:600}
+.iohead{display:flex;align-items:center;gap:6px;margin:2px 0 6px;font-size:12px;font-weight:600}
+.iohead select{font-size:11.5px;border:1px solid var(--line);border-radius:3px;padding:1px 2px;background:#fff}
+.iohead .grow{flex:1}
+.seg.sm button{padding:1px 7px;font-size:11px}
+.iogrid{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;margin-bottom:10px}
+.xbtn{border:1px solid #c5ced9;background:linear-gradient(#fff,#eef2f6);border-radius:4px;padding:3px 0 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font:600 9.5px var(--font-mono);color:#3c4858;touch-action:none;user-select:none}
+.xbtn i{width:12px;height:12px;border-radius:2px;background:#d4dae2;border:1px solid #b9c2ce}
+.xbtn.on{background:linear-gradient(#e8f0ff,#d4e3ff);border-color:#7d9fe0}
+.xbtn.on i{background:var(--on);border-color:#1546b8}
+.xbtn.used span{color:#0b3f9c}
+.ylamp{display:flex;flex-direction:column;align-items:center;gap:2px;font:600 9.5px var(--font-mono);color:#3c4858;padding:3px 0 2px;border-radius:4px;border:1px solid transparent}
+.ylamp i{width:14px;height:14px;border-radius:50%;background:#e1c4c0;border:1px solid #c59a94}
+.ylamp.on i{background:var(--lamp);border-color:#c62a17;box-shadow:0 0 8px rgba(255,75,54,.85)}
+.ylamp.used span{color:#0b3f9c}
+.ylamp.used{border-color:#e6ebf1}
+.watchadd{display:flex;gap:4px;margin-bottom:6px}
+.watchadd input{flex:1;min-width:0;border:1px solid var(--line);border-radius:4px;padding:3px 6px;font-family:var(--font-mono);text-transform:uppercase}
+#watchTbl{width:100%;border-collapse:collapse;font-size:12px}
+#watchTbl th{text-align:left;font-weight:600;color:var(--muted);font-size:11px;border-bottom:1px solid #e1e6ec;padding:2px 4px}
+#watchTbl td{padding:2px 4px;border-bottom:1px solid #f0f2f5;vertical-align:middle}
+#watchTbl td.dv{font:600 12px var(--font-mono)}
+#watchTbl td.cm{color:var(--muted);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#watchTbl .val{font:600 11.5px var(--font-mono);border:1px solid #d5dce5;background:#f6f8fb;border-radius:10px;padding:0 7px;cursor:pointer;min-width:44px;font-variant-numeric:tabular-nums}
+#watchTbl .val.on{background:var(--on);border-color:var(--on);color:#fff}
+#watchTbl .val.word{border-radius:3px;background:#fff;color:#0b3f9c}
+#watchTbl .rm{border:0;background:none;color:#a2adbb;cursor:pointer;padding:0 2px}
+.hintline{font-size:11.5px;color:var(--muted);margin:4px 0 0}
+
+#statusbar{display:flex;gap:0;background:#e7ebf0;border-top:1px solid var(--line);font-size:11.5px;color:#3b4757;overflow:hidden;white-space:nowrap}
+#statusbar span{padding:3px 12px;border-right:1px solid #cfd6df}
+#statusbar .grow{flex:1;border-right:0}
+#stMode.mon{color:#0d6a35;font-weight:600}
+#stConv.dirty{color:#a35a00;font-weight:600}
+
+#modalBack{position:fixed;inset:0;background:rgba(18,28,44,.38);display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+#modalBack.show{display:flex}
+#modal{background:#fff;border-radius:8px;box-shadow:0 18px 50px rgba(10,20,40,.35);width:min(620px,100%);max-height:calc(100% - 32px);display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+#modal .mh{padding:12px 16px;border-bottom:1px solid #e3e8ee;font-weight:600;font-size:14px}
+#modal .mb{padding:14px 16px;overflow:auto;font-size:13px}
+#modal .mf{padding:10px 16px;border-top:1px solid #e3e8ee;display:flex;gap:6px;justify-content:flex-end}
+#modal .mb p{margin:0 0 10px}
+#modal .mb h4{margin:14px 0 6px;font-size:13px}
+#modal .mb h4:first-child{margin-top:0}
+#modal table{border-collapse:collapse;width:100%;font-size:12.5px}
+#modal td,#modal th{border-bottom:1px solid #edf0f4;padding:4px 6px;text-align:left;vertical-align:top}
+#modal th{color:var(--muted);font-weight:600}
+#modal code,#modal .mono{font-family:var(--font-mono);font-size:12px;background:#f1f4f8;padding:0 4px;border-radius:3px}
+#modal .field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+#modal .field input,#modal textarea{border:1px solid var(--line);border-radius:4px;padding:6px 8px}
+#modal textarea{width:100%;height:220px;font:12px var(--font-mono)}
+.plist{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.pitem{display:flex;align-items:center;gap:8px;border:1px solid #dfe5ec;border-radius:5px;padding:6px 10px}
+.pitem .nm{font-weight:600}
+.pitem .ds{color:var(--muted);font-size:12px}
+.pitem .grow{flex:1;min-width:0}
+.pitem:hover{border-color:#a9bbd3;background:#f7faff}
+.muted{color:var(--muted)}
+
+#toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:#1d2a3d;color:#fff;padding:8px 14px;border-radius:6px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .18s;z-index:120;max-width:calc(100% - 32px)}
+#toast.show{opacity:1}
+#toast.err{background:#9f1d1d}
+
+@media (max-width:1100px){#main{grid-template-columns:minmax(0,1fr) 300px}#nav{display:none}#titlebar .note{display:none}}
+@media (max-width:820px){
+  body{overflow:auto}
+  #app{height:auto;min-height:100%}
+  #main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(460px,70vh) auto}
+  #side{border-left:0;border-top:1px solid var(--line)}
+}
+@media (prefers-reduced-motion:reduce){.led.blink i{animation:none}#toast{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="titlebar">
+    <a class="home" href="index.html" title="메인 페이지로"><span class="logo">Q</span><b>Q03UDV 래더 시뮬레이터</b></a>
+    <span id="ttlInfo">— 새 프로젝트</span>
+    <span class="grow"></span>
+    <span class="note">학습용 · 미쓰비시 공식 소프트웨어 아님</span>
+    <a class="tlink" href="devices.html" target="_blank" rel="noopener" title="새 탭에서 열기">디바이스 설명 ↗</a>
+    <a class="tlink" href="index.html">홈</a>
+  </header>
+  <nav id="menubar" aria-label="메뉴"></nav>
+  <div class="tb" id="tb1">
+    <button class="btn" data-cmd="newProject" title="새 프로젝트">새로 만들기</button>
+    <button class="btn" data-cmd="openDialog" title="프로젝트 열기 (Ctrl+O)">열기</button>
+    <button class="btn" data-cmd="save" title="저장 (Ctrl+S)">저장</button>
+    <span class="sep"></span>
+    <button class="btn" data-cmd="undo" title="되돌리기 (Ctrl+Z)">↶ 되돌리기</button>
+    <button class="btn" data-cmd="redo" title="다시 실행 (Ctrl+Y)">↷</button>
+    <span class="sep"></span>
+    <button class="btn" data-cmd="convert" title="변환 (F4)"><b>변환</b><kbd>F4</kbd></button>
+    <span class="sep"></span>
+    <div class="seg" id="modeSeg">
+      <button data-cmd="modeWrite" data-mode="write" title="쓰기 모드 (F2)">쓰기<kbd>F2</kbd></button>
+      <button data-cmd="modeRead" data-mode="read" title="읽기 모드 (Shift+F2)">읽기</button>
+      <button data-cmd="modeMonitor" data-mode="monitor" title="모니터 모드 (F3)">모니터<kbd>F3</kbd></button>
+    </div>
+    <span class="sep"></span>
+    <button class="btn" id="btnSim" data-cmd="toggleSim">▶ 시뮬레이션 시작</button>
+    <span class="grow"></span>
+    <label class="chk"><input type="checkbox" id="chkCm"> 코멘트 표시</label>
+    <label class="chk"><input type="checkbox" id="chkFlow"> 전류 흐름</label>
+    <button class="btn" data-cmd="helpKeys" title="도움말 (F1)">도움말</button>
+  </div>
+  <div class="tb" id="tb2"><span class="lbl">래더 심볼</span></div>
+
+  <div id="main">
+    <aside id="nav" aria-label="프로젝트 트리">
+      <div class="head">프로젝트</div>
+      <button class="t l1" data-cmd="param"><span class="ic">⚙</span>파라미터 (Q03UDV)</button>
+      <button class="t l1" data-cmd="tabComments" data-nav="comments"><span class="ic">✎</span>글로벌 디바이스 코멘트</button>
+      <div class="t l1" style="cursor:default"><span class="ic">▾</span>프로그램 설정</div>
+      <div class="t l2" style="cursor:default"><span class="ic">▾</span>스캔 프로그램</div>
+      <button class="t l3 sel" data-cmd="tabLadder" data-nav="ladder"><span class="ic">▤</span>MAIN</button>
+      <button class="t l1" data-cmd="tabList" data-nav="list"><span class="ic">≡</span>명령 리스트</button>
+      <button class="t l1" data-cmd="openDialog"><span class="ic">▣</span>예제 · 내 프로젝트</button>
+      <div class="foot">
+        <b>빠른 입력</b><br>
+        래더 위에서 바로 타이핑:<br>
+        <span class="mono">X0</span> → a접점<br>
+        <span class="mono">LDI X1</span> → b접점<br>
+        <span class="mono">OR Y20</span> → 병렬 접점<br>
+        <span class="mono">OUT T0 K30</span> → 3초 타이머<br>
+        <span class="mono">MOV K10 D0</span> → 명령
+      </div>
+    </aside>
+
+    <section id="center">
+      <div id="tabs" role="tablist">
+        <button class="tab active" data-tab="ladder" id="tabLadderBtn">[PRG]쓰기 MAIN</button>
+        <button class="tab" data-tab="list">명령 리스트</button>
+        <button class="tab" data-tab="comments">디바이스 코멘트</button>
+      </div>
+      <div id="views">
+        <div class="view active" id="viewLadder">
+          <div id="ladderScroll" tabindex="0" aria-label="래더 편집 화면"><div id="ladderSpacer"></div></div>
+          <canvas id="ladderCanvas"></canvas>
+          <div id="inDlg" hidden>
+            <div class="ttl"><span>래더 입력</span><span>Enter 확인 · Esc 취소</span></div>
+            <div class="row">
+              <select id="inSym" aria-label="심볼 종류"></select>
+              <input id="inText" type="text" autocomplete="off" spellcheck="false" aria-label="디바이스 또는 명령">
+              <button class="btn primary" id="inOk">확인</button>
+              <button class="btn" id="inCancel">취소</button>
+            </div>
+            <div id="inHint"></div>
+          </div>
+        </div>
+        <div class="view" id="viewList">
+          <h2>명령 리스트 (니모닉)</h2>
+          <p class="sub">변환(F4)할 때 래더가 이 명령어 순서로 바뀝니다. 줄을 누르면 래더의 해당 위치로 이동합니다. 스텝 수는 근사값입니다.</p>
+          <table class="dtable"><thead><tr><th>스텝</th><th>명령</th><th>디바이스 / 피연산자</th><th>코멘트</th></tr></thead><tbody id="ilBody"></tbody></table>
+        </div>
+        <div class="view" id="viewComments">
+          <h2>글로벌 디바이스 코멘트</h2>
+          <p class="sub">코멘트는 래더의 접점·코일 아래에 표시됩니다. 프로그램에 쓰인 디바이스는 자동으로 목록에 나옵니다.</p>
+          <table class="dtable"><thead><tr><th style="width:110px">디바이스</th><th style="width:320px">코멘트</th><th></th></tr></thead><tbody id="cmBody"></tbody></table>
+        </div>
+      </div>
+      <div id="outPane">
+        <div id="outHead"><span>출력</span><span class="muted" style="font-weight:400" id="outSummary"></span><span class="grow"></span><button id="outClear">지우기</button><button id="outToggle">접기</button></div>
+        <div id="outList" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <aside id="side" aria-label="시뮬레이터">
+      <div class="card">
+        <h3>시뮬레이터 <span class="cpu">Q03UDV</span><span class="grow"></span><small id="simState">꺼짐</small></h3>
+        <div class="leds"><span class="led g" id="ledPow"><i></i>POWER</span><span class="led g" id="ledRun"><i></i>RUN</span><span class="led r" id="ledErr"><i></i>ERR</span><span class="led y" id="ledUsr"><i></i>SM412</span></div>
+        <div class="swrow">
+          <button class="btn" id="swRun" title="RUN">RUN</button>
+          <button class="btn" id="swStop" title="STOP">STOP</button>
+          <button class="btn" id="swReset" title="디바이스 메모리 초기화">RESET</button>
+        </div>
+        <div id="simInfo">시뮬레이션을 시작하면 변환된 프로그램이 가상 CPU에 쓰여 실행됩니다.</div>
+        <button class="btn" id="simBig" data-cmd="toggleSim">▶ 시뮬레이션 시작</button>
+      </div>
+      <div class="card">
+        <div class="iohead">입력 X
+          <select id="xBank" aria-label="입력 범위"></select>
+          <span class="grow"></span>
+          <div class="seg sm" id="pushSeg"><button data-push="0" class="active">토글</button><button data-push="1">푸시</button></div>
+        </div>
+        <div class="iogrid" id="xGrid"></div>
+        <div class="iohead">출력 Y <select id="yBank" aria-label="출력 범위"></select></div>
+        <div class="iogrid" id="yGrid"></div>
+        <p class="hintline">토글: 누를 때마다 ON/OFF · 푸시: 누르고 있는 동안만 ON (푸시버튼처럼)</p>
+      </div>
+      <div class="card">
+        <h3>디바이스 모니터 <span class="grow"></span><small>값을 누르면 변경</small></h3>
+        <div class="watchadd"><input id="watchIn" placeholder="추가: D0, M10, T0…" aria-label="모니터에 추가할 디바이스"><button class="btn" id="watchAdd">추가</button></div>
+        <table id="watchTbl"><thead><tr><th>디바이스</th><th>현재값</th><th>코멘트</th><th></th></tr></thead><tbody id="watchBody"></tbody></table>
+      </div>
+    </aside>
+  </div>
+
+  <footer id="statusbar">
+    <span id="stMode">쓰기 모드</span>
+    <span>Q03UDV</span>
+    <span>호스트 스테이션</span>
+    <span id="stSteps">0스텝</span>
+    <span id="stConv">미변환</span>
+    <span id="stPos">행 1 · 열 1</span>
+    <span class="grow" id="stSave"></span>
+  </footer>
+</div>
+
+<div id="modalBack"><div id="modal" role="dialog" aria-modal="true"><div class="mh" id="mTitle"></div><div class="mb" id="mBody"></div><div class="mf" id="mFoot"></div></div></div>
+<div id="toast" role="status"></div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+/* =====================================================================
+   1. 디바이스 (Q03UDV 기본 디바이스 할당)
+   ===================================================================== */
+const OC = 11;          // 출력(코일/명령) 열
+const NCOL = 12;        // 접점 11열 + 출력 1열
+const DEV = {
+  X:{hex:true,  max:0x1FFF, name:'입력'},
+  Y:{hex:true,  max:0x1FFF, name:'출력'},
+  M:{hex:false, max:8191,   name:'내부 릴레이'},
+  L:{hex:false, max:8191,   name:'래치 릴레이'},
+  B:{hex:true,  max:0x1FFF, name:'링크 릴레이'},
+  SM:{hex:false,max:2047,   name:'특수 릴레이'},
+  T:{hex:false, max:2047,   name:'타이머'},
+  C:{hex:false, max:1023,   name:'카운터'},
+  D:{hex:false, max:12287,  name:'데이터 레지스터'},
+  W:{hex:true,  max:0x1FFF, name:'링크 레지스터'},
+  SD:{hex:false,max:2047,   name:'특수 레지스터'},
+};
+const DEV_ORDER = ['X','Y','M','L','B','T','C','D','W','SM','SD','KN'];
+const fmtDev = (t, n) => t + (DEV[t].hex ? n.toString(16).toUpperCase() : String(n));
+
+function parseOperand(raw) {
+  const s = String(raw).toUpperCase();
+  let m;
+  if ((m = /^K(-?\d+)$/.exec(s))) {
+    const v = parseInt(m[1], 10);
+    if (v < -2147483648 || v > 2147483647) return {err:`${s}: 상수 범위를 벗어났습니다`};
+    return {t:'K', v, text:'K' + v};
+  }
+  if ((m = /^H([0-9A-F]{1,8})$/.exec(s))) {
+    const v = parseInt(m[1], 16);
+    return {t:'H', v, text:'H' + v.toString(16).toUpperCase()};
+  }
+  if ((m = /^K([1-8])(X|Y|M|L|B)([0-9A-F]+)$/.exec(s))) {
+    const base = parseOperand(m[2] + m[3]);
+    if (base.err) return base;
+    const k = +m[1];
+    if (base.n + k * 4 - 1 > DEV[base.t].max) return {err:`${s}: 디바이스 범위를 벗어났습니다`};
+    return {t:'KN', k, bt:base.t, n:base.n, text:'K' + k + base.text};
+  }
+  if ((m = /^(SM|SD)(\d+)$/.exec(s)) || (m = /^(X|Y|B|W)([0-9A-F]+)$/.exec(s)) || (m = /^(M|L|T|C|D)(\d+)$/.exec(s))) {
+    const t = m[1], d = DEV[t];
+    const n = parseInt(m[2], d.hex ? 16 : 10);
+    if (n > d.max) return {err:`${s}: ${d.name} 범위(${fmtDev(t,0)}~${fmtDev(t,d.max)})를 벗어났습니다`};
+    return {t, n, text:fmtDev(t, n)};
+  }
+  return {err:`"${raw}"은(는) 알 수 없는 디바이스입니다`};
+}
+const isBitRead  = o => ['X','Y','M','L','B','SM','T','C'].includes(o.t);
+const isBitWrite = o => ['Y','M','L','B'].includes(o.t);
+const isWordSrc  = o => ['K','H','D','W','SD','T','C','KN'].includes(o.t);
+const isWordDst  = o => ['D','W','T','C'].includes(o.t) || (o.t === 'KN' && o.bt !== 'X');
+
+/* =====================================================================
+   2. 명령어 / 입력 해석
+   ===================================================================== */
+const APP = {
+  SET:{sig:['b'], ex:'SET M0', desc:'입력이 ON이 되면 디바이스를 ON으로 유지'},
+  RST:{sig:['r'], ex:'RST C0', desc:'디바이스 OFF / 현재값 0으로 리셋'},
+  PLS:{sig:['b'], ex:'PLS M1', desc:'입력 OFF→ON 순간에 1스캔만 ON'},
+  PLF:{sig:['b'], ex:'PLF M2', desc:'입력 ON→OFF 순간에 1스캔만 ON'},
+  ALT:{sig:['b'], p:1, ex:'ALTP Y20', desc:'실행할 때마다 ON/OFF 반전 (ALTP는 상승 시 1번)'},
+  MOV:{sig:['sd'], p:1, ex:'MOV K10 D0', desc:'(s)의 값을 (d)로 전송'},
+  '+':{sig:['sd','ssd'], p:1, ex:'+ D0 K5 D2', desc:'덧셈 (s1)+(s2)→(d), 2개면 (d)+(s)→(d)'},
+  '-':{sig:['sd','ssd'], p:1, ex:'- D0 K1 D2', desc:'뺄셈 (s1)-(s2)→(d), 2개면 (d)-(s)→(d)'},
+  '*':{sig:['ssd'], p:1, ex:'* D0 K2 D10', desc:'곱셈, 결과는 32비트 (d)(d+1)'},
+  '/':{sig:['ssd'], p:1, ex:'/ D0 K3 D10', desc:'나눗셈, 몫 (d) 나머지 (d+1)'},
+  INC:{sig:['d'], p:1, ex:'INCP D0', desc:'(d)+1'},
+  DEC:{sig:['d'], p:1, ex:'DECP D0', desc:'(d)-1'},
+  BCD:{sig:['sd'], p:1, ex:'BCD D0 K4Y20', desc:'BIN → BCD 변환 (0~9999)'},
+  BIN:{sig:['sd'], p:1, ex:'BIN K4X0 D0', desc:'BCD → BIN 변환'},
+  BMOV:{sig:['sdn'], p:1, ex:'BMOV D0 D100 K5', desc:'(s)부터 n개를 (d)부터 블록 전송'},
+  FMOV:{sig:['sdn'], p:1, ex:'FMOV K0 D0 K10', desc:'(d)부터 n개를 같은 값으로 채움'},
+  ZRST:{sig:['zz'], p:1, ex:'ZRST M0 M15', desc:'(d1)~(d2) 구간 일괄 리셋'},
+};
+function appInfo(name) {
+  if (APP[name]) return {base:name, pulse:false, spec:APP[name]};
+  if (name.length > 1 && name.endsWith('P')) {
+    const b = name.slice(0, -1);
+    if (APP[b] && APP[b].p) return {base:b, pulse:true, spec:APP[b]};
+  }
+  return null;
+}
+const SYM = {
+  NO:  {label:'-| |-  a접점',        kind:'NO', or:false, key:'F5'},
+  NOR: {label:'└┤ ├┘ a접점 OR',      kind:'NO', or:true,  key:'Shift+F5'},
+  NC:  {label:'-|/|-  b접점',        kind:'NC', or:false, key:'F6'},
+  NCR: {label:'└┤/├┘ b접점 OR',      kind:'NC', or:true,  key:'Shift+F6'},
+  P:   {label:'-|↑|-  상승 펄스',     kind:'P',  or:false, key:'Shift+F7'},
+  PR:  {label:'└┤↑├┘ 상승 펄스 OR',   kind:'P',  or:true,  key:'Alt+F7'},
+  F:   {label:'-|↓|-  하강 펄스',     kind:'F',  or:false, key:'Shift+F8'},
+  FR:  {label:'└┤↓├┘ 하강 펄스 OR',   kind:'F',  or:true,  key:'Alt+F8'},
+  COIL:{label:'-( )-  코일',          out:true, key:'F7'},
+  APP: {label:'-[ ]-  응용 명령',      out:true, key:'F8'},
+};
+const KIND_NAME = {NO:'a접점', NC:'b접점', P:'상승 펄스', F:'하강 펄스'};
+const CONTACT_MN = {LD:['NO',0],AND:['NO',0],OR:['NO',1],LDI:['NC',0],ANI:['NC',0],ORI:['NC',1],LDP:['P',0],ANDP:['P',0],ORP:['P',1],LDF:['F',0],ANDF:['F',0],ORF:['F',1]};
+
+function mkContact(kind, or, args) {
+  if (args.length !== 1) return {err: args.length ? '접점에는 디바이스를 1개만 입력합니다 (타이머 코일은 OUT T0 K30)' : '디바이스를 입력하세요 (예: X0)'};
+  const d = parseOperand(args[0]);
+  if (d.err) return d;
+  if (!isBitRead(d)) return {err:`${d.text}은(는) 접점으로 쓸 수 없습니다 (X Y M L B T C SM)`};
+  return {type:'contact', kind, or, d:d.text};
+}
+function mkCmp(op, or, args) {
+  if (args.length !== 2) return {err:`비교 접점은 값 2개가 필요합니다 (예: ${op} D0 K10)`};
+  const a = [];
+  for (const s of args) {
+    const o = parseOperand(s);
+    if (o.err) return o;
+    if (!isWordSrc(o)) return {err:`${o.text}: 비교에는 상수(K/H)나 워드 디바이스(D T C …)를 씁니다`};
+    a.push(o.text);
+  }
+  return {type:'cmp', op, or, a};
+}
+function checkOp(ch, o) {
+  switch (ch) {
+    case 'b': return isBitWrite(o) ? null : `${o.text}: 비트 디바이스(Y M L B)를 쓰세요`;
+    case 'r': case 'z': return (isBitWrite(o) || ['T','C','D','W'].includes(o.t)) ? null : `${o.text}은(는) 리셋할 수 없습니다`;
+    case 's': case 'n': return isWordSrc(o) ? null : `${o.text}: 상수(K/H) 또는 워드 디바이스(D W T C KnX…)를 쓰세요`;
+    case 'd': return isWordDst(o) ? null : `${o.text}에는 값을 쓸 수 없습니다 (D W T C KnY KnM…)`;
+  }
+  return null;
+}
+function parseOutput(toks) {
+  const name = toks[0], args = toks.slice(1);
+  if (name === 'OUT') {
+    if (!args.length) return {err:'OUT 뒤에 디바이스를 입력하세요 (예: OUT Y20)'};
+    const d = parseOperand(args[0]);
+    if (d.err) return d;
+    if (d.t === 'T' || d.t === 'C') {
+      if (args.length !== 2) return {err:`${d.text}은(는) 설정값이 필요합니다 (예: OUT ${d.text} K${d.t === 'T' ? 30 : 5})`};
+      const k = parseOperand(args[1]);
+      if (k.err) return k;
+      if (!['K','D','W'].includes(k.t)) return {err:'설정값은 K상수 또는 D 레지스터로 입력하세요'};
+      if (k.t === 'K' && (k.v < 0 || k.v > 32767)) return {err:'설정값은 K0~K32767 범위입니다'};
+      return {type:'out', i:'OUT', a:[d.text, k.text]};
+    }
+    if (!isBitWrite(d)) return {err:`${d.text}은(는) OUT으로 출력할 수 없습니다 (Y M L B T C)`};
+    if (args.length !== 1) return {err:'OUT 명령은 디바이스 1개만 씁니다'};
+    return {type:'out', i:'OUT', a:[d.text]};
+  }
+  const info = appInfo(name);
+  if (!info) return {err:`"${name}"은(는) 지원하지 않는 명령어입니다 (도움말 F1 참고)`};
+  const sig = info.spec.sig.find(s => s.length === args.length);
+  if (!sig) return {err:`${name}의 피연산자 개수가 맞지 않습니다 (예: ${info.spec.ex})`};
+  const ops = [];
+  for (let i = 0; i < args.length; i++) {
+    const o = parseOperand(args[i]);
+    if (o.err) return o;
+    const e = checkOp(sig[i], o);
+    if (e) return {err:e};
+    ops.push(o);
+  }
+  if (sig === 'zz') {
+    if (ops[0].t !== ops[1].t) return {err:'ZRST는 같은 종류의 디바이스끼리만 씁니다 (예: ZRST M0 M15)'};
+    if (ops[0].n > ops[1].n) return {err:'ZRST는 (d1) 번호가 (d2)보다 작아야 합니다'};
+  }
+  return {type:'out', i:name, a:ops.map(o => o.text)};
+}
+function parseInput(text, symId) {
+  const toks = String(text).trim().toUpperCase().split(/\s+/).filter(Boolean);
+  if (!toks.length) return {err:'디바이스나 명령을 입력하세요'};
+  const sym = SYM[symId] || SYM.NO;
+  const h = toks[0];
+  if (CONTACT_MN[h]) return mkContact(CONTACT_MN[h][0], !!CONTACT_MN[h][1], toks.slice(1));
+  const cm = /^(LD|AND|OR)?(=|<>|>=|<=|>|<)$/.exec(h);
+  if (cm) return mkCmp(cm[2], cm[1] ? cm[1] === 'OR' : !!sym.or, toks.slice(1));
+  if (h === 'END') return {err:'END는 프로그램 끝에 자동으로 들어갑니다'};
+  if (['ANB','ORB','MPS','MRD','MPP'].includes(h)) return {err:`${h}는 래더 모양을 보고 변환할 때 자동으로 만들어집니다`};
+  if (h === 'OUT' || appInfo(h)) return parseOutput(toks);
+  if (sym.out) {
+    if (symId === 'COIL') return parseOutput(['OUT', ...toks]);
+    return {err:'명령어부터 입력하세요 (예: MOV K10 D0, SET M0)'};
+  }
+  return mkContact(sym.kind, sym.or, toks);
+}
+function resToCell(res) {
+  if (res.type === 'contact') return {t:'C', k:res.kind, d:res.d};
+  if (res.type === 'cmp') return {t:'CMP', op:res.op, a:res.a.slice()};
+  return {t:'O', i:res.i, a:res.a.slice()};
+}
+function cellToInput(cell) {
+  if (!cell || cell.t === 'H') return null;
+  if (cell.t === 'C') return {sym:cell.k, text:cell.d};
+  if (cell.t === 'CMP') return {sym:'NO', text:cell.op + ' ' + cell.a.join(' ')};
+  if (cell.i === 'OUT') return {sym:'COIL', text:cell.a.join(' ')};
+  return {sym:'APP', text:cell.i + ' ' + cell.a.join(' ')};
+}
+function cellDevice(cell) {
+  if (!cell || cell.t === 'H') return null;
+  if (cell.t === 'C') return cell.d;
+  const a = cell.a;
+  if (cell.t === 'CMP') return a.find(x => !/^[KH]-?[0-9A-F]+$/.test(x) || /^K\d[XYMLB]/.test(x)) || null;
+  if (['OUT','SET','RST','PLS','PLF','ALT','ALTP','INC','INCP','DEC','DECP'].includes(cell.i)) return a[0];
+  for (let i = a.length - 1; i >= 0; i--) { const o = parseOperand(a[i]); if (!o.err && o.t !== 'K' && o.t !== 'H') return o.text; }
+  return null;
+}
+function describeRes(res) {
+  if (res.err) return res.err;
+  const cmt = d => (P.cm[d] ? `  ·  코멘트: ${P.cm[d]}` : '');
+  if (res.type === 'contact') {
+    const mn = {NO:['LD','AND','OR'], NC:['LDI','ANI','ORI'], P:['LDP','ANDP','ORP'], F:['LDF','ANDF','ORF']}[res.kind];
+    return `${KIND_NAME[res.kind]}${res.or ? ' OR (병렬)' : ''}  ${res.d}   (${res.or ? mn[2] : mn[0] + ' / ' + mn[1]} ${res.d})${cmt(res.d)}`;
+  }
+  if (res.type === 'cmp') return `비교 접점 [${res.op} ${res.a.join(' ')}]${res.or ? ' OR (병렬)' : ''} — 조건이 참이면 ON`;
+  if (res.i === 'OUT') {
+    const d = res.a[0];
+    if (d[0] === 'T' && res.a[1]) {
+      const k = /^K(\d+)$/.exec(res.a[1]);
+      return `타이머 코일 ${d}  설정 ${res.a[1]}${k ? ` = ${(k[1] / 10).toFixed(1)}초 (100ms 타이머)` : ''}${cmt(d)}`;
+    }
+    if (d[0] === 'C' && res.a[1]) return `카운터 코일 ${d}  설정 ${res.a[1]}회${cmt(d)}`;
+    return `코일 OUT ${d}${cmt(d)}`;
+  }
+  const info = appInfo(res.i);
+  return `[${res.i} ${res.a.join(' ')}]  ${info ? info.spec.desc : ''}${info && info.pulse ? ' · P: 입력 상승 시 1번만 실행' : ''}`;
+}
+
+/* =====================================================================
+   3. 프로젝트 모델 / 편집
+   ===================================================================== */
+const newRow = () => ({c:new Array(NCOL).fill(null), v:new Array(NCOL).fill(false), d:true});
+let P = {name:'새 프로젝트', id:null, rows:[], cm:{}, changed:true};
+const ED = {r:0, c:0, anchor:null, mode:'write', tab:'ladder', showCm:true, flow:true, cmEdit:false,
+  clip:null, undo:[], redo:[], prog:null};
+
+const rowBlank = row => row.c.every(x => !x);
+const rowHasV = row => row.v.some(Boolean);
+function ensureRow(r) { while (P.rows.length <= r) P.rows.push(newRow()); }
+function touch(r) { if (r >= 0 && r < P.rows.length) P.rows[r].d = true; }
+const cellAt = (r, c) => (r < P.rows.length ? P.rows[r].c[c] : null);
+
+function snapshot() { return JSON.stringify({rows:P.rows, cm:P.cm, r:ED.r, c:ED.c}); }
+function restore(s) {
+  const o = JSON.parse(s);
+  P.rows = o.rows; P.cm = o.cm; ED.r = o.r; ED.c = o.c; ED.anchor = null; P.changed = true;
+}
+function edit(fn) {
+  if (ED.mode !== 'write') { toast(ED.mode === 'monitor' ? '모니터 중에는 편집할 수 없습니다. F2(쓰기 모드)로 바꾸세요' : '읽기 모드입니다. F2(쓰기 모드)로 바꾸세요', 'err'); return false; }
+  const snap = snapshot();
+  if (fn() === false) return false;
+  ED.undo.push(snap); if (ED.undo.length > 120) ED.undo.shift();
+  ED.redo.length = 0;
+  P.changed = true;
+  afterChange();
+  return true;
+}
+function afterChange() { layout(); render(); updateStatus(); scheduleLocalSave(); }
+function undo() { if (ED.mode !== 'write') return toast('쓰기 모드에서만 되돌릴 수 있습니다', 'err'); if (!ED.undo.length) return toast('되돌릴 내용이 없습니다'); ED.redo.push(snapshot()); restore(ED.undo.pop()); afterChange(); ensureVisible(); }
+function redo() { if (ED.mode !== 'write') return; if (!ED.redo.length) return toast('다시 실행할 내용이 없습니다'); ED.undo.push(snapshot()); restore(ED.redo.pop()); afterChange(); ensureVisible(); }
+
+function setCursor(r, c, keepSel) {
+  ED.r = clamp(r, 0, P.rows.length);
+  ED.c = clamp(c, 0, OC);
+  if (!keepSel) ED.anchor = null;
+  ensureVisible(); render(); updateStatus();
+}
+function hasSel() { return ED.anchor && (ED.anchor.r !== ED.r || ED.anchor.c !== ED.c); }
+function selRect() {
+  const a = hasSel() ? ED.anchor : {r:ED.r, c:ED.c};
+  return {r1:Math.min(a.r, ED.r), r2:Math.max(a.r, ED.r), c1:Math.min(a.c, ED.c), c2:Math.max(a.c, ED.c)};
+}
+
+function placeParsed(res) {
+  const r = ED.r, c = ED.c;
+  return edit(() => {
+    if (res.type === 'out') {
+      ensureRow(r);
+      const row = P.rows[r];
+      row.c[OC] = resToCell(res);
+      for (let k = c; k < OC; k++) if (!row.c[k]) row.c[k] = {t:'H'};
+      touch(r);
+      ED.r = r + 1; ED.c = 0; ED.anchor = null;
+    } else {
+      if (c >= OC) { toast('출력 열(맨 오른쪽)에는 접점을 넣을 수 없습니다', 'err'); return false; }
+      if (res.or && r === 0) { toast('첫 번째 행에는 OR(병렬) 접점을 넣을 수 없습니다', 'err'); return false; }
+      ensureRow(r);
+      P.rows[r].c[c] = resToCell(res);
+      if (res.or) { P.rows[r - 1].v[c + 1] = true; if (c > 0) P.rows[r - 1].v[c] = true; touch(r - 1); }
+      touch(r);
+      ED.c = Math.min(c + 1, OC); ED.anchor = null;
+    }
+  }) && (ensureVisible(), render(), updateStatus());
+}
+function cmdHLine() {
+  edit(() => {
+    if (ED.c >= OC) { toast('출력 열에는 가로선을 넣을 수 없습니다', 'err'); return false; }
+    ensureRow(ED.r); P.rows[ED.r].c[ED.c] = {t:'H'}; touch(ED.r); ED.c = Math.min(ED.c + 1, OC);
+  });
+}
+function cmdVLine() {
+  edit(() => {
+    if (ED.c === 0) { toast('모선(맨 왼쪽)에는 세로선을 넣을 수 없습니다. 오른쪽 칸에서 입력하세요', 'err'); return false; }
+    ensureRow(ED.r + 1); P.rows[ED.r].v[ED.c] = true; touch(ED.r); touch(ED.r + 1); ED.r += 1;
+  });
+  ensureVisible(); render();
+}
+function cmdDelH() {
+  const cell = cellAt(ED.r, ED.c);
+  if (!cell || cell.t !== 'H') return toast('커서 위치에 가로선이 없습니다');
+  edit(() => { P.rows[ED.r].c[ED.c] = null; touch(ED.r); });
+}
+function cmdDelV() {
+  if (ED.r >= P.rows.length || !P.rows[ED.r].v[ED.c]) return toast('커서 왼쪽 아래에 세로선이 없습니다');
+  edit(() => { P.rows[ED.r].v[ED.c] = false; touch(ED.r); touch(ED.r + 1); });
+}
+function cmdDelete() {
+  if (hasSel()) {
+    const s = selRect();
+    edit(() => {
+      for (let r = s.r1; r <= Math.min(s.r2, P.rows.length - 1); r++) {
+        for (let c = s.c1; c <= s.c2; c++) { P.rows[r].c[c] = null; if (c >= 1) P.rows[r].v[c] = false; }
+        touch(r); touch(r + 1);
+      }
+      ED.anchor = null;
+    });
+    return;
+  }
+  if (ED.r >= P.rows.length) return;
+  const row = P.rows[ED.r];
+  if (row.c[ED.c]) edit(() => { row.c[ED.c] = null; touch(ED.r); });
+  else if (row.v[ED.c]) edit(() => { row.v[ED.c] = false; touch(ED.r); touch(ED.r + 1); });
+}
+function cmdInsRow() {
+  edit(() => {
+    const r = ED.r, nr = newRow();
+    if (r > 0 && r < P.rows.length) { const prev = P.rows[r - 1]; for (let b = 1; b < NCOL; b++) nr.v[b] = prev.v[b]; }
+    P.rows.splice(r, 0, nr);
+  });
+}
+function cmdDelRow() {
+  if (ED.r >= P.rows.length) return toast('END 행은 삭제할 수 없습니다');
+  edit(() => { P.rows.splice(ED.r, 1); touch(ED.r - 1); touch(ED.r); ED.r = Math.min(ED.r, P.rows.length); });
+}
+function cmdCopy(cut) {
+  const s = selRect();
+  const cells = [], v = [];
+  for (let r = s.r1; r <= s.r2; r++) {
+    const cr = [], vr = [];
+    for (let c = s.c1; c <= s.c2; c++) {
+      const row = P.rows[r];
+      cr.push(row && row.c[c] ? JSON.parse(JSON.stringify(row.c[c])) : null);
+      vr.push(!!(row && c >= 1 && row.v[c]));
+    }
+    cells.push(cr); v.push(vr);
+  }
+  ED.clip = {cells, v};
+  if (cut) cmdDeleteRect(s); else toast(`${s.r2 - s.r1 + 1}행 × ${s.c2 - s.c1 + 1}열 복사됨`);
+}
+function cmdDeleteRect(s) {
+  edit(() => {
+    for (let r = s.r1; r <= Math.min(s.r2, P.rows.length - 1); r++) {
+      for (let c = s.c1; c <= s.c2; c++) { P.rows[r].c[c] = null; if (c >= 1) P.rows[r].v[c] = false; }
+      touch(r); touch(r + 1);
+    }
+    ED.anchor = null;
+  });
+}
+function cmdPaste() {
+  if (!ED.clip) return toast('복사한 내용이 없습니다');
+  let skipped = 0;
+  edit(() => {
+    const {cells, v} = ED.clip;
+    for (let i = 0; i < cells.length; i++) for (let j = 0; j < cells[i].length; j++) {
+      const R = ED.r + i, C = ED.c + j;
+      if (C > OC) { if (cells[i][j]) skipped++; continue; }
+      const cell = cells[i][j];
+      if (cell) {
+        if ((cell.t === 'O') !== (C === OC)) { skipped++; }
+        else { ensureRow(R); P.rows[R].c[C] = JSON.parse(JSON.stringify(cell)); touch(R); }
+      }
+      if (v[i][j] && C >= 1) { ensureRow(R + 1); P.rows[R].v[C] = true; touch(R); touch(R + 1); }
+    }
+    ED.anchor = null;
+  });
+  if (skipped) toast(`${skipped}개 요소는 위치가 맞지 않아 붙여넣지 않았습니다`);
+}
+function normalizeRows() {
+  let removed = 0;
+  for (let r = P.rows.length - 1; r >= 0; r--) {
+    const row = P.rows[r];
+    if (rowBlank(row) && !rowHasV(row) && !(r > 0 && rowHasV(P.rows[r - 1]))) { P.rows.splice(r, 1); removed++; }
+  }
+  if (removed) ED.r = Math.min(ED.r, P.rows.length);
+  return removed;
+}
+
+/* =====================================================================
+   4. 변환 (래더 → 명령 리스트)
+   ===================================================================== */
+const TRUE = {k:'T'};
+function AND(a, b) {
+  if (a.k === 'T') return b;
+  if (b.k === 'T') return a;
+  return {k:'A', ch:[...(a.k === 'A' ? a.ch : [a]), ...(b.k === 'A' ? b.ch : [b])]};
+}
+function OR(list) {
+  if (list.every(x => x.k === 'T')) return TRUE;
+  const ch = [];
+  let short = false;
+  for (const x of list) { if (x.k === 'T') short = true; else if (x.k === 'O') { ch.push(...x.ch); if (x.short) short = true; } else ch.push(x); }
+  return {k:'O', ch, short};
+}
+function hasShort(x) { return x.k === 'O' ? (x.short || x.ch.some(hasShort)) : x.k === 'A' ? x.ch.some(hasShort) : false; }
+
+function leafFromCell(cell, r, c) {
+  const res = cell.t === 'C' ? mkContact(cell.k, false, [cell.d]) : mkCmp(cell.op, false, cell.a);
+  if (res.err) return {err:res.err};
+  if (res.type === 'contact') return {k:'L', kind:res.kind, ops:[parseOperand(res.d)], r, c};
+  return {k:'L', kind:'CMP', cmp:res.op, ops:res.a.map(parseOperand), r, c};
+}
+const MN = {NO:{LD:'LD',AND:'AND',OR:'OR'}, NC:{LD:'LDI',AND:'ANI',OR:'ORI'}, P:{LD:'LDP',AND:'ANDP',OR:'ORP'}, F:{LD:'LDF',AND:'ANDF',OR:'ORF'}};
+function leafIns(leaf, mode) {
+  const name = leaf.kind === 'CMP' ? mode + leaf.cmp : MN[leaf.kind][mode];
+  const steps = leaf.kind === 'CMP' ? 3 : (leaf.kind === 'P' || leaf.kind === 'F') ? 2 : 1;
+  return {op:mode, name, kind:leaf.kind, cmp:leaf.cmp, ops:leaf.ops, r:leaf.r, c:leaf.c, steps};
+}
+function outIns(cell, r) {
+  const res = parseOutput([cell.i, ...cell.a]);
+  if (res.err) return {err:res.err};
+  const ops = res.a.map(parseOperand);
+  const info = cell.i === 'OUT' ? {base:'OUT', pulse:false} : appInfo(cell.i);
+  let steps;
+  if (info.base === 'OUT') steps = (ops[0].t === 'T' || ops[0].t === 'C') ? 4 : 1;
+  else if (info.base === 'SET' || info.base === 'RST') steps = isBitWrite(ops[0]) ? 1 : 2;
+  else if (info.base === 'PLS' || info.base === 'PLF') steps = 2;
+  else steps = 1 + ops.length;
+  return {op:'OUT*', name:cell.i, base:info.base, pulse:info.pulse, ops, r, c:OC, steps};
+}
+
+function compile(rows) {
+  const errors = [], blocks = [];
+  const n = rows.length;
+  let r = 0;
+  while (r < n) {
+    if (rowBlank(rows[r]) && !rowHasV(rows[r])) { r++; continue; }
+    const s = r;
+    while (r < n - 1 && rowHasV(rows[r])) r++;
+    const e = r; r++;
+    const b = compileBlock(rows, s, e, errors);
+    if (b) blocks.push(b);
+  }
+  let step = 0;
+  const il = [];
+  for (const b of blocks) { b.step = step; for (const ins of b.il) { ins.step = step; step += ins.steps; il.push(ins); } }
+  const stepAtRow = new Map(blocks.map(b => [b.s, b.step]));
+  const cellIns = new Map();
+  for (const ins of il) if (ins.r != null) cellIns.set(ins.r * NCOL + ins.c, ins);
+  const rowBlock = new Array(n).fill(null);
+  for (const b of blocks) for (let i = b.s; i <= b.e; i++) rowBlock[i] = b;
+  const devSet = new Set();
+  for (const ins of il) for (const o of (ins.ops || [])) if (o.t !== 'K' && o.t !== 'H') devSet.add(o.text);
+  const devs = [...devSet].sort(devCompare);
+  return {errors, blocks, il, endStep:step, stepAtRow, cellIns, rowBlock, devs};
+}
+function devCompare(a, b) {
+  const pa = parseOperand(a), pb = parseOperand(b);
+  const ta = DEV_ORDER.indexOf(pa.t), tb = DEV_ORDER.indexOf(pb.t);
+  if (ta !== tb) return ta - tb;
+  if (pa.t === 'KN') return (pa.bt + pa.n).localeCompare(pb.bt + pb.n);
+  return (pa.n || 0) - (pb.n || 0);
+}
+
+function compileBlock(rows, s, e, errors) {
+  const R = e - s + 1;
+  const par = new Int32Array(R * NCOL);
+  for (let k = 0; k < par.length; k++) par[k] = k;
+  const find = x => { while (par[x] !== x) { par[x] = par[par[x]]; x = par[x]; } return x; };
+  const uni = (a, b) => { a = find(a); b = find(b); if (a !== b) par[b] = a; };
+  const id = (i, b) => i * NCOL + b;
+  for (let i = 1; i < R; i++) uni(id(0, 0), id(i, 0));
+  for (let i = 0; i < R - 1; i++) for (let b = 1; b <= OC; b++) if (rows[s + i].v[b]) uni(id(i, b), id(i + 1, b));
+  const L = find(id(0, 0));
+  let bad = false;
+  const err = (r, c, msg) => { errors.push({r, c, msg}); bad = true; };
+  const edges = [], outs = [];
+  for (let i = 0; i < R; i++) {
+    const row = rows[s + i];
+    for (let c = 0; c < OC; c++) {
+      const cell = row.c[c];
+      if (!cell) continue;
+      if (cell.t === 'O') { err(s + i, c, '코일·명령은 맨 오른쪽 출력 열에만 둘 수 있습니다'); continue; }
+      let leaf = null;
+      if (cell.t !== 'H') { leaf = leafFromCell(cell, s + i, c); if (leaf.err) { err(s + i, c, leaf.err); continue; } }
+      edges.push({u:find(id(i, c)), v:find(id(i, c + 1)), r:s + i, c, leaf});
+    }
+    const oc = row.c[OC];
+    if (oc) {
+      if (oc.t !== 'O') { err(s + i, OC, '출력 열에는 코일·명령만 둘 수 있습니다'); continue; }
+      const ins = outIns(oc, s + i);
+      if (ins.err) { err(s + i, OC, ins.err); continue; }
+      outs.push({node:find(id(i, OC)), r:s + i, ins});
+    }
+  }
+  if (!edges.length && !outs.length) return null;
+  const nodes = new Int32Array(R * NCOL);
+  for (let k = 0; k < nodes.length; k++) nodes[k] = find(k);
+  const pf = {L, nodes, edges:edges.map(x => ({u:x.u, v:x.v, r:x.r, c:x.c, h:!x.leaf})).sort((a, b) => a.c - b.c)};
+  const blk = {s, e, il:[], pf, bad:false};
+  if (bad) { blk.bad = true; return blk; }
+  if (!outs.length) { err(edges[0].r, edges[0].c, '출력(코일이나 명령)이 없는 회로입니다. 줄 끝에 코일을 넣으세요'); blk.bad = true; return blk; }
+
+  // 연결 검사
+  const byC = edges.slice().sort((a, b) => a.c - b.c);
+  const fwd = new Set([L]);
+  for (const x of byC) if (fwd.has(x.u)) fwd.add(x.v);
+  const bwd = new Set(outs.map(o => o.node));
+  for (let k = byC.length - 1; k >= 0; k--) if (bwd.has(byC[k].v)) bwd.add(byC[k].u);
+  for (const x of edges) {
+    if (!fwd.has(x.u)) err(x.r, x.c, '왼쪽이 모선에 연결되어 있지 않습니다 (세로선이나 가로선 확인)');
+    else if (!bwd.has(x.v)) err(x.r, x.c, '오른쪽이 출력까지 연결되어 있지 않습니다');
+  }
+  for (const o of outs) if (!fwd.has(o.node)) err(o.r, OC, '출력 앞의 회로가 모선과 연결되어 있지 않습니다');
+  if (bad) { blk.bad = true; return blk; }
+
+  // 직렬·병렬 축약
+  let E = edges.map(x => ({u:x.u, v:x.v, x:x.leaf || TRUE, row:x.r}));
+  const OUT = new Map();
+  for (const o of outs) { if (!OUT.has(o.node)) OUT.set(o.node, []); OUT.get(o.node).push(o); }
+  let guard = 0;
+  for (;;) {
+    if (++guard > 20000) break;
+    const g = new Map();
+    for (const x of E) { const k = x.u + '>' + x.v; if (!g.has(k)) g.set(k, []); g.get(k).push(x); }
+    if (g.size < E.length) {
+      E = [...g.values()].map(list => {
+        if (list.length === 1) return list[0];
+        list.sort((a, b) => a.row - b.row);
+        return {u:list[0].u, v:list[0].v, x:OR(list.map(z => z.x)), row:list[0].row};
+      });
+      continue;
+    }
+    const indeg = new Map(), outdeg = new Map();
+    for (const x of E) { indeg.set(x.v, (indeg.get(x.v) || 0) + 1); outdeg.set(x.u, (outdeg.get(x.u) || 0) + 1); }
+    const w = E.find(x => x.x.k === 'T' && x.v !== L && indeg.get(x.v) === 1);
+    if (w) {
+      const u = w.u, v = w.v;
+      E = E.filter(x => x !== w);
+      for (const x of E) if (x.u === v) x.u = u;
+      if (OUT.has(v)) { OUT.set(u, [...(OUT.get(u) || []), ...OUT.get(v)]); OUT.delete(v); }
+      continue;
+    }
+    let did = false;
+    for (const x of E) {
+      const nd = x.v;
+      if (nd === L || OUT.has(nd) || indeg.get(nd) !== 1 || outdeg.get(nd) !== 1) continue;
+      const f = E.find(z => z.u === nd);
+      E = E.filter(z => z !== x && z !== f);
+      E.push({u:x.u, v:f.v, x:AND(x.x, f.x), row:Math.min(x.row, f.row)});
+      did = true; break;
+    }
+    if (!did) break;
+  }
+  const indeg = new Map();
+  for (const x of E) indeg.set(x.v, (indeg.get(x.v) || 0) + 1);
+  if ([...indeg.values()].some(d => d > 1)) { err(s, 0, '변환할 수 없는 회로 구조입니다 (브리지 회로). 접점 배치를 바꿔 보세요'); blk.bad = true; return blk; }
+  if (E.some(x => hasShort(x.x))) { err(s, 0, '접점 없이 선만으로 병렬 연결된 부분이 있습니다 (단락 회로)'); blk.bad = true; return blk; }
+
+  // 명령 리스트 생성
+  const il = blk.il;
+  const emitLoad = x => {
+    if (x.k === 'L') il.push(leafIns(x, 'LD'));
+    else if (x.k === 'A') { emitLoad(x.ch[0]); for (let i = 1; i < x.ch.length; i++) emitAnd(x.ch[i]); }
+    else if (x.k === 'O') { emitLoad(x.ch[0]); for (let i = 1; i < x.ch.length; i++) emitOr(x.ch[i]); }
+  };
+  const emitAnd = x => {
+    if (x.k === 'L') il.push(leafIns(x, 'AND'));
+    else if (x.k === 'A') x.ch.forEach(emitAnd);
+    else if (x.k === 'O') { emitLoad(x); il.push({op:'ANB', name:'ANB', steps:1}); }
+  };
+  const emitOr = x => {
+    if (x.k === 'L') il.push(leafIns(x, 'OR'));
+    else if (x.k === 'O') x.ch.forEach(emitOr);
+    else if (x.k === 'A') { emitLoad(x); il.push({op:'ORB', name:'ORB', steps:1}); }
+  };
+  const gen = (nd, hasRes) => {
+    const br = [];
+    for (const o of (OUT.get(nd) || [])) br.push({row:o.r, out:o});
+    for (const x of E) if (x.u === nd) br.push({row:x.row, e:x});
+    br.sort((a, b) => a.row - b.row || (a.out ? -1 : 1));
+    if (!hasRes) {
+      for (const b of br) {
+        if (b.out) { err(b.out.r, OC, '출력이 모선에 바로 연결되어 있습니다. 항상 ON이 필요하면 SM400 접점을 쓰세요'); continue; }
+        emitLoad(b.e.x); gen(b.e.v, true);
+      }
+      return;
+    }
+    let first = br.findIndex(b => b.e);
+    if (first < 0) first = br.length;
+    for (let i = 0; i < first; i++) il.push(br[i].out.ins);
+    const rest = br.slice(first);
+    if (rest.length === 1) { emitAnd(rest[0].e.x); gen(rest[0].e.v, true); return; }
+    rest.forEach((b, i) => {
+      const op = i === 0 ? 'MPS' : i === rest.length - 1 ? 'MPP' : 'MRD';
+      il.push({op, name:op, steps:1});
+      if (b.out) il.push(b.out.ins);
+      else { emitAnd(b.e.x); gen(b.e.v, true); }
+    });
+  };
+  gen(L, false);
+  if (bad) { blk.bad = true; blk.il = []; }
+  return blk;
+}
+
+/* =====================================================================
+   5. 시뮬레이터 (가상 CPU)
+   ===================================================================== */
+const XIN = new Uint8Array(0x2000);
+function memNew() {
+  return {
+    X:new Uint8Array(0x2000), Y:new Uint8Array(0x2000), M:new Uint8Array(8192), L:new Uint8Array(8192),
+    B:new Uint8Array(0x2000), SM:new Uint8Array(2048), D:new Int16Array(12288), W:new Int16Array(0x2000), SD:new Int16Array(2048),
+    TC:new Uint8Array(2048), TS:new Uint8Array(2048), TN:new Int16Array(2048), TA:new Float64Array(2048),
+    CC:new Uint8Array(1024), CS:new Uint8Array(1024), CN:new Int16Array(1024),
+  };
+}
+const SIM = {on:false, state:'OFF', prog:null, mem:null, iv:0, last:0, t:0, scans:0, first:true, err:null};
+const s16 = v => (v << 16) >> 16;
+function plcErr(code, msg, ins) { const e = new Error(msg); e.plc = true; e.code = code; e.ins = ins; return e; }
+function rdBit(M, o) {
+  switch (o.t) {
+    case 'T': return !!M.TS[o.n];
+    case 'C': return !!M.CS[o.n];
+    default: return !!M[o.t][o.n];
+  }
+}
+function wrBit(M, o, v) { if (M[o.t]) M[o.t][o.n] = v ? 1 : 0; }
+function rdWord(M, o) {
+  switch (o.t) {
+    case 'K': case 'H': return o.v;
+    case 'T': return M.TN[o.n];
+    case 'C': return M.CN[o.n];
+    case 'KN': {
+      const arr = M[o.bt], bits = o.k * 4;
+      let v = 0;
+      for (let i = 0; i < bits; i++) if (arr[o.n + i]) v |= (1 << i);
+      if (bits === 16 && (v & 0x8000)) v -= 0x10000;
+      return v;
+    }
+    default: return M[o.t][o.n];
+  }
+}
+function wrWord(M, o, v) {
+  switch (o.t) {
+    case 'T': M.TN[o.n] = v; break;
+    case 'C': M.CN[o.n] = v; break;
+    case 'KN': { const arr = M[o.bt], bits = o.k * 4; for (let i = 0; i < bits; i++) arr[o.n + i] = (v >> i) & 1; break; }
+    default: if (M[o.t]) M[o.t][o.n] = v;
+  }
+}
+function offOp(o, k, ins) {
+  const step = o.t === 'KN' ? o.k * 4 : 1;
+  const n = o.n + k * step;
+  const max = o.t === 'KN' ? DEV[o.bt].max - o.k * 4 + 1 : DEV[o.t] ? DEV[o.t].max : 0;
+  if (n > max || n < 0) throw plcErr('4101', `디바이스 범위를 넘었습니다 (${o.text}+${k})`, ins);
+  return Object.assign({}, o, {n});
+}
+function rst(M, o) {
+  switch (o.t) {
+    case 'T': M.TN[o.n] = 0; M.TS[o.n] = 0; M.TA[o.n] = 0; break;
+    case 'C': M.CN[o.n] = 0; M.CS[o.n] = 0; break;
+    case 'D': case 'W': M[o.t][o.n] = 0; break;
+    default: wrBit(M, o, 0);
+  }
+}
+function contactVal(ins, M) {
+  let v;
+  switch (ins.kind) {
+    case 'NO': v = rdBit(M, ins.ops[0]); break;
+    case 'NC': v = !rdBit(M, ins.ops[0]); break;
+    case 'P': { const b = rdBit(M, ins.ops[0]); v = b && !ins.pv; ins.pv = b; break; }
+    case 'F': { const b = rdBit(M, ins.ops[0]); v = !b && !!ins.pv; ins.pv = b; break; }
+    default: {
+      const a = s16(rdWord(M, ins.ops[0])), b = s16(rdWord(M, ins.ops[1]));
+      v = ins.cmp === '=' ? a === b : ins.cmp === '<>' ? a !== b : ins.cmp === '>' ? a > b : ins.cmp === '<' ? a < b : ins.cmp === '>=' ? a >= b : a <= b;
+    }
+  }
+  ins.lv = v;
+  return v;
+}
+function toBCD(v) { let r = 0, sh = 0; while (v > 0) { r |= (v % 10) << sh; v = Math.floor(v / 10); sh += 4; } return r; }
+function execOut(ins, acc, M, dt) {
+  ins.li = acc;
+  const a = ins.ops;
+  let run = acc;
+  if (ins.pulse) { run = acc && !ins.pv; ins.pv = acc; }
+  switch (ins.base) {
+    case 'OUT':
+      if (a[0].t === 'T') {
+        const n = a[0].n, set = Math.max(0, rdWord(M, a[1]));
+        if (acc) {
+          M.TC[n] = 1;
+          if (!M.TS[n]) { M.TA[n] += dt; const cur = Math.floor(M.TA[n] / 100); if (cur >= set) { M.TN[n] = set; M.TS[n] = 1; } else M.TN[n] = cur; }
+        } else { M.TC[n] = 0; M.TA[n] = 0; M.TN[n] = 0; M.TS[n] = 0; }
+      } else if (a[0].t === 'C') {
+        const n = a[0].n, set = Math.max(0, rdWord(M, a[1]));
+        if (acc && !M.CC[n] && M.CN[n] < set) M.CN[n]++;
+        M.CC[n] = acc ? 1 : 0;
+        M.CS[n] = M.CN[n] >= set ? 1 : 0;
+      } else wrBit(M, a[0], acc);
+      break;
+    case 'SET': if (acc) wrBit(M, a[0], 1); break;
+    case 'RST': if (acc) rst(M, a[0]); break;
+    case 'PLS': { const on = acc && !ins.pv; ins.pv = acc; wrBit(M, a[0], on); break; }
+    case 'PLF': { const on = !acc && !!ins.pv; ins.pv = acc; wrBit(M, a[0], on); break; }
+    case 'ALT': if (run) wrBit(M, a[0], !rdBit(M, a[0])); break;
+    case 'MOV': if (run) wrWord(M, a[1], rdWord(M, a[0])); break;
+    case '+': if (run) { if (a.length === 2) wrWord(M, a[1], rdWord(M, a[1]) + rdWord(M, a[0])); else wrWord(M, a[2], rdWord(M, a[0]) + rdWord(M, a[1])); } break;
+    case '-': if (run) { if (a.length === 2) wrWord(M, a[1], rdWord(M, a[1]) - rdWord(M, a[0])); else wrWord(M, a[2], rdWord(M, a[0]) - rdWord(M, a[1])); } break;
+    case '*': if (run) {
+      const v = s16(rdWord(M, a[0])) * s16(rdWord(M, a[1]));
+      if (['D','W'].includes(a[2].t)) { wrWord(M, a[2], v & 0xFFFF); wrWord(M, offOp(a[2], 1, ins), v >> 16); }
+      else wrWord(M, a[2], v);
+    } break;
+    case '/': if (run) {
+      const d = s16(rdWord(M, a[1]));
+      if (d === 0) throw plcErr('4100', '0으로 나누었습니다 (OPERATION ERROR)', ins);
+      const n = s16(rdWord(M, a[0]));
+      wrWord(M, a[2], Math.trunc(n / d));
+      if (['D','W'].includes(a[2].t)) wrWord(M, offOp(a[2], 1, ins), n % d);
+    } break;
+    case 'INC': if (run) wrWord(M, a[0], rdWord(M, a[0]) + 1); break;
+    case 'DEC': if (run) wrWord(M, a[0], rdWord(M, a[0]) - 1); break;
+    case 'BCD': if (run) {
+      const v = s16(rdWord(M, a[0]));
+      if (v < 0 || v > 9999) throw plcErr('4100', `BCD 변환 범위(0~9999)를 벗어났습니다: ${v}`, ins);
+      wrWord(M, a[1], toBCD(v));
+    } break;
+    case 'BIN': if (run) {
+      const v = rdWord(M, a[0]) & 0xFFFF;
+      let r = 0, mul = 1;
+      for (let i = 0; i < 4; i++) { const dg = (v >> (i * 4)) & 15; if (dg > 9) throw plcErr('4100', 'BCD가 아닌 값입니다 (각 자리 0~9)', ins); r += dg * mul; mul *= 10; }
+      wrWord(M, a[1], r);
+    } break;
+    case 'BMOV': if (run) {
+      const cnt = rdWord(M, a[2]);
+      if (cnt < 0 || cnt > 4096) throw plcErr('4100', 'BMOV 개수(n)가 잘못되었습니다', ins);
+      const tmp = [];
+      for (let i = 0; i < cnt; i++) tmp.push(rdWord(M, offOp(a[0], i, ins)));
+      for (let i = 0; i < cnt; i++) wrWord(M, offOp(a[1], i, ins), tmp[i]);
+    } break;
+    case 'FMOV': if (run) {
+      const cnt = rdWord(M, a[2]), v = rdWord(M, a[0]);
+      if (cnt < 0 || cnt > 4096) throw plcErr('4100', 'FMOV 개수(n)가 잘못되었습니다', ins);
+      for (let i = 0; i < cnt; i++) wrWord(M, offOp(a[1], i, ins), v);
+    } break;
+    case 'ZRST': if (run) for (let i = a[0].n; i <= a[1].n; i++) rst(M, {t:a[0].t, n:i}); break;
+  }
+}
+function runBlock(blk, M, dt) {
+  let acc = false;
+  const bs = [], ms = [];
+  for (const ins of blk.il) {
+    switch (ins.op) {
+      case 'LD': bs.push(acc); acc = contactVal(ins, M); break;
+      case 'AND': { const v = contactVal(ins, M); acc = acc && v; break; }
+      case 'OR': { const v = contactVal(ins, M); acc = acc || v; break; }
+      case 'ANB': acc = bs.pop() && acc; break;
+      case 'ORB': acc = bs.pop() || acc; break;
+      case 'MPS': ms.push(acc); break;
+      case 'MRD': acc = ms[ms.length - 1]; break;
+      case 'MPP': acc = ms.pop(); break;
+      default: execOut(ins, acc, M, dt);
+    }
+  }
+}
+function scan(dt) {
+  const M = SIM.mem, sm = M.SM, t = SIM.t;
+  M.X.set(XIN);
+  sm[400] = 1; sm[401] = 0; sm[402] = SIM.first ? 1 : 0; sm[403] = SIM.first ? 0 : 1;
+  sm[409] = Math.floor(t / 5) % 2; sm[410] = Math.floor(t / 50) % 2; sm[411] = Math.floor(t / 100) % 2;
+  sm[412] = Math.floor(t / 500) % 2; sm[413] = Math.floor(t / 1000) % 2;
+  for (const b of SIM.prog.blocks) runBlock(b, M, dt);
+  M.SD[520] = Math.round(dt);
+  SIM.first = false;
+  SIM.scans++;
+}
+function tick() {
+  const now = performance.now();
+  let dt = now - SIM.last;
+  SIM.last = now;
+  dt = clamp(dt, 0, 1000);
+  if (SIM.state !== 'RUN') return;
+  SIM.t += dt;
+  try { scan(dt); }
+  catch (e) {
+    SIM.state = 'ERROR';
+    SIM.err = e;
+    SIM.mem.Y.fill(0);
+    const where = e.ins && e.ins.step != null ? `스텝 ${e.ins.step} (${e.ins.name})` : '';
+    log('err', `CPU 오류 ${e.code || ''}: ${e.message} ${where} — RESET을 누르세요`, e.ins ? e.ins.r : null, e.ins ? e.ins.c : null);
+    toast(`CPU 정지: ${e.message}`, 'err');
+    updateSimUI();
+  }
+}
+function resetSlots(prog) { for (const ins of prog.il) { ins.pv = false; ins.lv = false; ins.li = false; } }
+function simStart() {
+  if (SIM.on) return;
+  if (P.changed || !ED.prog) { if (!convert(true)) { toast('변환 오류를 먼저 고치세요 (출력 창 참고)', 'err'); return; } }
+  if (!ED.prog.il.length) { toast('프로그램이 비어 있습니다. 래더를 먼저 작성하세요', 'err'); return; }
+  SIM.prog = ED.prog; resetSlots(SIM.prog);
+  SIM.mem = memNew(); SIM.on = true; SIM.state = 'RUN'; SIM.first = true; SIM.t = 0; SIM.scans = 0; SIM.err = null;
+  SIM.last = performance.now();
+  SIM.iv = setInterval(tick, 10);
+  autoBanks();
+  ED.mode = 'monitor';
+  log('ok', `시뮬레이션 시작 — PLC 쓰기 완료 (${SIM.prog.endStep + 1}스텝), RUN`);
+  updateModeUI(); updateSimUI(); render();
+}
+function simStop() {
+  if (!SIM.on) return;
+  clearInterval(SIM.iv); SIM.on = false; SIM.state = 'OFF';
+  if (SIM.mem) SIM.mem.Y.fill(0);
+  ED.mode = 'write';
+  log('info', '시뮬레이션 종료');
+  updateModeUI(); updateSimUI(); updateIO(true); updateWatch(true); render();
+}
+function simSwitch(st) {
+  if (!SIM.on) return toast('먼저 시뮬레이션을 시작하세요');
+  if (st === 'RESET') {
+    SIM.mem = memNew(); resetSlots(SIM.prog); SIM.first = true; SIM.t = 0; SIM.scans = 0; SIM.err = null;
+    SIM.state = SIM.state === 'STOP' ? 'STOP' : 'RUN';
+    log('info', 'RESET — 디바이스 메모리 초기화');
+  } else if (st === 'RUN') {
+    if (SIM.state === 'ERROR') return toast('오류 상태입니다. RESET을 먼저 누르세요', 'err');
+    if (SIM.state !== 'RUN') { SIM.state = 'RUN'; SIM.first = true; SIM.last = performance.now(); log('info', 'STOP → RUN'); }
+  } else if (st === 'STOP') {
+    if (SIM.state === 'RUN') { SIM.state = 'STOP'; SIM.mem.Y.fill(0); log('info', 'RUN → STOP (출력 Y 모두 OFF)'); }
+  }
+  updateSimUI(); render();
+}
+function toggleSim() { SIM.on ? simStop() : simStart(); }
+
+/* =====================================================================
+   6. 래더 그리기 (캔버스)
+   ===================================================================== */
+const cv = $('#ladderCanvas'), ctx = cv.getContext('2d');
+const scr = $('#ladderScroll'), spacer = $('#ladderSpacer');
+const GEO = {};
+const TOP = 8;
+const COL = {ink:'#1a1f27', on:'#1f5fff', flow:'#0e9a52', dirty:'#dde2e8', cur:'#1f5fbf', sel:'rgba(31,95,191,.14)', step:'#6b7685', cm:'#2f6b45', val:'#0b46c9', guide:'#f1f3f6', err:'#d32f2f'};
+const F_DEV = '600 12px "JetBrains Mono", Consolas, monospace';
+const F_SM = '500 11px "JetBrains Mono", Consolas, monospace';
+const F_CM = '500 10.5px "IBM Plex Sans KR", "Malgun Gothic", sans-serif';
+const F_STEP = '500 11.5px "JetBrains Mono", Consolas, monospace';
+
+function layout() {
+  const W = scr.clientWidth || 800;
+  const lm = 50;
+  let cw = Math.floor((W - lm - 26) / (11 + 2.7));
+  cw = clamp(cw, 58, 92);
+  GEO.lm = lm; GEO.rail = lm + 4; GEO.cw = cw; GEO.ow = Math.round(cw * 2.7);
+  GEO.outX = GEO.rail + 11 * cw; GEO.right = GEO.outX + GEO.ow;
+  GEO.rowH = ED.showCm ? 80 : 56;
+  GEO.lineY = 28;
+  GEO.totalW = GEO.right + 16;
+  GEO.totalH = TOP + (P.rows.length + 1) * GEO.rowH + 60;
+  spacer.style.width = GEO.totalW + 'px';
+  spacer.style.height = GEO.totalH + 'px';
+}
+const cellX = c => GEO.rail + c * GEO.cw;
+const cellW = c => (c === OC ? GEO.ow : GEO.cw);
+const rowY = r => TOP + r * GEO.rowH;
+
+function seg(x1, y1, x2, y2, color, w) {
+  ctx.strokeStyle = color; ctx.lineWidth = w || 1.4;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+}
+function wire(x1, x2, y, on) { seg(x1, y, x2, y, on ? COL.flow : COL.ink, on ? 2.6 : 1.4); }
+function text(t, x, y, font, color, align) {
+  ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align || 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(t, x, y);
+}
+function fitText(t, x, y, maxW, size, weight, color, align) {
+  let s = size;
+  ctx.font = `${weight} ${s}px "JetBrains Mono", Consolas, monospace`;
+  while (s > 8 && ctx.measureText(t).width > maxW) { s -= 0.5; ctx.font = `${weight} ${s}px "JetBrains Mono", Consolas, monospace`; }
+  ctx.fillStyle = color; ctx.textAlign = align || 'center'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(t, x, y);
+}
+function wrapLines(t, maxW, maxLines) {
+  ctx.font = F_CM;
+  const out = [];
+  let line = '';
+  for (const ch of t) {
+    if (ctx.measureText(line + ch).width > maxW && line) {
+      out.push(line); line = ch.trim() ? ch : '';
+      if (out.length === maxLines) { let l = out[maxLines - 1]; while (l && ctx.measureText(l + '…').width > maxW) l = l.slice(0, -1); out[maxLines - 1] = l + '…'; return out; }
+    } else line += ch;
+  }
+  if (line) out.push(line);
+  return out;
+}
+function drawComment(dev, cx, y, maxW) {
+  if (!ED.showCm || !dev || !P.cm[dev]) return;
+  const lines = wrapLines(P.cm[dev], maxW, 2);
+  lines.forEach((l, i) => text(l, cx, y + 36 + i * 12, F_CM, COL.cm, 'center'));
+}
+function drawContactSym(x, w, y, kind, closed, fL, fR) {
+  const mid = x + w / 2, g = 6, h = 9;
+  wire(x, mid - g, y, fL);
+  wire(mid + g, x + w, y, fR);
+  if (closed) { ctx.fillStyle = COL.on; ctx.fillRect(mid - g, y - h, g * 2, h * 2); }
+  seg(mid - g, y - h, mid - g, y + h, COL.ink, 1.7);
+  seg(mid + g, y - h, mid + g, y + h, COL.ink, 1.7);
+  const ic = closed ? '#fff' : COL.ink;
+  if (kind === 'NC') seg(mid - g - 4, y + h + 2, mid + g + 4, y - h - 2, closed ? '#fff' : COL.ink, 1.5);
+  if (kind === 'P') { seg(mid, y + 6, mid, y - 6, ic, 1.4); seg(mid - 3, y - 3, mid, y - 6, ic, 1.4); seg(mid + 3, y - 3, mid, y - 6, ic, 1.4); }
+  if (kind === 'F') { seg(mid, y - 6, mid, y + 6, ic, 1.4); seg(mid - 3, y + 3, mid, y + 6, ic, 1.4); seg(mid + 3, y + 3, mid, y + 6, ic, 1.4); }
+}
+function drawBox(x, w, y, parts, active, fL, vals) {
+  const h = 10;
+  let size = 12;
+  const gap = 10;
+  const measure = () => { ctx.font = `600 ${size}px "JetBrains Mono", Consolas, monospace`; return parts.map(p => ctx.measureText(p).width); };
+  let ws = measure();
+  let tw = ws.reduce((a, b) => a + b, 0) + gap * (parts.length - 1);
+  while (tw + 18 > w - 14 && size > 8) { size -= 0.5; ws = measure(); tw = ws.reduce((a, b) => a + b, 0) + gap * (parts.length - 1); }
+  const bw = tw + 18, right = x + w - 6, left = right - bw;
+  wire(x, left, y, fL);
+  seg(right, y, x + w, y, COL.ink, 1.4);
+  if (active) { ctx.fillStyle = COL.on; ctx.fillRect(left, y - h, bw, h * 2); }
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(left + 4, y - h); ctx.lineTo(left, y - h); ctx.lineTo(left, y + h); ctx.lineTo(left + 4, y + h); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(right - 4, y - h); ctx.lineTo(right, y - h); ctx.lineTo(right, y + h); ctx.lineTo(right - 4, y + h); ctx.stroke();
+  let cx = left + 9;
+  ctx.font = `600 ${size}px "JetBrains Mono", Consolas, monospace`;
+  parts.forEach((p, i) => {
+    ctx.fillStyle = active ? '#fff' : (i === 0 ? '#0b3f9c' : COL.ink);
+    ctx.textAlign = 'left'; ctx.fillText(p, cx, y + 4);
+    if (vals && vals[i] != null) text(String(vals[i]), cx + ws[i] / 2, y + h + 12, F_SM, COL.val, 'center');
+    cx += ws[i] + gap;
+  });
+  return {left, right};
+}
+function drawCoil(x, w, y, label, setv, on, fL, val) {
+  const h = 9;
+  ctx.font = F_DEV;
+  const cw2 = Math.max(48, ctx.measureText(label).width + 26);
+  const r2 = x + w - 8, l2 = r2 - cw2;
+  wire(x, l2, y, fL);
+  seg(r2, y, x + w, y, COL.ink, 1.4);
+  if (on) { ctx.fillStyle = COL.on; ctx.beginPath(); ctx.ellipse((l2 + r2) / 2, y, cw2 / 2 - 2, h, 0, 0, Math.PI * 2); ctx.fill(); }
+  ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.ellipse(l2 + 9, y, 9, h + 1, 0, Math.PI * 0.62, Math.PI * 1.38); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(r2 - 9, y, 9, h + 1, 0, -Math.PI * 0.38, Math.PI * 0.38); ctx.stroke();
+  text(label, (l2 + r2) / 2, y + 4, F_DEV, on ? '#fff' : COL.ink, 'center');
+  if (setv) text(setv, (l2 + r2) / 2, y - h - 5, F_SM, '#3b4757', 'center');
+  if (val != null) text(String(val), (l2 + r2) / 2, y + h + 13, F_SM, COL.val, 'center');
+  return (l2 + r2) / 2;
+}
+function evalPower(blk) {
+  const pf = blk.pf, pw = new Map();
+  pw.set(pf.L, true);
+  for (const e of pf.edges) {
+    if (!pw.get(e.u)) continue;
+    let cond = e.h;
+    if (!cond) { const ins = ED.prog.cellIns.get(e.r * NCOL + e.c); cond = !!(ins && ins.lv); }
+    if (cond) pw.set(e.v, true);
+  }
+  return pw;
+}
+function fmtWordVal(M, o) { return o.t === 'K' || o.t === 'H' ? null : rdWord(M, o); }
+
+function render() {
+  if (!GEO.cw) layout();
+  const W = scr.clientWidth, H = scr.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) {
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  const sx = scr.scrollLeft, sy = scr.scrollTop;
+  ctx.save(); ctx.translate(-sx, -sy);
+  const rh = GEO.rowH, n = P.rows.length;
+  const r0 = Math.max(0, Math.floor((sy - TOP) / rh) - 1);
+  const r1 = Math.min(n, Math.ceil((sy + H - TOP) / rh) + 1);
+  const prog = ED.prog;
+  const mon = ED.mode === 'monitor' && SIM.on && prog && !P.changed && SIM.prog === prog;
+  const M = SIM.mem;
+
+  ctx.fillStyle = '#f2f4f7'; ctx.fillRect(sx, sy, GEO.lm, H);
+  seg(sx + GEO.lm, sy, sx + GEO.lm, sy + H, '#e1e5ea', 1);
+  for (let r = r0; r <= r1; r++) if (r < n && P.rows[r].d) { ctx.fillStyle = COL.dirty; ctx.fillRect(GEO.rail, rowY(r), GEO.right - GEO.rail, rh); }
+  if (ED.mode === 'write') {
+    for (let c = 1; c <= OC; c++) seg(cellX(c), Math.max(TOP, sy), cellX(c), Math.min(rowY(n) + rh, sy + H), COL.guide, 1);
+  }
+  if (hasSel()) {
+    const s = selRect();
+    ctx.fillStyle = COL.sel;
+    ctx.fillRect(cellX(s.c1), rowY(s.r1), cellX(s.c2) + cellW(s.c2) - cellX(s.c1), (s.r2 - s.r1 + 1) * rh);
+  }
+  const yEnd = rowY(n) + GEO.lineY;
+  const railOn = mon && SIM.state === 'RUN' && ED.flow;
+  seg(GEO.rail, TOP, GEO.rail, yEnd + 16, railOn ? COL.flow : COL.ink, 2.4);
+  seg(GEO.right, TOP, GEO.right, yEnd + 16, COL.ink, 1.2);
+
+  const pwCache = new Map();
+  const showStep = prog && !P.changed;
+  for (let r = r0; r < Math.min(r1 + 1, n); r++) {
+    const row = P.rows[r], y = rowY(r) + GEO.lineY;
+    if (showStep && prog.stepAtRow.has(r)) text(String(prog.stepAtRow.get(r)), GEO.lm - 7, y + 4, F_STEP, COL.step, 'right');
+    const blk = mon && prog.rowBlock[r] && !prog.rowBlock[r].bad ? prog.rowBlock[r] : null;
+    let pw = null, base = 0;
+    if (blk && ED.flow && SIM.state === 'RUN') { pw = pwCache.get(blk); if (!pw) { pw = evalPower(blk); pwCache.set(blk, pw); } base = (r - blk.s) * NCOL; }
+    const nodeOn = b => (pw ? !!pw.get(blk.pf.nodes[base + b]) : false);
+    for (let c = 0; c < OC; c++) {
+      const cell = row.c[c];
+      if (!cell) continue;
+      const x = cellX(c), w = GEO.cw, mid = x + w / 2;
+      const ins = mon ? prog.cellIns.get(r * NCOL + c) : null;
+      const fL = nodeOn(c);
+      if (cell.t === 'H') { wire(x, x + w, y, fL); continue; }
+      if (cell.t === 'C') {
+        let closed = false;
+        if (ins && M) { const b = rdBit(M, ins.ops[0]); closed = cell.k === 'NC' ? !b : b; }
+        drawContactSym(x, w, y, cell.k, closed, fL, fL && !!(ins && ins.lv));
+        fitText(cell.d, mid, y - 14, w - 4, 12, 600, COL.ink);
+        if (mon && ins && (ins.ops[0].t === 'T' || ins.ops[0].t === 'C') && M) text(String(rdWord(M, ins.ops[0])), mid, y + 22, F_SM, COL.val);
+        drawComment(cell.d, mid, y, w - 4);
+      } else if (cell.t === 'CMP') {
+        const on = !!(ins && ins.lv);
+        const bl = x + 4, br = x + w - 4, h = 10;
+        wire(x, bl, y, fL); wire(br, x + w, y, fL && on);
+        if (on) { ctx.fillStyle = COL.on; ctx.fillRect(bl, y - h, br - bl, h * 2); }
+        ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(bl + 3, y - h); ctx.lineTo(bl, y - h); ctx.lineTo(bl, y + h); ctx.lineTo(bl + 3, y + h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(br - 3, y - h); ctx.lineTo(br, y - h); ctx.lineTo(br, y + h); ctx.lineTo(br - 3, y + h); ctx.stroke();
+        fitText(`${cell.op} ${cell.a[0]} ${cell.a[1]}`, mid, y + 4, br - bl - 6, 11.5, 600, on ? '#fff' : COL.ink);
+        if (ins && M) {
+          const v = ins.ops.map(o => fmtWordVal(M, o)).filter(z => z != null);
+          if (v.length) fitText(v.join(' : '), mid, y + 23, w - 4, 11, 500, COL.val);
+        }
+        drawComment(cellDevice(cell), mid, y, w - 4);
+      } else {
+        text('?', mid, y + 4, F_DEV, COL.err);
+      }
+    }
+    const oc = row.c[OC];
+    if (oc) {
+      const x = cellX(OC), w = GEO.ow;
+      const ins = mon ? prog.cellIns.get(r * NCOL + OC) : null;
+      const fL = nodeOn(OC);
+      if (oc.t !== 'O') { text('?', x + w / 2, y + 4, F_DEV, COL.err); }
+      else if (oc.i === 'OUT') {
+        const d = oc.a[0];
+        let on = false, val = null;
+        if (ins && M) {
+          const o = ins.ops[0];
+          if (o.t === 'T') { on = !!M.TC[o.n]; val = M.TN[o.n]; }
+          else if (o.t === 'C') { on = !!M.CC[o.n]; val = M.CN[o.n]; }
+          else on = rdBit(M, o);
+        }
+        const cx = drawCoil(x, w, y, d, oc.a[1] || '', on, fL, val);
+        drawComment(d, cx, y, 120);
+      } else {
+        let vals = null, active = false;
+        if (ins && M) { active = !!ins.li; vals = [null, ...ins.ops.map(o => fmtWordVal(M, o))]; if (['SET','RST','PLS','PLF','ALT','ALTP'].includes(oc.i) && isBitWrite(ins.ops[0])) vals = null; }
+        const bx = drawBox(x, w, y, [oc.i, ...oc.a], active, fL, vals);
+        const dv = cellDevice(oc);
+        drawComment(dv, (bx.left + bx.right) / 2, y, bx.right - bx.left + 20);
+      }
+    }
+    for (let b = 1; b <= OC; b++) if (row.v[b]) seg(cellX(b), y, cellX(b), y + rh, nodeOn(b) ? COL.flow : COL.ink, nodeOn(b) ? 2.6 : 1.4);
+  }
+  if (r1 >= n) {
+    const y = yEnd;
+    if (showStep) text(String(prog.endStep), GEO.lm - 7, y + 4, F_STEP, COL.step, 'right');
+    drawBox(GEO.rail, GEO.outX - GEO.rail + GEO.ow, y, ['END'], false, false, null);
+  }
+  const cx = cellX(ED.c), cw = cellW(ED.c), cy = rowY(ED.r);
+  ctx.strokeStyle = ED.cmEdit ? '#2f8a4b' : COL.cur; ctx.lineWidth = 2;
+  ctx.strokeRect(cx + 1.5, cy + 1.5, cw - 3, rh - 3);
+  ctx.restore();
+}
+function ensureVisible() {
+  const rh = GEO.rowH, y = rowY(ED.r), x = cellX(ED.c), w = cellW(ED.c);
+  if (y < scr.scrollTop) scr.scrollTop = y - 6;
+  else if (y + rh > scr.scrollTop + scr.clientHeight) scr.scrollTop = y + rh - scr.clientHeight + 6;
+  if (x < scr.scrollLeft + GEO.lm) scr.scrollLeft = Math.max(0, x - GEO.lm - 6);
+  else if (x + w > scr.scrollLeft + scr.clientWidth) scr.scrollLeft = x + w - scr.clientWidth + 6;
+}
+function hitCell(clientX, clientY) {
+  const rect = scr.getBoundingClientRect();
+  const x = clientX - rect.left + scr.scrollLeft, y = clientY - rect.top + scr.scrollTop;
+  const r = clamp(Math.floor((y - TOP) / GEO.rowH), 0, P.rows.length);
+  let c;
+  if (x < GEO.rail) c = 0; else if (x >= GEO.outX) c = OC; else c = Math.floor((x - GEO.rail) / GEO.cw);
+  return {r, c:clamp(c, 0, OC)};
+}
+
+/* =====================================================================
+   7. 변환 실행 / 출력 창
+   ===================================================================== */
+function convert(quiet) {
+  if (SIM.on && ED.mode === 'monitor' && !P.changed) { if (!quiet) toast('변경된 내용이 없습니다'); return true; }
+  normalizeRows();
+  const prog = compile(P.rows);
+  layout();
+  if (prog.errors.length) {
+    log('err', `변환 오류 ${prog.errors.length}건 — 아래 항목을 누르면 위치로 이동합니다`);
+    prog.errors.slice(0, 30).forEach(e => log('err', `  행 ${e.r + 1} · 열 ${e.c + 1}: ${e.msg}`, e.r, e.c));
+    const e0 = prog.errors[0];
+    setCursor(e0.r, e0.c);
+    if (!quiet) toast('변환 오류가 있습니다. 출력 창을 확인하세요', 'err');
+    expandOut();
+    updateStatus();
+    return false;
+  }
+  ED.prog = prog;
+  P.rows.forEach(r => { r.d = false; });
+  P.changed = false;
+  const wasRunning = SIM.on;
+  if (wasRunning) { SIM.prog = prog; resetSlots(prog); log('ok', `변환 완료 + RUN 중 쓰기 (${prog.endStep + 1}스텝)`); }
+  else log('ok', `변환 완료 — ${prog.endStep + 1}스텝, 래더 블록 ${prog.blocks.length}개`);
+  if (!quiet && !wasRunning) toast(`변환 완료 (${prog.endStep + 1}스텝)`);
+  rebuildWatch(); renderList(); renderComments(); updateIOUsed();
+  render(); updateStatus(); scheduleLocalSave();
+  return true;
+}
+let outCount = 0;
+function log(kind, msg, r, c) {
+  const list = $('#outList');
+  const d = document.createElement('div');
+  d.className = kind;
+  const now = new Date();
+  const tm = document.createElement('span'); tm.className = 'tm'; tm.textContent = now.toTimeString().slice(0, 8);
+  d.appendChild(tm);
+  d.appendChild(document.createTextNode(msg));
+  if (r != null) { d.dataset.r = r; d.dataset.c = c; d.title = '눌러서 위치로 이동'; }
+  list.appendChild(d);
+  while (list.children.length > 200) list.removeChild(list.firstChild);
+  list.scrollTop = list.scrollHeight;
+  outCount++;
+  $('#outSummary').textContent = kind === 'err' ? '· 오류 있음' : '';
+}
+function expandOut() { $('#outPane').classList.remove('collapsed'); $('#outToggle').textContent = '접기'; requestAnimationFrame(() => { layout(); render(); }); }
+
+/* =====================================================================
+   8. 모니터 · I/O · 워치
+   ===================================================================== */
+const IO = {xBase:0, yBase:0x20, push:false};
+let usedX = new Set(), usedY = new Set();
+function buildBanks() {
+  const xs = $('#xBank'), ys = $('#yBank');
+  for (let b = 0; b < 0x200; b += 0x20) {
+    const lab = (t) => `${t}${b.toString(16).toUpperCase()}~${t}${(b + 0x1F).toString(16).toUpperCase()}`;
+    xs.add(new Option(lab('X'), b)); ys.add(new Option(lab('Y'), b));
+  }
+  xs.value = IO.xBase; ys.value = IO.yBase;
+  xs.onchange = () => { IO.xBase = +xs.value; buildIO(); };
+  ys.onchange = () => { IO.yBase = +ys.value; buildIO(); };
+}
+function buildIO() {
+  const xg = $('#xGrid'), yg = $('#yGrid');
+  xg.innerHTML = ''; yg.innerHTML = '';
+  for (let i = 0; i < 32; i++) {
+    const n = IO.xBase + i, nm = fmtDev('X', n);
+    const b = document.createElement('button');
+    b.className = 'xbtn'; b.dataset.n = n;
+    b.innerHTML = `<i></i><span>${nm}</span>`;
+    b.title = P.cm[nm] ? `${nm}: ${P.cm[nm]}` : nm;
+    b.addEventListener('pointerdown', ev => {
+      ev.preventDefault();
+      if (IO.push) { XIN[n] = 1; b.setPointerCapture && b.setPointerCapture(ev.pointerId); }
+      else XIN[n] = XIN[n] ? 0 : 1;
+      updateIO(true); updateWatch(true);
+    });
+    const release = () => { if (IO.push && XIN[n]) { XIN[n] = 0; updateIO(true); updateWatch(true); } };
+    b.addEventListener('pointerup', release);
+    b.addEventListener('pointercancel', release);
+    b.addEventListener('keydown', ev => { if (ev.key === ' ' || ev.key === 'Enter') { ev.preventDefault(); ev.stopPropagation(); XIN[n] = IO.push ? 1 : (XIN[n] ? 0 : 1); updateIO(true); } });
+    b.addEventListener('keyup', ev => { if ((ev.key === ' ' || ev.key === 'Enter') && IO.push) { XIN[n] = 0; updateIO(true); } });
+    xg.appendChild(b);
+    const yn = IO.yBase + i, ynm = fmtDev('Y', yn);
+    const l = document.createElement('div');
+    l.className = 'ylamp'; l.dataset.n = yn;
+    l.innerHTML = `<i></i><span>${ynm}</span>`;
+    l.title = P.cm[ynm] ? `${ynm}: ${P.cm[ynm]}` : ynm;
+    yg.appendChild(l);
+  }
+  updateIOUsed(); updateIO(true);
+}
+function updateIOUsed() {
+  usedX = new Set(); usedY = new Set();
+  if (ED.prog) for (const ins of ED.prog.il) for (const o of (ins.ops || [])) {
+    if (o.t === 'X') usedX.add(o.n); if (o.t === 'Y') usedY.add(o.n);
+    if (o.t === 'KN') for (let i = 0; i < o.k * 4; i++) (o.bt === 'X' ? usedX : o.bt === 'Y' ? usedY : new Set()).add(o.n + i);
+  }
+  $$('#xGrid .xbtn').forEach(b => { b.classList.toggle('used', usedX.has(+b.dataset.n)); const nm = fmtDev('X', +b.dataset.n); b.title = P.cm[nm] ? `${nm}: ${P.cm[nm]}` : nm; });
+  $$('#yGrid .ylamp').forEach(b => { b.classList.toggle('used', usedY.has(+b.dataset.n)); const nm = fmtDev('Y', +b.dataset.n); b.title = P.cm[nm] ? `${nm}: ${P.cm[nm]}` : nm; });
+}
+function autoBanks() {
+  const pick = set => { if (!set.size) return null; return Math.floor(Math.min(...set) / 0x20) * 0x20; };
+  const xb = pick(usedX), yb = pick(usedY);
+  let ch = false;
+  if (xb != null && (xb > IO.xBase + 0x1F || ![...usedX].some(n => n >= IO.xBase && n < IO.xBase + 32))) { IO.xBase = xb; ch = true; }
+  if (yb != null && ![...usedY].some(n => n >= IO.yBase && n < IO.yBase + 32)) { IO.yBase = yb; ch = true; }
+  if (ch) { $('#xBank').value = IO.xBase; $('#yBank').value = IO.yBase; buildIO(); }
+}
+const ioCache = {x:[], y:[]};
+function updateIO(force) {
+  const M = SIM.mem;
+  $$('#xGrid .xbtn').forEach((b, i) => { const v = XIN[+b.dataset.n]; if (force || ioCache.x[i] !== v) { b.classList.toggle('on', !!v); ioCache.x[i] = v; } });
+  $$('#yGrid .ylamp').forEach((l, i) => { const v = SIM.on && M ? M.Y[+l.dataset.n] : 0; if (force || ioCache.y[i] !== v) { l.classList.toggle('on', !!v); ioCache.y[i] = v; } });
+}
+let watchUser = [];
+let watchList = [];
+function rebuildWatch() {
+  const progDevs = ED.prog ? ED.prog.devs : [];
+  watchList = [...new Set([...progDevs, ...watchUser])];
+  renderWatch();
+}
+function renderWatch() {
+  const tb = $('#watchBody');
+  if (!watchList.length) { tb.innerHTML = '<tr><td colspan="4" class="muted" style="padding:8px 4px">변환하면 프로그램에서 쓰는 디바이스가 여기에 나옵니다.</td></tr>'; return; }
+  tb.innerHTML = watchList.map(d => `<tr data-dev="${esc(d)}"><td class="dv">${esc(d)}</td><td><button class="val" data-dev="${esc(d)}">-</button></td><td class="cm" title="${esc(P.cm[d] || '')}">${esc(P.cm[d] || '')}</td><td>${watchUser.includes(d) ? `<button class="rm" data-rm="${esc(d)}" title="목록에서 빼기">✕</button>` : ''}</td></tr>`).join('');
+  updateWatch(true);
+}
+function devState(o) {
+  const M = SIM.mem;
+  const bit = ['X','Y','M','L','B','SM'].includes(o.t);
+  if (o.t === 'X') return {bit:true, on:!!XIN[o.n], txt:XIN[o.n] ? 'ON' : 'OFF'};
+  if (!M) return {bit, on:false, txt:bit ? 'OFF' : (o.t === 'T' || o.t === 'C') ? 'OFF · 0' : '0'};
+  if (bit) { const v = rdBit(M, o); return {bit:true, on:v, txt:v ? 'ON' : 'OFF'}; }
+  if (o.t === 'T') return {bit:true, on:!!M.TS[o.n], txt:`${M.TS[o.n] ? 'ON' : 'OFF'} · ${M.TN[o.n]}`};
+  if (o.t === 'C') return {bit:true, on:!!M.CS[o.n], txt:`${M.CS[o.n] ? 'ON' : 'OFF'} · ${M.CN[o.n]}`};
+  return {bit:false, on:false, txt:String(rdWord(M, o))};
+}
+function updateWatch(force) {
+  $$('#watchBody .val').forEach(b => {
+    const o = parseOperand(b.dataset.dev);
+    if (o.err) return;
+    const st = devState(o);
+    if (force || b.textContent !== st.txt) { b.textContent = st.txt; b.classList.toggle('on', st.on); b.classList.toggle('word', !st.bit); }
+  });
+}
+function toggleDevice(dev) {
+  const o = parseOperand(dev);
+  if (o.err) return toast(o.err, 'err');
+  if (o.t === 'X') { XIN[o.n] = XIN[o.n] ? 0 : 1; updateIO(true); updateWatch(true); render(); return; }
+  if (!SIM.on) return toast('시뮬레이션 중에만 값을 바꿀 수 있습니다 (X 입력은 언제나 가능)');
+  if (['Y','M','L','B'].includes(o.t)) { wrBit(SIM.mem, o, !rdBit(SIM.mem, o)); updateWatch(true); updateIO(true); render(); return; }
+  modifyDialog(o.text);
+}
+function monitorAt(r, c) {
+  const cell = cellAt(r, c);
+  if (!cell || cell.t === 'H') return;
+  if (cell.t === 'C') return toggleDevice(cell.d);
+  const d = cellDevice(cell);
+  if (!d) return;
+  const o = parseOperand(d);
+  if (['X','Y','M','L','B'].includes(o.t)) toggleDevice(d); else modifyDialog(d);
+}
+
+/* =====================================================================
+   9. UI: 메뉴 / 툴바 / 탭 / 상태
+   ===================================================================== */
+const MENU = [
+  {t:'프로젝트', items:[['새 프로젝트','newProject'],['열기 · 예제…','openDialog','Ctrl+O'],null,['저장','save','Ctrl+S'],['다른 이름으로 저장…','saveAs'],null,['파일로 내보내기 (.json)','exportFile'],['파일에서 불러오기…','importFile']]},
+  {t:'편집', items:[['되돌리기','undo','Ctrl+Z'],['다시 실행','redo','Ctrl+Y'],null,['잘라내기','cut','Ctrl+X'],['복사','copy','Ctrl+C'],['붙여넣기','paste','Ctrl+V'],['삭제','del','Del'],null,['행 삽입','insRow','Shift+Ins'],['행 삭제','delRow','Shift+Del'],null,['디바이스 코멘트 편집 모드','commentMode']]},
+  {t:'보기', items:[['코멘트 표시','toggleCm'],['전류 흐름 표시 (모니터)','toggleFlow'],null,['래더','tabLadder'],['명령 리스트','tabList','Alt+F1'],['디바이스 코멘트','tabComments']]},
+  {t:'변환', items:[['변환','convert','F4']]},
+  {t:'디버그', items:[['시뮬레이션 시작 / 정지','toggleSim'],null,['쓰기 모드','modeWrite','F2'],['읽기 모드','modeRead','Shift+F2'],['모니터 모드','modeMonitor','F3'],null,['현재값 변경…','modify']]},
+  {t:'도움말', items:[['단축키 · 입력 방법','helpKeys','F1'],['지원 명령어','helpIns'],['PLC 파라미터 (디바이스 범위)','param'],null,['디바이스 설명 페이지 (X·Y·M·T…)','devGuide','새 탭'],['메인 페이지','goHome']]},
+];
+const CHECKS = {toggleCm:() => ED.showCm, toggleFlow:() => ED.flow, commentMode:() => ED.cmEdit};
+function buildMenus() {
+  const bar = $('#menubar');
+  MENU.forEach(m => {
+    const wrap = document.createElement('div'); wrap.className = 'menu';
+    const b = document.createElement('button'); b.textContent = m.t; b.setAttribute('aria-haspopup', 'true');
+    const drop = document.createElement('div'); drop.className = 'drop';
+    m.items.forEach(it => {
+      if (!it) { drop.appendChild(document.createElement('hr')); return; }
+      const ib = document.createElement('button');
+      ib.dataset.cmd = it[1];
+      ib.innerHTML = `<span class="ck"></span><span>${esc(it[0])}</span>${it[2] ? `<span class="sc">${esc(it[2])}</span>` : ''}`;
+      drop.appendChild(ib);
+    });
+    b.addEventListener('click', ev => { ev.stopPropagation(); const open = wrap.classList.contains('open'); closeMenus(); if (!open) openMenu(wrap); });
+    b.addEventListener('mouseenter', () => { if ($('#menubar .menu.open') && !wrap.classList.contains('open')) { closeMenus(); openMenu(wrap); } });
+    wrap.append(b, drop); bar.appendChild(wrap);
+  });
+  document.addEventListener('click', closeMenus);
+}
+function openMenu(w) {
+  w.classList.add('open');
+  w.querySelectorAll('.drop button').forEach(ib => { const f = CHECKS[ib.dataset.cmd]; ib.querySelector('.ck').textContent = f && f() ? '✓' : ''; });
+}
+function closeMenus() { $$('#menubar .menu.open').forEach(m => m.classList.remove('open')); }
+
+function icon(kind) {
+  const w = 'stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"';
+  const s = d => `<svg viewBox="0 0 34 20" width="34" height="20" aria-hidden="true"><path d="${d}" ${w}/></svg>`;
+  const NO = 'M1 10H12M22 10H33M12 3V17M22 3V17';
+  const ORC = 'M3 2V13H12M22 13H31V2M12 7V19M22 7V19';
+  switch (kind) {
+    case 'NO': return s(NO);
+    case 'NC': return s(NO + 'M9 18L25 2');
+    case 'P': return s(NO + 'M17 15V5M14 8L17 5L20 8');
+    case 'F': return s(NO + 'M17 5V15M14 12L17 15L20 12');
+    case 'NOR': return s(ORC);
+    case 'NCR': return s(ORC + 'M9 20L25 6');
+    case 'PR': return s(ORC + 'M17 17V9M14 12L17 9L20 12');
+    case 'FR': return s(ORC + 'M17 9V17M14 14L17 17L20 14');
+    case 'COIL': return s('M1 10H10M24 10H33M13 3Q7 10 13 17M21 3Q27 10 21 17');
+    case 'APP': return s('M1 10H7M27 10H33M10 3H7V17H10M24 3H27V17H24');
+    case 'H': return s('M2 10H32');
+    case 'V': return s('M17 1V19M5 10H13');
+    case 'DH': return s('M2 10H32M12 4L22 16M22 4L12 16');
+    case 'DV': return s('M17 1V19M11 5L23 15M23 5L11 15');
+  }
+  return '';
+}
+const SYMBAR = [
+  ['NO','F5','a접점 (F5)'],['NOR','sF5','a접점 OR (Shift+F5)'],['NC','F6','b접점 (F6)'],['NCR','sF6','b접점 OR (Shift+F6)'],
+  ['P','sF7','상승 펄스 (Shift+F7)'],['F','sF8','하강 펄스 (Shift+F8)'],['PR','aF7','상승 펄스 OR (Alt+F7)'],['FR','aF8','하강 펄스 OR (Alt+F8)'],
+  ['COIL','F7','코일 (F7)'],['APP','F8','응용 명령 (F8)'],
+  ['H','F9','가로선 (F9)'],['V','sF9','세로선: 커서 왼쪽 아래로 (Shift+F9 / F10)'],['DH','cF9','가로선 삭제 (Ctrl+F9)'],['DV','cF10','세로선 삭제 (Ctrl+F10)'],
+];
+function buildSymbar() {
+  const tb = $('#tb2');
+  SYMBAR.forEach(([k, key, title], i) => {
+    if (i === 10) { const sp = document.createElement('span'); sp.className = 'sep'; tb.appendChild(sp); }
+    const b = document.createElement('button');
+    b.className = 'symbtn' + (k[0] === 'D' && k.length === 2 ? ' del' : '');
+    b.title = title; b.setAttribute('aria-label', title);
+    b.innerHTML = icon(k) + `<span>${key}</span>`;
+    b.addEventListener('mousedown', ev => ev.preventDefault());
+    b.addEventListener('click', () => { symAction(k); scr.focus({preventScroll:true}); });
+    tb.appendChild(b);
+  });
+  const sp = document.createElement('span'); sp.className = 'grow'; tb.appendChild(sp);
+  const cmb = document.createElement('button');
+  cmb.className = 'btn'; cmb.id = 'btnCmEdit'; cmb.dataset.cmd = 'commentMode'; cmb.textContent = '코멘트 편집';
+  cmb.title = '켜면 래더 요소를 더블클릭/Enter 해서 디바이스 코멘트를 입력합니다';
+  tb.appendChild(cmb);
+}
+function symAction(k) {
+  if (k === 'H') return cmdHLine();
+  if (k === 'V') return cmdVLine();
+  if (k === 'DH') return cmdDelH();
+  if (k === 'DV') return cmdDelV();
+  openInput(k);
+}
+function switchTab(t) {
+  ED.tab = t;
+  $$('#tabs .tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+  $('#viewLadder').classList.toggle('active', t === 'ladder');
+  $('#viewList').classList.toggle('active', t === 'list');
+  $('#viewComments').classList.toggle('active', t === 'comments');
+  $$('#nav [data-nav]').forEach(b => b.classList.toggle('sel', b.dataset.nav === t));
+  if (t === 'ladder') { closeInput(); requestAnimationFrame(() => { layout(); render(); scr.focus({preventScroll:true}); }); }
+  if (t === 'list') renderList();
+  if (t === 'comments') renderComments();
+}
+const MODE_NAME = {write:'쓰기', read:'읽기', monitor:'모니터 실행중'};
+function setMode(m) {
+  if (m === 'monitor') {
+    if (!SIM.on) { simStart(); return; }
+    if (P.changed) { if (!convert(true)) { toast('변환 오류가 있어 모니터로 바꿀 수 없습니다', 'err'); return; } }
+  }
+  ED.mode = m;
+  closeInput();
+  updateModeUI(); render();
+}
+function updateModeUI() {
+  $$('#modeSeg button').forEach(b => b.classList.toggle('active', b.dataset.mode === ED.mode));
+  updateStatus();
+}
+function updateStatus() {
+  const steps = ED.prog && !P.changed ? ED.prog.endStep + 1 : null;
+  $('#tabLadderBtn').textContent = `[PRG]${MODE_NAME[ED.mode]} MAIN${steps ? ' ' + steps + '스텝' : ''}`;
+  const st = $('#stMode');
+  st.textContent = `${MODE_NAME[ED.mode]} 모드${ED.cmEdit ? ' · 코멘트 편집' : ''}`;
+  st.classList.toggle('mon', ED.mode === 'monitor');
+  $('#stSteps').textContent = steps ? `${steps} / 30720 스텝` : '— 스텝';
+  const cv2 = $('#stConv');
+  cv2.textContent = P.changed ? '미변환 (F4)' : '변환됨';
+  cv2.classList.toggle('dirty', P.changed);
+  $('#stPos').textContent = ED.r >= P.rows.length ? `END 행 · 열 ${ED.c + 1}` : `행 ${ED.r + 1} · 열 ${ED.c + 1}`;
+  $('#ttlInfo').textContent = `— ${P.name}${P.changed ? ' *' : ''}`;
+  $('#btnCmEdit') && $('#btnCmEdit').classList.toggle('primary', ED.cmEdit);
+  $('#chkCm').checked = ED.showCm; $('#chkFlow').checked = ED.flow;
+}
+function updateSimUI() {
+  const on = SIM.on;
+  ['#btnSim', '#simBig'].forEach(s => { const b = $(s); b.textContent = on ? '■ 시뮬레이션 정지' : '▶ 시뮬레이션 시작'; b.classList.toggle('running', on); });
+  $('#ledPow').classList.toggle('on', on);
+  $('#ledRun').classList.toggle('on', on && SIM.state === 'RUN');
+  const le = $('#ledErr'); le.classList.toggle('on', SIM.state === 'ERROR'); le.classList.toggle('blink', SIM.state === 'ERROR');
+  $('#simState').textContent = on ? SIM.state : '꺼짐';
+  $('#swRun').classList.toggle('active', on && SIM.state === 'RUN');
+  $('#swStop').classList.toggle('active', on && SIM.state === 'STOP');
+  if (!on) $('#simInfo').textContent = '시뮬레이션을 시작하면 변환된 프로그램이 가상 CPU에 쓰여 실행됩니다.';
+}
+function updateSimInfo() {
+  if (!SIM.on) return;
+  const M = SIM.mem;
+  $('#ledUsr').classList.toggle('on', !!(M && M.SM[412] && SIM.state === 'RUN'));
+  $('#simInfo').textContent = `${SIM.state === 'RUN' ? '실행 중' : SIM.state === 'STOP' ? '정지(STOP)' : '오류 정지'} · 스캔 ${SIM.scans.toLocaleString()}회 · ${(SIM.t / 1000).toFixed(1)}초 · 스캔 주기 약 10ms`;
+}
+
+/* ---- 입력 대화상자 ---- */
+const inDlg = $('#inDlg'), inSym = $('#inSym'), inText = $('#inText'), inHint = $('#inHint');
+function buildSymSelect() { Object.entries(SYM).forEach(([k, v]) => inSym.add(new Option(`${v.label}  (${v.key})`, k))); }
+function openInput(symId, prefill) {
+  if (ED.tab !== 'ladder') switchTab('ladder');
+  if (ED.cmEdit) return openCommentAt();
+  if (ED.mode !== 'write') return toast(ED.mode === 'monitor' ? '모니터 모드입니다. F2(쓰기 모드)로 바꾸고 입력하세요' : '읽기 모드입니다. F2(쓰기 모드)로 바꾸세요', 'err');
+  const cell = cellAt(ED.r, ED.c);
+  const ci = cellToInput(cell);
+  let sym = symId, txt = '';
+  if (prefill != null) { txt = prefill; if (!sym) sym = ED.c === OC ? 'COIL' : 'NO'; }
+  else if (!sym) { sym = ci ? ci.sym : (ED.c === OC ? 'COIL' : 'NO'); txt = ci ? ci.text : ''; }
+  else if (ci) {
+    const fam = s => (SYM[s].out ? 'out' : 'in');
+    if (fam(sym) === fam(ci.sym)) txt = ci.text;
+    else if (cell.t === 'C' && sym === 'COIL') txt = cell.d;
+  }
+  inSym.value = sym; inText.value = txt;
+  inDlg.hidden = false;
+  const host = $('#viewLadder').getBoundingClientRect();
+  const x = cellX(ED.c) - scr.scrollLeft, y = rowY(ED.r) + GEO.rowH - scr.scrollTop + 2;
+  const dw = inDlg.offsetWidth, dh = inDlg.offsetHeight;
+  let left = clamp(x, 8, host.width - dw - 8), top = y;
+  if (top + dh > host.height - 6) top = Math.max(6, rowY(ED.r) - scr.scrollTop - dh - 2);
+  inDlg.style.left = left + 'px'; inDlg.style.top = top + 'px';
+  updateHint();
+  inText.focus();
+  const L = inText.value.length; inText.setSelectionRange(L, L);
+}
+function closeInput() { if (!inDlg.hidden) { inDlg.hidden = true; } }
+function updateHint() {
+  const v = inText.value.trim();
+  if (!v) { inHint.className = ''; inHint.textContent = SYM[inSym.value].out ? '예: Y20  /  T0 K30  /  MOV K10 D0  /  SET M0' : '예: X0  /  LDI X1  /  OR Y20  /  = D0 K10'; return; }
+  const res = parseInput(v, inSym.value);
+  inHint.className = res.err ? 'err' : '';
+  inHint.textContent = describeRes(res);
+}
+function okInput() {
+  const res = parseInput(inText.value, inSym.value);
+  if (res.err) { inHint.className = 'err'; inHint.textContent = res.err; inText.focus(); return; }
+  closeInput();
+  placeParsed(res);
+  scr.focus({preventScroll:true});
+}
+inText.addEventListener('input', updateHint);
+inSym.addEventListener('change', () => { updateHint(); inText.focus(); });
+$('#inOk').addEventListener('click', okInput);
+$('#inCancel').addEventListener('click', () => { closeInput(); scr.focus({preventScroll:true}); });
+inDlg.addEventListener('keydown', ev => {
+  ev.stopPropagation();
+  if (ev.key === 'Enter') { ev.preventDefault(); okInput(); }
+  else if (ev.key === 'Escape') { ev.preventDefault(); closeInput(); scr.focus({preventScroll:true}); }
+  else if (/^F\d+$/.test(ev.key)) {
+    ev.preventDefault();
+    const m = {F5:ev.shiftKey ? 'NOR' : 'NO', F6:ev.shiftKey ? 'NCR' : 'NC', F7:ev.shiftKey ? 'P' : ev.altKey ? 'PR' : 'COIL', F8:ev.shiftKey ? 'F' : ev.altKey ? 'FR' : 'APP'}[ev.key];
+    if (m) { inSym.value = m; updateHint(); }
+  }
+});
+
+/* ---- 모달 ---- */
+let modalClose = null;
+function showModal(title, html, buttons, onOpen) {
+  $('#mTitle').textContent = title;
+  $('#mBody').innerHTML = html;
+  const foot = $('#mFoot'); foot.innerHTML = '';
+  const close = () => { $('#modalBack').classList.remove('show'); modalClose = null; if (ED.tab === 'ladder') scr.focus({preventScroll:true}); };
+  (buttons || [{label:'닫기'}]).forEach(bt => {
+    const b = document.createElement('button');
+    b.className = 'btn' + (bt.primary ? ' primary' : '') + (bt.danger ? ' danger' : '');
+    b.textContent = bt.label;
+    b.addEventListener('click', () => { if (bt.onClick && bt.onClick() === false) return; close(); });
+    foot.appendChild(b);
+  });
+  $('#modalBack').classList.add('show');
+  modalClose = close;
+  if (onOpen) onOpen($('#mBody'));
+  const f = $('#mBody input, #mBody textarea'); if (f) f.focus();
+  return close;
+}
+$('#modalBack').addEventListener('mousedown', ev => { if (ev.target.id === 'modalBack' && modalClose) modalClose(); });
+
+let toastT = 0;
+function toast(msg, kind) {
+  const t = $('#toast');
+  t.textContent = msg; t.className = 'show' + (kind === 'err' ? ' err' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => { t.className = ''; }, 2600);
+}
+
+/* ---- 코멘트 ---- */
+function setComment(dev, val) {
+  const o = parseOperand(dev);
+  if (o.err || o.t === 'K' || o.t === 'H') return toast(o.err || '상수에는 코멘트를 달 수 없습니다', 'err');
+  const v = String(val || '').trim().slice(0, 32);
+  if (v) P.cm[o.text] = v; else delete P.cm[o.text];
+  scheduleLocalSave(); render(); updateIOUsed();
+  if (ED.tab === 'comments') renderComments();
+  if (ED.tab === 'list') renderList();
+  renderWatch();
+}
+function openCommentAt() {
+  const cell = cellAt(ED.r, ED.c);
+  const dev = cellDevice(cell) || '';
+  showModal('디바이스 코멘트 입력', `
+    <div class="field"><label for="cmDev">디바이스</label><input id="cmDev" value="${esc(dev)}" style="font-family:var(--font-mono);text-transform:uppercase"></div>
+    <div class="field"><label for="cmText">코멘트 (최대 32자)</label><input id="cmText" maxlength="32" value="${esc(P.cm[dev] || '')}"></div>
+    <p class="muted">코멘트는 래더 요소 아래와 I/O 패널, 디바이스 모니터에 표시됩니다.</p>`,
+    [{label:'취소'}, {label:'저장', primary:true, onClick:() => { const d = $('#cmDev').value.trim(); if (!d) return false; setComment(d, $('#cmText').value); }}],
+    body => { const t = body.querySelector(dev ? '#cmText' : '#cmDev'); setTimeout(() => t.focus(), 0); body.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#mFoot .primary').click(); } }); });
+}
+function renderComments() {
+  const devs = new Set(Object.keys(P.cm));
+  if (ED.prog) ED.prog.devs.forEach(d => { if (!/^K\d/.test(d)) devs.add(d); });
+  const list = [...devs].sort(devCompare);
+  const tb = $('#cmBody');
+  tb.innerHTML = list.map(d => `<tr><td class="ops">${esc(d)}</td><td><input data-cm="${esc(d)}" maxlength="32" value="${esc(P.cm[d] || '')}" placeholder="코멘트 입력" aria-label="${esc(d)} 코멘트"></td><td>${P.cm[d] ? `<button class="btn" data-cmdel="${esc(d)}">지우기</button>` : ''}</td></tr>`).join('') +
+    `<tr><td><input id="cmNewDev" placeholder="예: X3" style="font-family:var(--font-mono);text-transform:uppercase" aria-label="새 디바이스"></td><td><input id="cmNewText" placeholder="코멘트" maxlength="32" aria-label="새 코멘트"></td><td><button class="btn primary" id="cmNewAdd">추가</button></td></tr>`;
+}
+$('#cmBody').addEventListener('change', ev => { const d = ev.target.dataset.cm; if (d) setComment(d, ev.target.value); });
+$('#cmBody').addEventListener('click', ev => {
+  const del = ev.target.dataset.cmdel;
+  if (del) { setComment(del, ''); return; }
+  if (ev.target.id === 'cmNewAdd') { const d = $('#cmNewDev').value.trim(); if (d) setComment(d, $('#cmNewText').value); }
+});
+$('#cmBody').addEventListener('keydown', ev => { if (ev.key === 'Enter' && (ev.target.id === 'cmNewText' || ev.target.id === 'cmNewDev')) $('#cmNewAdd').click(); });
+
+/* ---- 명령 리스트 ---- */
+function renderList() {
+  const tb = $('#ilBody');
+  if (!ED.prog || P.changed) {
+    tb.innerHTML = `<tr><td colspan="4" class="empty">${ED.prog ? '래더가 바뀌었습니다. 변환(F4)하면 최신 명령 리스트가 나옵니다.' : '변환(F4)하면 명령 리스트가 나타납니다.'}</td></tr>`;
+    if (!ED.prog) return;
+  }
+  const rows = ED.prog.il.map(ins => {
+    const ops = (ins.ops || []).map(o => esc(o.text)).join('&nbsp;&nbsp;');
+    const dv = (ins.ops || []).find(o => P.cm[o.text]);
+    return `<tr class="click" data-r="${ins.r != null ? ins.r : ''}" data-c="${ins.c != null ? ins.c : ''}"><td class="num">${ins.step}</td><td class="mn">${esc(ins.name)}</td><td class="ops">${ops}</td><td>${dv ? esc(P.cm[dv.text]) : ''}</td></tr>`;
+  });
+  rows.push(`<tr><td class="num">${ED.prog.endStep}</td><td class="mn">END</td><td></td><td></td></tr>`);
+  tb.innerHTML = (P.changed ? tb.innerHTML : '') + rows.join('');
+}
+$('#ilBody').addEventListener('click', ev => {
+  const tr = ev.target.closest('tr[data-r]');
+  if (!tr || tr.dataset.r === '' || P.changed) return;
+  switchTab('ladder'); setCursor(+tr.dataset.r, +tr.dataset.c);
+});
+
+/* ---- 현재값 변경 ---- */
+function modifyDialog(dev) {
+  showModal('현재값 변경', `
+    <div class="field"><label for="mdDev">디바이스</label><input id="mdDev" value="${esc(dev || '')}" placeholder="예: D0, M10, X3" style="font-family:var(--font-mono);text-transform:uppercase"></div>
+    <div class="field"><label for="mdVal">값 (워드 디바이스는 숫자, 비트는 아래 ON/OFF)</label><input id="mdVal" placeholder="예: 100"></div>
+    <p class="muted">비트(X Y M L B)는 ON/OFF, 워드(D W T C 현재값)는 숫자를 씁니다. X는 시뮬레이션이 꺼져 있어도 바꿀 수 있습니다.</p>`,
+    [
+      {label:'ON', onClick:() => setVal(true)},
+      {label:'OFF', onClick:() => setVal(false)},
+      {label:'값 설정', primary:true, onClick:() => setVal(null)},
+      {label:'닫기'},
+    ], body => { setTimeout(() => (dev ? $('#mdVal') : $('#mdDev')).focus(), 0); });
+  function setVal(bit) {
+    const o = parseOperand($('#mdDev').value.trim());
+    if (o.err) { toast(o.err, 'err'); return false; }
+    if (o.t === 'X') { if (bit === null) { toast('X는 ON/OFF로 바꾸세요', 'err'); return false; } XIN[o.n] = bit ? 1 : 0; updateIO(true); updateWatch(true); render(); return; }
+    if (!SIM.on) { toast('시뮬레이션 중에만 바꿀 수 있습니다', 'err'); return false; }
+    const M = SIM.mem;
+    if (['Y','M','L','B','SM'].includes(o.t)) { if (bit === null) { toast('비트 디바이스는 ON/OFF로 바꾸세요', 'err'); return false; } wrBit(M, o, bit); }
+    else if (o.t === 'K' || o.t === 'H') { toast('상수는 바꿀 수 없습니다', 'err'); return false; }
+    else {
+      if (bit !== null) { toast('워드 디바이스는 숫자를 입력하고 "값 설정"을 누르세요', 'err'); return false; }
+      const v = parseInt($('#mdVal').value, 10);
+      if (isNaN(v) || v < -32768 || v > 32767) { toast('-32768 ~ 32767 사이 숫자를 입력하세요', 'err'); return false; }
+      wrWord(M, o, v);
+    }
+    updateWatch(true); updateIO(true); render();
+  }
+}
+
+/* =====================================================================
+   10. 저장 / 불러오기 / 예제
+   ===================================================================== */
+const LS_KEY = 'q03udv-ladder:current';
+const BK_KEY = 'q03udv-ladder:backup';
+function readBackup() {
+  try { const o = JSON.parse(localStorage.getItem(BK_KEY) || 'null'); return o && Array.isArray(o.rows) ? o : null; }
+  catch (e) { return null; }
+}
+function serialize() {
+  return {format:'q03udv-ladder', version:1, name:P.name, rows:P.rows.map(r => ({c:r.c, v:r.v.map((b, i) => (b ? i : -1)).filter(i => i > 0)})), cm:P.cm};
+}
+function sanitizeCell(x) {
+  if (!x || typeof x !== 'object') return null;
+  if (x.t === 'H') return {t:'H'};
+  if (x.t === 'C' && ['NO','NC','P','F'].includes(x.k) && typeof x.d === 'string') return {t:'C', k:x.k, d:x.d.slice(0, 16)};
+  if (x.t === 'CMP' && typeof x.op === 'string' && Array.isArray(x.a)) return {t:'CMP', op:x.op.slice(0, 2), a:x.a.slice(0, 2).map(String)};
+  if (x.t === 'O' && typeof x.i === 'string' && Array.isArray(x.a)) return {t:'O', i:x.i.slice(0, 8), a:x.a.slice(0, 4).map(String)};
+  return null;
+}
+function loadProject(obj, opts) {
+  if (!obj || obj.format !== 'q03udv-ladder' || !Array.isArray(obj.rows)) throw new Error('이 프로그램의 프로젝트 파일이 아닙니다');
+  if (SIM.on) simStop();
+  P = {name:String(obj.name || '새 프로젝트').slice(0, 60), id:(opts && opts.id) || null, rows:[], cm:{}, changed:true};
+  for (const r of obj.rows.slice(0, 4000)) {
+    const row = newRow();
+    if (Array.isArray(r.c)) for (let c = 0; c < NCOL; c++) row.c[c] = sanitizeCell(r.c[c]);
+    if (Array.isArray(r.v)) for (const b of r.v) if (b >= 1 && b <= OC) row.v[b] = true;
+    P.rows.push(row);
+  }
+  if (obj.cm && typeof obj.cm === 'object') for (const [k, v] of Object.entries(obj.cm)) { const o = parseOperand(k); if (!o.err && typeof v === 'string') P.cm[o.text] = v.slice(0, 32); }
+  ED.prog = null; ED.undo = []; ED.redo = []; ED.r = 0; ED.c = 0; ED.anchor = null; ED.mode = 'write'; ED.cmEdit = false;
+  watchUser = [];
+  layout();
+  const ok = compile(P.rows).errors.length === 0 && P.rows.length > 0;
+  if (ok) convert(true); else { rebuildWatch(); renderList(); }
+  scr.scrollTop = 0; scr.scrollLeft = 0;
+  updateModeUI(); updateIOUsed(); render(); renderComments();
+  if (!(opts && opts.keepSave)) scheduleLocalSave();
+}
+let lsT = 0;
+function scheduleLocalSave() {
+  clearTimeout(lsT);
+  lsT = setTimeout(() => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(Object.assign(serialize(), {id:P.id}))); setSaveState(P.changed ? '이 브라우저에 자동 저장됨 (미변환)' : '이 브라우저에 자동 저장됨'); }
+    catch (e) { setSaveState('자동 저장을 쓸 수 없는 환경입니다 — 파일로 내보내기를 쓰세요'); }
+  }, 400);
+}
+function setSaveState(t) { $('#stSave').textContent = t; }
+
+const CLOUD = {db:null, uid:null, dl:null};
+async function initCapabilities() {
+  if (!window.claude || typeof window.claude.use !== 'function') return;
+  try {
+    const [db, user, dl] = await Promise.all([claude.use('db'), claude.use('user'), claude.use('downloads')]);
+    CLOUD.dl = dl || null;
+    if (db && user) { const uid = await user.id(); if (uid) { CLOUD.db = db; CLOUD.uid = uid; } }
+  } catch (e) { /* 저장 기능 없이 동작 */ }
+  if (CLOUD.db) setSaveState('내 계정에 저장 가능 (Ctrl+S)');
+}
+const projCol = () => CLOUD.db.collection('data/users/' + CLOUD.uid);
+function withTimeout(p, ms) { return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('시간 초과')), ms))]); }
+let saving = false;
+async function save(asNew) {
+  scheduleLocalSave();
+  if (!CLOUD.db) { toast('이 브라우저에 저장했습니다. 다른 기기로 옮기려면 "파일로 내보내기"를 쓰세요'); return; }
+  if (saving) return toast('저장 중입니다…');
+  if (asNew || !P.id) P.id = 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  saving = true; setSaveState('저장 중…');
+  try {
+    await withTimeout(projCol().doc(P.id).set({name:P.name, updated:Date.now(), rows:P.rows.length, data:JSON.stringify(serialize())}), 12000);
+    setSaveState(`내 계정에 저장됨 · ${new Date().toTimeString().slice(0, 5)}`);
+    toast(`"${P.name}" 저장 완료`);
+  } catch (e) {
+    setSaveState('계정 저장 실패 — 이 브라우저에는 저장됨');
+    toast('계정 저장에 실패했습니다: ' + (e.code === 'quota_exceeded' ? '저장 공간이 가득 찼습니다' : (e.message || e.code)), 'err');
+  } finally { saving = false; }
+}
+function saveAs() {
+  showModal('다른 이름으로 저장', `<div class="field"><label for="saName">프로젝트 이름</label><input id="saName" maxlength="60" value="${esc(P.name)}"></div>${CLOUD.db ? '<p class="muted">내 계정에 새 프로젝트로 저장합니다. 다른 기기에서도 열 수 있습니다.</p>' : '<p class="muted">이 환경에서는 계정 저장을 쓸 수 없어 이 브라우저에 저장합니다.</p>'}`,
+    [{label:'취소'}, {label:'저장', primary:true, onClick:() => { const v = $('#saName').value.trim(); if (!v) return false; P.name = v; updateStatus(); save(true); }}],
+    body => body.addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#mFoot .primary').click(); }));
+}
+function newProject() {
+  showModal('새 프로젝트', `<div class="field"><label for="npName">프로젝트 이름</label><input id="npName" maxlength="60" value="새 프로젝트"></div><p class="muted">CPU: Q03UDV · 프로그램: MAIN. 지금 프로젝트에서 저장하지 않은 내용은 사라집니다.</p>`,
+    [{label:'취소'}, {label:'만들기', primary:true, onClick:() => { const v = $('#npName').value.trim() || '새 프로젝트'; loadProject({format:'q03udv-ladder', name:v, rows:[], cm:{}}); P.changed = true; updateStatus(); log('info', `새 프로젝트 "${v}"`); }}],
+    body => body.addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#mFoot .primary').click(); }));
+}
+async function openDialog() {
+  const exHtml = EXAMPLES.map((e, i) => `<div class="pitem"><div class="grow"><div class="nm">${esc(e.name)}</div><div class="ds">${esc(e.desc)}</div></div><button class="btn" data-ex="${i}">열기</button></div>`).join('');
+  const bk = readBackup();
+  const bkHtml = bk ? `<h4>이전 작업 백업</h4><div class="plist"><div class="pitem"><div class="grow"><div class="nm">${esc(bk.name || '이름 없음')}</div><div class="ds">예제 링크로 들어오기 전에 하던 작업 · ${bk.rows.length}행</div></div><button class="btn" data-restore="1">복구</button></div></div>` : '';
+  showModal('프로젝트 열기', `
+    ${CLOUD.db ? '<h4>내 프로젝트</h4><div class="plist" id="cloudList"><div class="muted">불러오는 중…</div></div>' : ''}
+    ${bkHtml}
+    <h4>예제 회로</h4><div class="plist">${exHtml}</div>
+    <h4>파일</h4><button class="btn" id="odFile">파일에서 불러오기 (.json)</button>
+    ${CLOUD.db ? '' : '<p class="muted" style="margin-top:10px">작업은 이 브라우저에 자동 저장됩니다. 다른 컴퓨터로 옮기려면 프로젝트 → 파일로 내보내기(.json)를 쓰세요.</p>'}`,
+    [{label:'닫기'}], body => {
+      body.addEventListener('click', async ev => {
+        const ex = ev.target.dataset.ex, op = ev.target.dataset.open, del = ev.target.dataset.delp;
+        if (ev.target.dataset.restore && bk) {
+          try { loadProject(bk); try { localStorage.removeItem(BK_KEY); } catch (_) {} log('info', `백업한 작업 "${P.name}" 복구`); modalClose && modalClose(); }
+          catch (e) { toast('복구 실패: ' + e.message, 'err'); }
+          return;
+        }
+        if (ex != null) { loadExample(+ex); modalClose && modalClose(); }
+        if (ev.target.id === 'odFile') { modalClose && modalClose(); $('#fileIn').click(); }
+        if (op) {
+          try { const snap = await withTimeout(projCol().doc(op).get(), 10000); if (!snap.exists) throw new Error('프로젝트를 찾을 수 없습니다'); loadProject(JSON.parse(snap.data().data), {id:op}); log('info', `"${P.name}" 열기`); modalClose && modalClose(); }
+          catch (e) { toast('열기 실패: ' + (e.message || e.code), 'err'); }
+        }
+        if (del) {
+          if (ev.target.dataset.confirm !== '1') { ev.target.dataset.confirm = '1'; ev.target.textContent = '정말 삭제'; return; }
+          try { await withTimeout(projCol().doc(del).delete(), 10000); ev.target.closest('.pitem').remove(); if (P.id === del) P.id = null; toast('삭제했습니다'); }
+          catch (e) { toast('삭제 실패: ' + (e.message || e.code), 'err'); }
+        }
+      });
+      if (CLOUD.db) loadCloudList();
+    });
+}
+async function loadCloudList() {
+  const box = $('#cloudList');
+  try {
+    const snap = await withTimeout(projCol().orderBy('updated', 'desc').limit(100).get(), 10000);
+    if (!box.isConnected) return;
+    if (snap.empty) { box.innerHTML = '<div class="muted">저장한 프로젝트가 없습니다. Ctrl+S로 저장하세요.</div>'; return; }
+    box.innerHTML = snap.docs.map(d => { const v = d.data(); return `<div class="pitem"><div class="grow"><div class="nm">${esc(v.name || '이름 없음')}</div><div class="ds">${new Date(v.updated || 0).toLocaleString('ko-KR')} · ${v.rows || 0}행</div></div><button class="btn" data-open="${esc(d.id)}">열기</button><button class="btn danger" data-delp="${esc(d.id)}">삭제</button></div>`; }).join('');
+  } catch (e) { if (box.isConnected) box.innerHTML = '<div class="muted">목록을 불러오지 못했습니다. 잠시 뒤 다시 열어 보세요.</div>'; }
+}
+async function exportFile() {
+  const data = JSON.stringify(serialize(), null, 1);
+  const fname = (P.name || 'ladder').replace(/[\\/:*?"<>|]/g, '_') + '.json';
+  if (CLOUD.dl) {
+    try { await CLOUD.dl.save({filename:fname, data}); toast('파일로 내보냈습니다'); return; }
+    catch (e) { if (e && e.code === 'declined') return; }
+  } else if (window.self === window.top) {
+    try {
+      const url = URL.createObjectURL(new Blob([data], {type:'application/json'}));
+      const a = document.createElement('a');
+      a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      toast(`${fname} 파일을 내려받았습니다`);
+      return;
+    } catch (e) { /* 아래 복사 방식으로 */ }
+  }
+  showModal('프로젝트 내보내기', `<p>아래 내용을 복사해 메모장에 붙여넣고 <b>${esc(fname)}</b>로 저장하세요. "파일에서 불러오기"로 다시 열 수 있습니다.</p><textarea id="exText" readonly>${esc(data)}</textarea>`,
+    [{label:'복사', primary:true, onClick:() => { const t = $('#exText'); t.select(); (navigator.clipboard ? navigator.clipboard.writeText(data) : Promise.reject()).then(() => toast('복사했습니다')).catch(() => toast('Ctrl+C로 복사하세요')); return false; }}, {label:'닫기'}]);
+}
+$('#fileIn').addEventListener('change', ev => {
+  const f = ev.target.files[0]; ev.target.value = '';
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => { try { loadProject(JSON.parse(rd.result)); log('info', `파일 "${f.name}" 불러오기`); toast('불러왔습니다'); } catch (e) { toast('불러오기 실패: ' + e.message, 'err'); } };
+  rd.readAsText(f);
+});
+
+const EXAMPLES = [
+  {name:'자기유지 회로 (기동·정지)', desc:'X0을 누르면 Y20이 켜진 채 유지, X1을 누르면 꺼짐', rows:[
+    {c:{0:'LD X0', 1:'LDI X1'}, o:'OUT Y20', v:[1]},
+    {c:{0:'LD Y20'}}], cm:{X0:'기동 PB1', X1:'정지 PB2', Y20:'모터 MC'}},
+  {name:'인터록 (정·역회전)', desc:'정회전 Y20과 역회전 Y21이 동시에 켜지지 않게 막음', rows:[
+    {c:{0:'LD X0', 1:'LDI X2', 2:'LDI Y21'}, o:'OUT Y20', v:[1]},
+    {c:{0:'LD Y20'}},
+    {c:{0:'LD X1', 1:'LDI X2', 2:'LDI Y20'}, o:'OUT Y21', v:[1]},
+    {c:{0:'LD Y21'}}], cm:{X0:'정회전 PB', X1:'역회전 PB', X2:'정지 PB', Y20:'정회전 MC', Y21:'역회전 MC'}},
+  {name:'ON 딜레이 타이머', desc:'시작 후 3초 뒤 Y20 ON (T0 K30 = 3.0초)', rows:[
+    {c:{0:'LD X0', 1:'LDI X1'}, o:'OUT M0', v:[1]},
+    {c:{0:'LD M0'}},
+    {c:{0:'LD M0'}, o:'OUT T0 K30'},
+    {c:{0:'LD T0'}, o:'OUT Y20'},
+    {c:{0:'LD M0', 1:'LDI T0'}, o:'OUT Y21'}], cm:{X0:'시작', X1:'정지', M0:'운전 중', T0:'3초', Y20:'3초 후 램프', Y21:'대기 램프'}},
+  {name:'플리커 (깜빡임)', desc:'타이머 2개로 0.5초 간격 깜빡이기', rows:[
+    {c:{0:'LD X0', 1:'LDI X1'}, o:'OUT M0', v:[1]},
+    {c:{0:'LD M0'}},
+    {c:{0:'LD M0', 1:'LDI T1'}, o:'OUT T0 K5'},
+    {c:{0:'LD T0'}, o:'OUT T1 K5'},
+    {c:{0:'LD M0', 1:'LDI T0'}, o:'OUT Y20'}], cm:{X0:'시작', X1:'정지', M0:'운전', T0:'ON 0.5초', T1:'OFF 0.5초', Y20:'깜빡이 램프'}},
+  {name:'카운터 (5회)', desc:'X0을 5번 누르면 Y20 ON, X1로 리셋', rows:[
+    {c:{0:'LD X0'}, o:'OUT C0 K5'},
+    {c:{0:'LD C0'}, o:'OUT Y20'},
+    {c:{0:'LD X1'}, o:'RST C0'}], cm:{X0:'카운트 입력', X1:'리셋', C0:'5회', Y20:'완료 램프'}},
+  {name:'신호등 (순차 제어)', desc:'빨강 5초 → 초록 4초 → 노랑 1초 반복', rows:[
+    {c:{0:'LD X0', 1:'LDI X1'}, o:'OUT M0', v:[1]},
+    {c:{0:'LD M0'}},
+    {c:{0:'LD M0', 1:'LDI T2'}, o:'OUT T0 K50'},
+    {c:{0:'LD T0'}, o:'OUT T1 K40'},
+    {c:{0:'LD T1'}, o:'OUT T2 K10'},
+    {c:{0:'LD M0', 1:'LDI T0'}, o:'OUT Y20'},
+    {c:{0:'LD T0', 1:'LDI T1'}, o:'OUT Y21'},
+    {c:{0:'LD T1', 1:'LDI T2'}, o:'OUT Y22'}], cm:{X0:'시작', X1:'정지', M0:'운전', T0:'빨강 5초', T1:'초록 4초', T2:'노랑 1초', Y20:'빨강', Y21:'초록', Y22:'노랑'}},
+  {name:'데이터 처리 (INC·비교·MOV)', desc:'X0 누른 횟수를 D0에 세고, 5 이상이면 Y20 ON, Y24~Y27에 2진수 표시', rows:[
+    {c:{0:'LDP X0'}, o:'INC D0'},
+    {c:{0:'>= D0 K5'}, o:'OUT Y20'},
+    {c:{0:'LD X1'}, o:'MOV K0 D0'},
+    {c:{0:'LD SM400'}, o:'MOV D0 K1Y24'}], cm:{X0:'+1 버튼', X1:'초기화', D0:'누른 횟수', Y20:'5회 이상', SM400:'항상 ON'}},
+  {name:'한 버튼 ON/OFF (ALTP)', desc:'X0을 누를 때마다 Y20이 켜졌다 꺼졌다 반복', rows:[
+    {c:{0:'LD X0'}, o:'ALTP Y20'}], cm:{X0:'토글 버튼', Y20:'램프'}},
+];
+function buildRows(spec) {
+  return spec.map(s => {
+    const row = newRow();
+    let last = -1;
+    for (const [k, t] of Object.entries(s.c || {})) {
+      const c = +k;
+      if (t === 'H') row.c[c] = {t:'H'};
+      else { const res = parseInput(t, 'NO'); if (res.err) throw new Error(t + ': ' + res.err); row.c[c] = resToCell(res); }
+      last = Math.max(last, c);
+    }
+    if (s.o) {
+      const res = parseInput(s.o, 'COIL'); if (res.err) throw new Error(s.o + ': ' + res.err);
+      row.c[OC] = resToCell(res);
+      if (last >= 0) for (let k = last + 1; k < OC; k++) if (!row.c[k]) row.c[k] = {t:'H'};
+    }
+    for (const b of (s.v || [])) row.v[b] = true;
+    return row;
+  });
+}
+function loadExample(i) {
+  const ex = EXAMPLES[i];
+  const rows = buildRows(ex.rows);
+  loadProject({format:'q03udv-ladder', name:ex.name, rows:rows.map(r => ({c:r.c, v:r.v.map((b, k) => (b ? k : -1)).filter(k => k > 0)})), cm:ex.cm});
+  log('info', `예제 "${ex.name}" 열기 — ${ex.desc}`);
+}
+
+/* =====================================================================
+   11. 도움말
+   ===================================================================== */
+function helpKeys() {
+  showModal('단축키 · 입력 방법 (GX Works2 방식)', `
+    <h4>래더 입력</h4>
+    <table>
+      <tr><th style="width:150px">키</th><th>동작</th></tr>
+      <tr><td><code>F5</code> / <code>Shift+F5</code></td><td>a접점 / a접점 OR(병렬)</td></tr>
+      <tr><td><code>F6</code> / <code>Shift+F6</code></td><td>b접점 / b접점 OR</td></tr>
+      <tr><td><code>Shift+F7</code> / <code>Shift+F8</code></td><td>상승 펄스(LDP) / 하강 펄스(LDF) · OR는 Alt+F7 / Alt+F8</td></tr>
+      <tr><td><code>F7</code> / <code>F8</code></td><td>코일(OUT) / 응용 명령(MOV, SET …)</td></tr>
+      <tr><td><code>F9</code></td><td>가로선 · <code>Ctrl+F9</code> 가로선 삭제</td></tr>
+      <tr><td><code>Shift+F9</code> 또는 <code>F10</code></td><td>세로선 (커서 칸의 왼쪽, 아래 행으로) · <code>Ctrl+F10</code> 삭제</td></tr>
+      <tr><td>바로 타이핑</td><td><code>X0</code> <code>LDI X1</code> <code>OR Y20</code> <code>OUT T0 K30</code> <code>MOV K10 D0</code> <code>= D0 K5</code></td></tr>
+      <tr><td><code>Enter</code> / 더블클릭</td><td>커서 위치 요소 수정</td></tr>
+      <tr><td><code>Del</code></td><td>요소 삭제 (빈 칸이면 왼쪽 아래 세로선 삭제)</td></tr>
+      <tr><td><code>Shift+Ins</code> / <code>Shift+Del</code></td><td>행 삽입 / 행 삭제</td></tr>
+      <tr><td><code>Shift+방향키</code>, 드래그</td><td>범위 선택 → <code>Ctrl+C / X / V</code></td></tr>
+    </table>
+    <h4>변환 · 모드 · 시뮬레이션</h4>
+    <table>
+      <tr><td style="width:150px"><code>F4</code></td><td>변환 — 회색(미변환) 영역을 검사해 명령 리스트로 바꿈</td></tr>
+      <tr><td><code>F2</code> / <code>Shift+F2</code> / <code>F3</code></td><td>쓰기 / 읽기 / 모니터 모드</td></tr>
+      <tr><td>시뮬레이션 시작</td><td>변환 → 가상 CPU에 쓰기 → RUN → 모니터 모드. 접점이 켜지면 파랗게 칠해집니다</td></tr>
+      <tr><td>모니터 중 더블클릭</td><td>디바이스 강제 ON/OFF (Shift+Enter도 가능), 워드는 현재값 변경</td></tr>
+      <tr><td>시뮬레이션 중 수정</td><td>F2 → 수정 → F4 변환하면 RUN 중 쓰기로 바로 반영 → F3 모니터</td></tr>
+    </table>
+    <h4>팁</h4>
+    <p>• 병렬(OR) 회로: 아래 행 첫 칸에서 <code>Shift+F5</code>(또는 <code>OR Y20</code> 입력)하면 오른쪽 세로선이 자동으로 그려집니다.<br>
+    • 병렬 코일: 위 행 출력 칸에서 <code>Shift+F9</code>로 세로선을 내린 뒤, 아래 행 출력 칸에 코일을 넣으세요.<br>
+    • 브라우저 단축키(F5 새로고침 등)는 이 화면에서 래더 입력용으로 바뀝니다.</p>`, [{label:'닫기', primary:true}]);
+}
+function helpIns() {
+  const rows = [
+    ['LD / LDI / AND / ANI / OR / ORI', 'X0', 'a접점, b접점 (래더 모양으로 자동 결정)'],
+    ['LDP / LDF (ANDP, ORP …)', 'X0', '상승 / 하강 펄스 접점'],
+    ['LD= LD<> LD> LD< LD>= LD<=', 'D0 K10', '비교 접점 (AND=, OR= 도 가능)'],
+    ['OUT', 'Y20 / T0 K30 / C0 K5', '코일, 타이머(100ms 단위), 카운터'],
+    ...Object.entries(APP).map(([k, v]) => [k + (v.p ? ` / ${k}P` : ''), v.ex.split(' ').slice(1).join(' '), v.desc]),
+  ];
+  showModal('지원 명령어', `<p>Q 시리즈 명령 중 수업에서 많이 쓰는 것들을 지원합니다. ANB · ORB · MPS · MRD · MPP는 변환할 때 자동으로 만들어집니다.</p>
+    <table><tr><th>명령</th><th>예</th><th>설명</th></tr>${rows.map(r => `<tr><td class="mono">${esc(r[0])}</td><td><code>${esc(r[1])}</code></td><td>${esc(r[2])}</td></tr>`).join('')}</table>
+    <h4>특수 릴레이</h4><p><code>SM400</code> 항상 ON · <code>SM401</code> 항상 OFF · <code>SM402</code> RUN 후 첫 스캔만 ON · <code>SM410</code> 0.1초 클럭 · <code>SM411</code> 0.2초 · <code>SM412</code> 1초 클럭 · <code>SM413</code> 2초</p>
+    <h4>비트 지정</h4><p><code>K1Y24</code> = Y24~Y27 4비트, <code>K4X0</code> = X0~XF 16비트. MOV, BCD, BIN 등에 씁니다.</p>`, [{label:'닫기', primary:true}]);
+}
+function paramDialog() {
+  const rows = Object.entries(DEV).map(([t, d]) => `<tr><td class="mono">${t}</td><td>${esc(d.name)}</td><td class="mono">${fmtDev(t, 0)} ~ ${fmtDev(t, d.max)}</td><td>${d.hex ? '16진수' : '10진수'}</td></tr>`).join('');
+  showModal('PLC 파라미터 — Q03UDV', `<p>CPU: <b>Q03UDV</b> (프로그램 용량 30K 스텝) · 타이머: 100ms 저속 타이머 · 스캔 주기: 약 10ms (시뮬레이션)</p>
+    <table><tr><th>디바이스</th><th>이름</th><th>범위</th><th>번호</th></tr>${rows}</table>
+    <p class="muted" style="margin-top:10px">학교 실습 장비마다 입출력 모듈 번호가 다를 수 있습니다 (예: 입력 X0~X1F, 출력 Y20~Y3F). 오른쪽 I/O 패널에서 범위를 바꿔 보세요.</p>`, [{label:'닫기', primary:true}]);
+}
+
+/* =====================================================================
+   12. 명령 연결 / 키보드 / 마우스
+   ===================================================================== */
+const CMD = {
+  newProject, openDialog, save:() => save(false), saveAs, exportFile, importFile:() => $('#fileIn').click(),
+  undo, redo, cut:() => cmdCopy(true), copy:() => cmdCopy(false), paste:cmdPaste, del:cmdDelete, insRow:cmdInsRow, delRow:cmdDelRow,
+  commentMode:() => { ED.cmEdit = !ED.cmEdit; toast(ED.cmEdit ? '코멘트 편집 모드: 요소를 더블클릭하거나 Enter로 코멘트 입력' : '코멘트 편집 모드 끔'); if (ED.cmEdit && !ED.showCm) { ED.showCm = true; layout(); } updateStatus(); render(); },
+  toggleCm:() => { ED.showCm = !ED.showCm; layout(); render(); updateStatus(); },
+  toggleFlow:() => { ED.flow = !ED.flow; render(); updateStatus(); },
+  tabLadder:() => switchTab('ladder'), tabList:() => switchTab('list'), tabComments:() => switchTab('comments'),
+  convert:() => { switchTab('ladder'); convert(false); },
+  toggleSim, modeWrite:() => setMode('write'), modeRead:() => setMode('read'), modeMonitor:() => setMode('monitor'),
+  modify:() => modifyDialog(cellDevice(cellAt(ED.r, ED.c)) || ''),
+  helpKeys, helpIns, param:paramDialog,
+  devGuide:() => { const w = window.open('devices.html', '_blank', 'noopener'); if (!w) location.href = 'devices.html'; },
+  goHome:() => { location.href = 'index.html'; },
+};
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-cmd]');
+  if (!b) return;
+  const f = CMD[b.dataset.cmd];
+  if (f) { closeMenus(); f(); }
+});
+$('#chkCm').addEventListener('change', () => { ED.showCm = $('#chkCm').checked; layout(); render(); scr.focus({preventScroll:true}); });
+$('#chkFlow').addEventListener('change', () => { ED.flow = $('#chkFlow').checked; render(); scr.focus({preventScroll:true}); });
+$$('#tabs .tab').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+$$('#pushSeg button').forEach(b => b.addEventListener('click', () => { IO.push = b.dataset.push === '1'; $$('#pushSeg button').forEach(x => x.classList.toggle('active', x === b)); }));
+$('#swRun').addEventListener('click', () => simSwitch('RUN'));
+$('#swStop').addEventListener('click', () => simSwitch('STOP'));
+$('#swReset').addEventListener('click', () => simSwitch('RESET'));
+$('#outClear').addEventListener('click', () => { $('#outList').innerHTML = ''; $('#outSummary').textContent = ''; });
+$('#outToggle').addEventListener('click', () => { const p = $('#outPane'); p.classList.toggle('collapsed'); $('#outToggle').textContent = p.classList.contains('collapsed') ? '펼치기' : '접기'; requestAnimationFrame(() => { layout(); render(); }); });
+$('#outList').addEventListener('click', ev => { const d = ev.target.closest('[data-r]'); if (d) { switchTab('ladder'); setCursor(+d.dataset.r, +d.dataset.c); } });
+$('#watchBody').addEventListener('click', ev => {
+  const v = ev.target.closest('.val'); if (v) return toggleDevice(v.dataset.dev);
+  const rm = ev.target.dataset.rm; if (rm) { watchUser = watchUser.filter(x => x !== rm); rebuildWatch(); }
+});
+function addWatch() {
+  const o = parseOperand($('#watchIn').value.trim());
+  if (o.err || o.t === 'K' || o.t === 'H') return toast(o.err || '디바이스를 입력하세요', 'err');
+  if (!watchUser.includes(o.text)) watchUser.push(o.text);
+  $('#watchIn').value = ''; rebuildWatch();
+}
+$('#watchAdd').addEventListener('click', addWatch);
+$('#watchIn').addEventListener('keydown', ev => { if (ev.key === 'Enter') addWatch(); });
+
+function moveCursor(dr, dc, shift) {
+  if (shift && !ED.anchor) ED.anchor = {r:ED.r, c:ED.c};
+  setCursor(ED.r + dr, ED.c + dc, shift);
+}
+document.addEventListener('keydown', ev => {
+  if ($('#modalBack').classList.contains('show')) { if (ev.key === 'Escape' && modalClose) modalClose(); return; }
+  if (!inDlg.hidden) return;
+  const k = ev.key, sh = ev.shiftKey, ct = ev.ctrlKey || ev.metaKey, al = ev.altKey;
+  const tag = (ev.target.tagName || '').toUpperCase();
+  const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  if (/^F\d{1,2}$/.test(k)) {
+    ev.preventDefault();
+    if (typing && k !== 'F1' && k !== 'F4') return;
+    switch (k) {
+      case 'F1': return al ? switchTab('list') : helpKeys();
+      case 'F2': return setMode(sh ? 'read' : 'write');
+      case 'F3': return setMode('monitor');
+      case 'F4': return CMD.convert();
+      case 'F5': return openInput(sh ? 'NOR' : 'NO');
+      case 'F6': return openInput(sh ? 'NCR' : 'NC');
+      case 'F7': return openInput(sh ? 'P' : al ? 'PR' : 'COIL');
+      case 'F8': return openInput(sh ? 'F' : al ? 'FR' : 'APP');
+      case 'F9': return ct ? cmdDelH() : sh ? cmdVLine() : cmdHLine();
+      case 'F10': return ct ? cmdDelV() : cmdVLine();
+    }
+    return;
+  }
+  if (typing) return;
+  if (ct && !al) {
+    const kl = k.toLowerCase();
+    const map = {z:undo, y:redo, s:() => save(false), o:openDialog};
+    if (ED.tab === 'ladder') Object.assign(map, {c:() => cmdCopy(false), x:() => cmdCopy(true), v:cmdPaste});
+    if (map[kl]) { ev.preventDefault(); map[kl](); return; }
+    if (ED.tab === 'ladder' && k === 'Home') { ev.preventDefault(); return setCursor(0, 0); }
+    if (ED.tab === 'ladder' && k === 'End') { ev.preventDefault(); return setCursor(P.rows.length, 0); }
+    return;
+  }
+  if (ED.tab !== 'ladder') return;
+  if (ev.target.closest && ev.target.closest('#side, #nav, #menubar, .tb, #outPane')) {
+    if (!(k.length === 1 && /[A-Za-z0-9=<>+\-*/]/.test(k))) return;
+  }
+  switch (k) {
+    case 'ArrowUp': ev.preventDefault(); return moveCursor(-1, 0, sh);
+    case 'ArrowDown': ev.preventDefault(); return moveCursor(1, 0, sh);
+    case 'ArrowLeft': ev.preventDefault(); return moveCursor(0, -1, sh);
+    case 'ArrowRight': ev.preventDefault(); return moveCursor(0, 1, sh);
+    case 'Home': ev.preventDefault(); return moveCursor(0, -ED.c, sh);
+    case 'End': ev.preventDefault(); return moveCursor(0, OC - ED.c, sh);
+    case 'PageUp': ev.preventDefault(); return moveCursor(-8, 0, sh);
+    case 'PageDown': ev.preventDefault(); return moveCursor(8, 0, sh);
+    case 'Escape': ED.anchor = null; render(); return;
+    case 'Enter':
+      ev.preventDefault();
+      if (ED.cmEdit) return openCommentAt();
+      if (ED.mode === 'monitor' || sh) return monitorAt(ED.r, ED.c);
+      return openInput();
+    case 'Delete': ev.preventDefault(); return sh ? cmdDelRow() : cmdDelete();
+    case 'Backspace': ev.preventDefault(); return cmdDelete();
+    case 'Insert': ev.preventDefault(); if (sh) cmdInsRow(); return;
+  }
+  if (k.length === 1 && !al && /[A-Za-z0-9=<>+\-*/]/.test(k)) {
+    if (ED.mode !== 'write') return;
+    ev.preventDefault();
+    openInput(null, k.toUpperCase());
+  }
+});
+
+let dragging = false;
+scr.addEventListener('mousedown', ev => {
+  if (ev.button !== 0) return;
+  closeInput();
+  if (ev.offsetX > scr.clientWidth || ev.offsetY > scr.clientHeight) return;
+  const h = hitCell(ev.clientX, ev.clientY);
+  if (ev.shiftKey) { if (!ED.anchor) ED.anchor = {r:ED.r, c:ED.c}; setCursor(h.r, h.c, true); }
+  else { ED.anchor = {r:h.r, c:h.c}; setCursor(h.r, h.c, true); dragging = true; }
+  scr.focus({preventScroll:true});
+});
+window.addEventListener('mousemove', ev => { if (!dragging) return; const h = hitCell(ev.clientX, ev.clientY); if (h.r !== ED.r || h.c !== ED.c) setCursor(h.r, h.c, true); });
+window.addEventListener('mouseup', () => { if (dragging) { dragging = false; if (!hasSel()) { ED.anchor = null; render(); } } });
+scr.addEventListener('dblclick', ev => {
+  const h = hitCell(ev.clientX, ev.clientY);
+  setCursor(h.r, h.c);
+  if (ED.cmEdit) return openCommentAt();
+  if (ED.mode === 'monitor') return monitorAt(h.r, h.c);
+  if (ED.mode === 'write') openInput();
+});
+scr.addEventListener('scroll', () => { closeInput(); render(); });
+new ResizeObserver(() => { layout(); render(); }).observe($('#viewLadder'));
+
+let lastUi = 0;
+function uiLoop(ts) {
+  if (SIM.on && ts - lastUi > 50) {
+    lastUi = ts;
+    if (ED.mode === 'monitor' && ED.tab === 'ladder') render();
+    updateIO(); updateWatch(); updateSimInfo();
+  }
+  requestAnimationFrame(uiLoop);
+}
+window.addEventListener('error', e => { try { log('err', '프로그램 오류: ' + e.message); } catch (_) {} });
+
+/* =====================================================================
+   13. 시작
+   ===================================================================== */
+buildMenus(); buildSymbar(); buildSymSelect(); buildBanks(); buildIO();
+function hashExample() {
+  const m = /^#ex-([1-9])$/.exec(location.hash || '');
+  return m && +m[1] <= EXAMPLES.length ? +m[1] - 1 : -1;
+}
+function openHashExample() {
+  const i = hashExample();
+  if (i < 0) return false;
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const o = JSON.parse(raw);
+      const isExample = EXAMPLES.some(e => e.name === o.name);
+      if (!isExample && Array.isArray(o.rows) && o.rows.length) localStorage.setItem(BK_KEY, raw);
+    }
+  } catch (e) { /* 백업 없이 진행 */ }
+  loadExample(i);
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* 해시 유지 */ }
+  if (readBackup()) log('info', '하던 작업은 백업해 두었습니다 — 프로젝트 → 열기 → "이전 작업 백업"에서 복구할 수 있습니다.');
+  return true;
+}
+let restored = openHashExample();
+if (!restored) {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) { const o = JSON.parse(raw); loadProject(o, {id:o.id || null, keepSave:true}); restored = true; log('info', `이전 작업 "${P.name}"을(를) 이 브라우저 자동 저장에서 불러왔습니다`); }
+  } catch (e) { restored = false; }
+}
+if (!restored) {
+  loadExample(0);
+  log('info', '처음 오셨네요 — 예제 "자기유지 회로"가 열려 있습니다. ▶ 시뮬레이션 시작을 누르고 오른쪽 X0, X1을 눌러 보세요.');
+}
+window.addEventListener('hashchange', () => { if (hashExample() >= 0) { openHashExample(); updateModeUI(); } });
+updateModeUI(); updateSimUI(); renderComments();
+setTimeout(() => scr.focus({preventScroll:true}), 0);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); render(); });
+requestAnimationFrame(uiLoop);
+initCapabilities();
+window.__ladder = {P, ED, SIM, XIN, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
+})();
+</script>
+</body>
+</html>

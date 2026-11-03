@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>디바이스 설명 · Q03UDV 래더 시뮬레이터</title>
+<meta name="description" content="Y1, X10, M0, T0 K30, D0, SM400, K1Y20은 무슨 뜻일까? 미쓰비시 Q03UDV PLC 디바이스를 그림과 예시로 정리했어요.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Y1은 뭘까? PLC 디바이스 읽는 법">
+<meta property="og:description" content="X, Y, M, T, C, D, SM, K, H를 그림과 예시로 정리 — Q03UDV 기준">
+<meta property="og:image" content="https://ljh30581712-beep.github.io/plc-ladder-sim/assets/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f6ee0'/%3E%3Cpath d='M6 16h7M19 16h7M13 9v14M19 9v14' stroke='white' stroke-width='2.6' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.dhero{background:linear-gradient(180deg,#1c2a3e 0%,#22344d 100%);color:#e9f0f9;padding:46px 0 52px}
+.dhero .wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:center}
+.dhero h1{font-size:clamp(28px,3.6vw,40px);line-height:1.28;margin:10px 0 14px;color:#fff;text-wrap:balance}
+.dhero p{color:#c3d1e4;margin:0;max-width:48ch}
+.anatomy{background:#fff;color:var(--ink);border-radius:12px;padding:22px;box-shadow:0 18px 44px rgba(0,0,0,.3)}
+.anatomy .big{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.anatomy .big span{font:700 54px/1 var(--font-mono);padding:14px 22px;border-radius:10px}
+.anatomy .big .l{background:#e6eeff;color:#1f4fbf}
+.anatomy .big .n{background:#fff1d6;color:#8a5a00}
+.anatomy .parts{display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14.5px}
+.anatomy .parts .ttl{display:block;font-size:15px}
+.anatomy .parts .l .ttl{color:#1f4fbf}.anatomy .parts .n .ttl{color:#8a5a00}
+.anatomy .sum{margin-top:14px;padding-top:12px;border-top:1px solid #e5eaf0;font-size:14.5px;color:#3b4757}
+.toc{display:flex;gap:6px;flex-wrap:wrap;padding:14px 0}
+.toc a{font-size:13.5px;text-decoration:none;color:#2b3645;background:#fff;border:1px solid var(--line);border-radius:20px;padding:4px 12px}
+.toc a:hover{border-color:#9fb4d4;color:var(--accent)}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.three .card .ic{font:700 26px var(--font-mono);display:inline-block;padding:2px 12px;border-radius:7px;margin-bottom:8px}
+.three .x .ic{background:#e6eeff;color:#1f4fbf}.three .y .ic{background:#ffe3df;color:#b8321f}.three .m .ic{background:#e3f1e7;color:#1d6b3a}
+.hexgrid{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:4px;margin:6px 0 10px}
+.hexgrid div{background:#fff;border:1px solid var(--line);border-radius:5px;text-align:center;padding:5px 0 3px;font:600 13px var(--font-mono)}
+.hexgrid div small{display:block;font:500 10.5px var(--font-mono);color:var(--muted)}
+.hexgrid .af{background:#fff6e3;border-color:#f0d49a}
+.hexgrid .ten{background:#e6eeff;border-color:#9db7ee}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px;border:1px solid var(--line)}
+.callout{background:#fff;border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:14px 18px;margin:18px 0 0}
+.callout.warn{border-left-color:#e08a00}
+.callout b{display:block;margin-bottom:2px}
+.callout p{margin:0;color:#3b4757;font-size:14.5px}
+figure.dia{margin:0;background:#fff;border:1px solid var(--line);border-radius:9px;padding:16px;overflow-x:auto}
+figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
+.bits{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.bit{text-align:center;font:600 13px var(--font-mono)}
+.bit i{display:block;width:34px;height:34px;border-radius:50%;margin:0 auto 6px;background:#ead0cc;border:1px solid #c59a94}
+.bit.on i{background:var(--lamp);border-color:#c62a17;box-shadow:0 0 10px rgba(255,75,54,.7)}
+.bit small{display:block;color:var(--muted);font-weight:500}
+.decoder{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px}
+.decoder .row{display:flex;gap:8px;flex-wrap:wrap}
+.decoder input{flex:1;min-width:180px;font:700 22px var(--font-mono);text-transform:uppercase;border:2px solid var(--accent);border-radius:8px;padding:8px 12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+.chips button{font:600 13px var(--font-mono);background:#eef2f7;border:1px solid #d3dbe5;border-radius:16px;padding:3px 11px;cursor:pointer;color:#2b3645}
+.chips button:hover{border-color:#9fb4d4;color:var(--accent)}
+#decOut{margin-top:16px;border-top:1px solid #e7ebf0;padding-top:14px;min-height:120px}
+#decOut .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+#decOut .name{font:700 28px var(--font-mono)}
+#decOut dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;margin:0;font-size:15px}
+#decOut dt{color:var(--muted)}
+#decOut dd{margin:0}
+#decOut .err{color:#b3261e;font-weight:600}
+.mist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;list-style:none;padding:0;margin:0}
+.mist li{background:#fff;border:1px solid var(--line);border-radius:9px;padding:14px 16px}
+.mist b{display:block;margin-bottom:3px}
+.mist p{margin:0;color:var(--muted);font-size:14.5px}
+.mist .x{color:#b3261e;font-family:var(--font-mono);font-weight:700}
+.mist .o{color:#1d6b3a;font-family:var(--font-mono);font-weight:700}
+@media (max-width:900px){.dhero .wrap,.three,.mist{grid-template-columns:minmax(0,1fr)}.hexgrid{grid-template-columns:repeat(8,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="q">Q</span>Q03UDV 래더 시뮬레이터</a>
+    <nav class="top" aria-label="사이트 메뉴">
+      <a href="index.html">홈</a>
+      <a href="devices.html" aria-current="page">디바이스 설명</a>
+      <a class="cta" href="simulator.html">시뮬레이터 열기</a>
+    </nav>
+  </div>
+</header>
+
+<div class="dhero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">디바이스 설명 · Q03UDV 기준</div>
+      <h1>Y1은 뭘까? PLC 디바이스 읽는 법</h1>
+      <p>디바이스는 PLC 안에 있는 <b>이름표 붙은 칸</b>이에요. 앞 글자는 칸의 종류, 뒤 숫자는 몇 번 칸인지를 뜻해요. 이 규칙만 알면 X0, M100, T0, D10이 전부 읽혀요.</p>
+    </div>
+    <div class="anatomy" aria-label="Y1 분해">
+      <div class="big"><span class="l">Y</span><span class="n">1</span></div>
+      <div class="parts">
+        <div class="l"><b class="ttl">Y = 출력 (Output)</b>PLC가 밖으로 신호를 내보내는 칸. 램프, 릴레이, 모터 접촉기가 연결돼요.</div>
+        <div class="n"><b class="ttl">1 = 번호</b>Y0부터 세니까 Y1은 <b>두 번째</b> 출력이에요. X·Y 번호는 16진수예요.</div>
+      </div>
+      <div class="sum"><b>한 줄 정리:</b> <code>OUT Y1</code>이 실행되면 출력 1번이 켜져요. 출력 모듈이 Y0부터 꽂혀 있으면 그 단자의 램프가 켜지고, 학교 장비처럼 출력이 Y20부터면 실제로 켜지는 건 없어요 (<a href="#io">아래 설명</a>).</div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap"><nav class="toc" aria-label="목차">
+  <a href="#basic">X·Y·M 차이</a><a href="#table">전체 디바이스 표</a><a href="#hex">16진수 번호</a><a href="#io">왜 Y20부터?</a><a href="#timer">타이머·카운터</a><a href="#word">D·K·H·KnY</a><a href="#sm">특수 릴레이</a><a href="#decoder">번호 해석기</a><a href="#mistakes">자주 하는 실수</a>
+</nav></div>
+
+<section id="basic" style="padding-top:28px">
+  <div class="wrap">
+    <h2>X · Y · M, 이것만 먼저</h2>
+    <p class="lead">PLC를 사람이라고 생각하면 쉬워요. 들어오는 신호, 내보내는 신호, 머릿속 메모로 나뉘어요.</p>
+    <div class="three">
+      <div class="card x"><span class="ic">X</span><h3>입력 = 눈·귀</h3><p>푸시버튼, 리밋 스위치, 센서 신호가 들어오는 곳이에요. 프로그램은 X를 <b>읽기만</b> 해요. 그래서 X는 접점으로만 쓰고 <code>OUT X0</code>은 안 돼요.</p></div>
+      <div class="card y"><span class="ic">Y</span><h3>출력 = 손·발</h3><p>램프, 부저, 릴레이, 모터 접촉기(MC)를 켜는 곳이에요. <code>OUT Y20</code> 코일로 켜고, <code>Y20</code> 접점으로 "지금 켜져 있나?"를 읽을 수도 있어요 (자기유지).</p></div>
+      <div class="card m"><span class="ic">M</span><h3>내부 릴레이 = 메모</h3><p>실제 단자가 없는 PLC 속 스위치예요. "운전 중", "1단계 끝" 같은 중간 상태를 기억할 때 써요. 개수가 많아서(8192개) 마음껏 써도 돼요.</p></div>
+    </div>
+    <figure class="dia">
+      <svg viewBox="0 0 860 170" width="860" role="img" aria-label="푸시버튼이 X0 단자로 들어가 PLC 프로그램에서 M0을 거쳐 Y20 단자의 램프를 켜는 흐름">
+        <g font-family="IBM Plex Sans KR, sans-serif" font-size="14" fill="#18202b">
+          <rect x="10" y="50" width="130" height="70" rx="10" fill="#e6eeff" stroke="#9db7ee"/>
+          <text x="75" y="80" text-anchor="middle" font-weight="600">푸시버튼 PB1</text>
+          <text x="75" y="102" text-anchor="middle" font-size="12.5" fill="#5b6878">바깥 장치</text>
+          <path d="M140 85H200" stroke="#1f4fbf" stroke-width="2.5" marker-end="url(#ar)"/>
+          <rect x="205" y="20" width="450" height="130" rx="12" fill="#f6f8fb" stroke="#c3cbd6"/>
+          <text x="430" y="44" text-anchor="middle" font-weight="600">PLC (Q03UDV)</text>
+          <rect x="222" y="60" width="90" height="56" rx="8" fill="#fff" stroke="#9db7ee"/>
+          <text x="267" y="86" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" fill="#1f4fbf">X0</text>
+          <text x="267" y="106" text-anchor="middle" font-size="12" fill="#5b6878">입력 단자</text>
+          <path d="M312 88H372" stroke="#5b6878" stroke-width="2" marker-end="url(#ar2)"/>
+          <rect x="378" y="60" width="104" height="56" rx="8" fill="#fff" stroke="#9cc9ab"/>
+          <text x="430" y="86" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" fill="#1d6b3a">M0</text>
+          <text x="430" y="106" text-anchor="middle" font-size="12" fill="#5b6878">메모 (단자 없음)</text>
+          <path d="M482 88H542" stroke="#5b6878" stroke-width="2" marker-end="url(#ar2)"/>
+          <rect x="548" y="60" width="90" height="56" rx="8" fill="#fff" stroke="#efa79c"/>
+          <text x="593" y="86" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" fill="#b8321f">Y20</text>
+          <text x="593" y="106" text-anchor="middle" font-size="12" fill="#5b6878">출력 단자</text>
+          <path d="M655 85H715" stroke="#b8321f" stroke-width="2.5" marker-end="url(#ar3)"/>
+          <rect x="720" y="50" width="130" height="70" rx="10" fill="#ffe3df" stroke="#efa79c"/>
+          <circle cx="750" cy="85" r="11" fill="#ff4b36"/>
+          <text x="805" y="81" text-anchor="middle" font-weight="600">램프</text>
+          <text x="805" y="102" text-anchor="middle" font-size="12.5" fill="#5b6878">바깥 장치</text>
+        </g>
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1f4fbf"/></marker>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5b6878"/></marker>
+          <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#b8321f"/></marker>
+        </defs>
+      </svg>
+      <figcaption>버튼 → X0(입력) → 프로그램 안에서 M0(메모) → Y20(출력) → 램프. 실제 선이 연결되는 건 X와 Y뿐이에요.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="alt" id="table">
+  <div class="wrap">
+    <h2>전체 디바이스 표</h2>
+    <p class="lead"><span class="tag bit">비트</span>는 ON/OFF 하나, <span class="tag word">워드</span>는 숫자 하나(16비트)를 담아요. 번호가 <span class="tag hex">16진수</span>인지 <span class="tag dec">10진수</span>인지 꼭 구분하세요. 범위는 Q03UDV 기본 설정 기준이에요.</p>
+    <div class="tablewrap">
+      <table class="t">
+        <thead><tr><th>디바이스</th><th>이름</th><th>쉽게 말하면</th><th>번호</th><th>종류</th><th>Q03UDV 범위</th><th>래더에서</th></tr></thead>
+        <tbody>
+          <tr><td class="dv">X</td><td>입력</td><td>버튼·센서 신호가 들어오는 단자. 읽기만 가능</td><td><span class="tag hex">16진수</span></td><td><span class="tag bit">비트</span></td><td class="rng">X0 ~ X1FFF</td><td><code>X0</code> 접점</td></tr>
+          <tr><td class="dv">Y</td><td>출력</td><td>램프·릴레이·모터로 내보내는 단자</td><td><span class="tag hex">16진수</span></td><td><span class="tag bit">비트</span></td><td class="rng">Y0 ~ Y1FFF</td><td><code>OUT Y20</code></td></tr>
+          <tr><td class="dv">M</td><td>내부 릴레이</td><td>단자 없는 메모용 스위치</td><td><span class="tag dec">10진수</span></td><td><span class="tag bit">비트</span></td><td class="rng">M0 ~ M8191</td><td><code>OUT M0</code></td></tr>
+          <tr><td class="dv">L</td><td>래치 릴레이</td><td>M과 같지만 전원이 꺼져도 상태를 기억</td><td><span class="tag dec">10진수</span></td><td><span class="tag bit">비트</span></td><td class="rng">L0 ~ L8191</td><td><code>SET L0</code></td></tr>
+          <tr><td class="dv">B</td><td>링크 릴레이</td><td>네트워크로 다른 PLC와 주고받는 비트</td><td><span class="tag hex">16진수</span></td><td><span class="tag bit">비트</span></td><td class="rng">B0 ~ B1FFF</td><td><code>B0</code></td></tr>
+          <tr><td class="dv">T</td><td>타이머</td><td>코일이 켜진 채로 설정 시간이 지나면 접점 ON (0.1초 단위)</td><td><span class="tag dec">10진수</span></td><td><span class="tag bit">비트</span> + <span class="tag word">현재값</span></td><td class="rng">T0 ~ T2047</td><td><code>OUT T0 K30</code></td></tr>
+          <tr><td class="dv">C</td><td>카운터</td><td>입력이 켜질 때마다 1씩 세고, 설정값이 되면 접점 ON</td><td><span class="tag dec">10진수</span></td><td><span class="tag bit">비트</span> + <span class="tag word">현재값</span></td><td class="rng">C0 ~ C1023</td><td><code>OUT C0 K5</code></td></tr>
+          <tr><td class="dv">D</td><td>데이터 레지스터</td><td>숫자 하나(-32768 ~ 32767)를 저장하는 칸</td><td><span class="tag dec">10진수</span></td><td><span class="tag word">워드</span></td><td class="rng">D0 ~ D12287</td><td><code>MOV K10 D0</code></td></tr>
+          <tr><td class="dv">W</td><td>링크 레지스터</td><td>네트워크로 주고받는 숫자 칸</td><td><span class="tag hex">16진수</span></td><td><span class="tag word">워드</span></td><td class="rng">W0 ~ W1FFF</td><td><code>MOV W0 D0</code></td></tr>
+          <tr><td class="dv">SM</td><td>특수 릴레이</td><td>CPU가 미리 정해 둔 비트 (항상 ON, 1초 깜빡임 등)</td><td><span class="tag dec">10진수</span></td><td><span class="tag bit">비트</span></td><td class="rng">SM0 ~ SM2047</td><td><code>SM400</code></td></tr>
+          <tr><td class="dv">SD</td><td>특수 레지스터</td><td>CPU 상태를 담은 숫자 (예: SD520 현재 스캔 시간 ms)</td><td><span class="tag dec">10진수</span></td><td><span class="tag word">워드</span></td><td class="rng">SD0 ~ SD2047</td><td><code>MOV SD520 D0</code></td></tr>
+          <tr><td class="dv">K</td><td>10진 상수</td><td>그냥 숫자. <code>K30</code> = 30</td><td>—</td><td>상수</td><td class="rng">K-32768 ~ K32767</td><td><code>K30</code></td></tr>
+          <tr><td class="dv">H</td><td>16진 상수</td><td>16진수로 쓴 숫자. <code>H1F</code> = 31</td><td>—</td><td>상수</td><td class="rng">H0 ~ HFFFF</td><td><code>H1F</code></td></tr>
+          <tr><td class="dv">KnY</td><td>비트 묶음</td><td>비트 4개씩 묶어 숫자처럼 씀. <code>K1Y24</code> = Y24~Y27</td><td>—</td><td><span class="tag word">워드</span></td><td class="rng">K1 ~ K8 (4~32비트)</td><td><code>MOV D0 K1Y24</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="hex">
+  <div class="wrap">
+    <h2>X와 Y는 16진수로 센다</h2>
+    <p class="lead">X·Y·B·W 번호는 16진수예요. 0~9 다음에 A~F가 오고, 그다음이 10이에요. 그래서 <b>X10은 열 번째가 아니라 열일곱 번째</b> 입력이에요. 아래 작은 숫자가 10진수 번호예요.</p>
+    <div class="hexgrid" id="hexGrid" aria-label="X0부터 X1F까지 16진수 번호와 10진수 대응표"></div>
+    <div class="legend"><span><i style="background:#fff6e3;border-color:#f0d49a"></i>A~F가 들어간 번호</span><span><i style="background:#e6eeff;border-color:#9db7ee"></i>X10 = 10진수 16 (17번째)</span></div>
+    <div class="callout"><b>M, T, C, D는 10진수예요</b><p>M9 다음은 그냥 M10이고, <code>MA</code> 같은 번호는 없어요. 16진수는 X·Y·B·W만 기억하면 돼요.</p></div>
+  </div>
+</section>
+
+<section class="alt" id="io">
+  <div class="wrap">
+    <h2>학교 장비는 왜 출력이 Y20부터일까?</h2>
+    <p class="lead">Q 시리즈는 베이스에 꽂힌 순서대로 모듈에 번호를 이어서 붙여요. 0번 슬롯 입력 모듈이 32점(X0~X1F)을 쓰면, 1번 슬롯 출력 모듈은 그다음 번호인 Y20부터 시작해요.</p>
+    <figure class="dia">
+      <svg viewBox="0 0 860 210" width="860" role="img" aria-label="베이스 유닛: 전원, CPU Q03UDV, 0번 슬롯 입력 32점 X0~X1F, 1번 슬롯 출력 32점 Y20~Y3F, 2번 슬롯 입력 16점 X40~X4F">
+        <g font-family="IBM Plex Sans KR, sans-serif" fill="#18202b">
+          <rect x="6" y="20" width="848" height="150" rx="10" fill="#eef2f7" stroke="#c3cbd6"/>
+          <text x="20" y="40" font-size="12.5" fill="#5b6878">베이스 유닛</text>
+          <rect x="20" y="50" width="96" height="108" rx="6" fill="#fff" stroke="#c3cbd6"/><text x="68" y="100" text-anchor="middle" font-weight="600" font-size="14">전원</text><text x="68" y="120" text-anchor="middle" font-size="12" fill="#5b6878">Q61P</text>
+          <rect x="124" y="50" width="130" height="108" rx="6" fill="#22324a"/><text x="189" y="96" text-anchor="middle" font-weight="600" font-size="14" fill="#fff">CPU</text><text x="189" y="118" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="14" fill="#9fc0ff">Q03UDV</text>
+          <rect x="262" y="50" width="190" height="108" rx="6" fill="#e6eeff" stroke="#9db7ee"/><text x="357" y="76" text-anchor="middle" font-size="12.5" fill="#5b6878">0번 슬롯 · 입력 32점</text><text x="357" y="110" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="20" fill="#1f4fbf">X0 ~ X1F</text><text x="357" y="138" text-anchor="middle" font-size="12" fill="#5b6878">번호 0~1F 사용</text>
+          <rect x="460" y="50" width="190" height="108" rx="6" fill="#ffe3df" stroke="#efa79c"/><text x="555" y="76" text-anchor="middle" font-size="12.5" fill="#5b6878">1번 슬롯 · 출력 32점</text><text x="555" y="110" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="20" fill="#b8321f">Y20 ~ Y3F</text><text x="555" y="138" text-anchor="middle" font-size="12" fill="#5b6878">번호 20~3F 사용</text>
+          <rect x="658" y="50" width="184" height="108" rx="6" fill="#fff" stroke="#c3cbd6" stroke-dasharray="5 4"/><text x="750" y="76" text-anchor="middle" font-size="12.5" fill="#5b6878">2번 슬롯 · 예: 입력 16점</text><text x="750" y="110" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="20" fill="#1f4fbf">X40 ~ X4F</text><text x="750" y="138" text-anchor="middle" font-size="12" fill="#5b6878">그다음 번호 40부터</text>
+          <text x="430" y="196" text-anchor="middle" font-size="13" fill="#3b4757">번호는 X·Y 구분 없이 슬롯 순서대로 이어져요 → 0번 슬롯이 0~1F를 쓰면 1번 슬롯은 20부터</text>
+        </g>
+      </svg>
+      <figcaption>예시 구성이에요. 모듈 점수(16·32·64점)와 꽂힌 순서에 따라 번호가 달라져요. 우리 장비 번호는 수업 자료나 GX Works2의 PLC 파라미터 → I/O 할당에서 확인하세요.</figcaption>
+    </figure>
+    <div class="callout warn"><b>그럼 이 장비에서 Y1을 쓰면?</b><p>프로그램 안에서는 Y1이 정상적으로 켜지지만, Y1 번호에 연결된 출력 단자가 없어서 바깥에서는 아무것도 안 켜져요. M처럼 메모리만 바뀌는 거예요. <b>실습 장비에서 램프가 안 켜지면 출력 번호부터 확인하세요.</b> 시뮬레이터에서는 오른쪽 출력 범위를 Y0~Y1F로 바꾸면 Y1 램프를 볼 수 있어요.</p></div>
+  </div>
+</section>
+
+<section id="timer">
+  <div class="wrap">
+    <h2>타이머 T와 카운터 C</h2>
+    <p class="lead">T와 C는 이름 하나에 <b>코일, 접점, 현재값</b> 세 가지가 붙어 있어요. 코일(<code>OUT T0 K30</code>)로 시작시키고, 접점(<code>T0</code>)으로 결과를 읽어요.</p>
+    <div class="grid2">
+      <figure class="dia">
+        <svg viewBox="0 0 420 190" width="420" role="img" aria-label="타이머 타이밍: M0이 켜지면 T0 현재값이 0에서 30까지 올라가고 3초 뒤 T0 접점이 켜지며, M0이 꺼지면 둘 다 0으로 돌아감">
+          <g font-family="JetBrains Mono, monospace" font-size="12.5" fill="#18202b">
+            <text x="6" y="38" font-weight="700">M0 코일</text>
+            <path d="M92 42H130V20H330V42H410" stroke="#1f4fbf" stroke-width="2.4" fill="none"/>
+            <text x="6" y="98" font-weight="700">T0 현재값</text>
+            <path d="M92 108H130L250 70H330L330 108H410" stroke="#7a4dc1" stroke-width="2.4" fill="none"/>
+            <text x="252" y="64" font-size="11.5" fill="#7a4dc1">30 (=K30)</text>
+            <text x="6" y="158" font-weight="700">T0 접점</text>
+            <path d="M92 162H250V140H330V162H410" stroke="#b8321f" stroke-width="2.4" fill="none"/>
+            <path d="M130 172V180M250 172V180" stroke="#8a96a6" stroke-width="1"/>
+            <path d="M130 176H250" stroke="#8a96a6" stroke-width="1"/>
+            <text x="190" y="190" text-anchor="middle" font-size="11.5" fill="#5b6878">3.0초 (30 × 0.1초)</text>
+          </g>
+        </svg>
+        <figcaption><code>OUT T0 K30</code>: M0이 켜진 채로 3초가 지나면 T0 접점 ON. 중간에 M0이 꺼지면 현재값이 0으로 돌아가요.</figcaption>
+      </figure>
+      <div>
+        <div class="tablewrap"><table class="t" style="min-width:0">
+          <tr><th>써 놓은 것</th><th>뜻</th></tr>
+          <tr><td><code>OUT T0 K30</code></td><td>T0 타이머 코일, 설정 3.0초 (Q 시리즈 기본 0.1초 단위)</td></tr>
+          <tr><td><code>T0</code> 접점</td><td>시간이 다 되면 ON</td></tr>
+          <tr><td><code>OUT T1 K5</code></td><td>0.5초 — 플리커(깜빡이)에 많이 써요</td></tr>
+          <tr><td><code>OUT C0 K5</code></td><td>C0 코일이 꺼짐→켜짐 될 때마다 1 증가, 5가 되면 C0 접점 ON</td></tr>
+          <tr><td><code>RST C0</code></td><td>카운터를 0으로. 카운터는 코일이 꺼져도 숫자를 기억해서 꼭 리셋해야 해요</td></tr>
+        </table></div>
+        <div class="callout"><b>시뮬레이터에서 확인</b><p>예제 <a href="simulator.html#ex-3">ON 딜레이 타이머</a>, <a href="simulator.html#ex-5">카운터 (5회)</a>를 열고 실행하면 코일 아래 파란 숫자로 현재값이 올라가는 게 보여요.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="word">
+  <div class="wrap">
+    <h2>숫자 다루기: D, K, H, KnY</h2>
+    <p class="lead">비트(ON/OFF)가 아니라 숫자를 다룰 때 쓰는 디바이스예요. <code>MOV K10 D0</code>은 "숫자 10을 D0 칸에 넣어라"라는 뜻이에요.</p>
+    <div class="grid2">
+      <div class="tablewrap"><table class="t" style="min-width:0">
+        <tr><th>예</th><th>뜻</th></tr>
+        <tr><td><code>MOV K10 D0</code></td><td>D0 = 10</td></tr>
+        <tr><td><code>+ D0 K5 D2</code></td><td>D2 = D0 + 5</td></tr>
+        <tr><td><code>INCP D0</code></td><td>입력이 켜지는 순간 D0을 1 올림</td></tr>
+        <tr><td><code>LD&gt;= D0 K5</code></td><td>D0이 5 이상이면 ON인 비교 접점</td></tr>
+        <tr><td><code>H1F</code></td><td>16진수 1F = 10진수 31</td></tr>
+        <tr><td><code>K4X0</code></td><td>X0~XF 16개 입력을 묶어 숫자 하나로 읽기</td></tr>
+      </table></div>
+      <figure class="dia">
+        <div class="bits" aria-label="D0 값 6을 K1Y24에 보내면 Y25와 Y26이 켜짐">
+          <div class="bit"><i></i>Y27<small>×8</small></div>
+          <div class="bit on"><i></i>Y26<small>×4</small></div>
+          <div class="bit on"><i></i>Y25<small>×2</small></div>
+          <div class="bit"><i></i>Y24<small>×1</small></div>
+          <div style="font:700 22px var(--font-mono);padding:0 0 18px 8px">= 4 + 2 = <span style="color:var(--accent)">6</span></div>
+        </div>
+        <figcaption><code>MOV D0 K1Y24</code>에서 D0이 6이면: K1 = 4비트 묶음이라 Y24~Y27을 쓰고, 2진수 0110이 되어 Y25와 Y26이 켜져요. 가장 작은 번호(Y24)가 1의 자리예요.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="sm">
+  <div class="wrap">
+    <h2>특수 릴레이 SM — 자주 쓰는 것</h2>
+    <p class="lead">CPU가 알아서 켜고 끄는 비트예요. 프로그램에서는 접점으로 읽기만 해요.</p>
+    <div class="tablewrap"><table class="t">
+      <thead><tr><th>디바이스</th><th>동작</th><th>어디에 쓰나</th></tr></thead>
+      <tbody>
+        <tr><td class="dv">SM400</td><td>항상 ON</td><td>조건 없이 매 스캔 실행할 명령 앞에 (예: <code>MOV D0 K1Y24</code>)</td></tr>
+        <tr><td class="dv">SM401</td><td>항상 OFF</td><td>회로를 잠깐 꺼 둘 때</td></tr>
+        <tr><td class="dv">SM402</td><td>RUN 직후 1스캔만 ON</td><td>처음 한 번 초기값 넣기 (<code>MOV K0 D0</code>)</td></tr>
+        <tr><td class="dv">SM403</td><td>RUN 직후 1스캔만 OFF</td><td>SM402의 반대</td></tr>
+        <tr><td class="dv">SM410</td><td>0.1초 주기로 깜빡임</td><td>빠른 점멸</td></tr>
+        <tr><td class="dv">SM411</td><td>0.2초 주기로 깜빡임</td><td>점멸 램프</td></tr>
+        <tr><td class="dv">SM412</td><td>1초 주기로 깜빡임 (0.5초 ON / 0.5초 OFF)</td><td>타이머 없이 램프 깜빡이기</td></tr>
+        <tr><td class="dv">SM413</td><td>2초 주기로 깜빡임</td><td>느린 점멸</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="alt" id="decoder">
+  <div class="wrap">
+    <h2>번호 해석기</h2>
+    <p class="lead">디바이스를 입력하면 무슨 뜻인지 풀어 줘요. 아래 예시를 눌러 봐도 돼요.</p>
+    <div class="decoder">
+      <div class="row"><label for="decIn" class="sr" style="position:absolute;left:-9999px">디바이스 입력</label><input id="decIn" value="Y1" autocomplete="off" spellcheck="false" placeholder="예: Y1, X1F, T0, K1Y24"></div>
+      <div class="chips" id="decChips"></div>
+      <div id="decOut" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<section id="mistakes">
+  <div class="wrap">
+    <h2>자주 하는 실수</h2>
+    <p class="lead">실습 장비에서 "왜 안 되지?" 할 때 대부분 여기 걸려요.</p>
+    <ul class="mist">
+      <li><b>X9 다음을 X10으로 착각</b><p><span class="x">X10</span>은 17번째예요. 열 번째는 <span class="o">X9</span>, 그다음은 <span class="o">XA</span>예요.</p></li>
+      <li><b>M에 16진수를 씀</b><p><span class="x">MA</span>, <span class="x">D1F</span>는 없어요. M·T·C·D는 10진수라 <span class="o">M10</span>, <span class="o">D31</span>처럼 써요.</p></li>
+      <li><b>K30을 30초로 착각</b><p>타이머는 0.1초 단위라 <span class="o">OUT T0 K30</span>은 3초예요. 30초는 <span class="o">K300</span>.</p></li>
+      <li><b>입력 X를 출력으로 씀</b><p><span class="x">OUT X0</span>은 안 돼요. X는 바깥에서 들어오는 신호라 프로그램이 켤 수 없어요.</p></li>
+      <li><b>같은 출력을 두 번 OUT (이중 코일)</b><p><span class="x">OUT Y20</span>을 두 줄에 쓰면 아래쪽 줄 결과만 남아요. 조건을 OR로 묶어서 한 번만 쓰세요.</p></li>
+      <li><b>장비 출력 번호와 다르게 씀</b><p>출력 모듈이 Y20부터인데 <span class="x">Y0</span>을 쓰면 램프가 안 켜져요. <a href="#io">I/O 할당</a>을 확인하세요.</p></li>
+      <li><b>카운터를 리셋 안 함</b><p>카운터는 설정값에 도달하면 그대로 멈춰 있어요. <span class="o">RST C0</span>을 넣어야 다시 세요.</p></li>
+      <li><b>펄스가 필요한 곳에 일반 접점</b><p><span class="x">LD X0 → INC D0</span>은 누르고 있는 동안 매 스캔(약 10ms마다) 올라가요. 한 번만 올리려면 <span class="o">LDP X0</span>이나 <span class="o">INCP</span>를 쓰세요.</p></li>
+    </ul>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <div>Q03UDV 래더 시뮬레이터 · PLC 수업 연습용 프로젝트<br>미쓰비시전기의 공식 자료가 아니에요. 정확한 사양은 미쓰비시 Q 시리즈 매뉴얼을 확인하세요.</div>
+    <div><a href="index.html">홈</a> · <a href="simulator.html">시뮬레이터</a></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  'use strict';
+  // 16진수 번호 표
+  const g = document.getElementById('hexGrid');
+  for (let n = 0; n < 32; n++) {
+    const d = document.createElement('div');
+    const h = n.toString(16).toUpperCase();
+    if (/[A-F]/.test(h)) d.className = 'af';
+    if (n === 16) d.className = 'ten';
+    d.innerHTML = 'X' + h + '<small>' + n + '</small>';
+    g.appendChild(d);
+  }
+
+  // 번호 해석기
+  const DEV = {
+    X:{hex:true, max:0x1FFF, name:'입력', what:'버튼·센서 신호가 PLC로 들어오는 단자예요. 프로그램은 읽기만 해요.', use:n => `<code>${n}</code> a접점, <code>LDI ${n}</code> b접점 (코일로는 못 써요)`},
+    Y:{hex:true, max:0x1FFF, name:'출력', what:'PLC가 램프·릴레이·모터로 신호를 내보내는 단자예요.', use:n => `<code>OUT ${n}</code> 코일로 켜고, <code>${n}</code> 접점으로 상태를 읽어요`},
+    M:{hex:false, max:8191, name:'내부 릴레이', what:'실제 단자가 없는 메모용 스위치예요. 중간 상태를 기억할 때 써요.', use:n => `<code>OUT ${n}</code>, <code>SET ${n}</code>, <code>${n}</code> 접점`},
+    L:{hex:false, max:8191, name:'래치 릴레이', what:'M과 같지만 전원이 꺼져도 상태를 기억해요.', use:n => `<code>SET ${n}</code> / <code>RST ${n}</code>`},
+    B:{hex:true, max:0x1FFF, name:'링크 릴레이', what:'네트워크로 다른 PLC와 주고받는 비트예요.', use:n => `<code>${n}</code> 접점, <code>OUT ${n}</code>`},
+    T:{hex:false, max:2047, name:'타이머', what:'코일이 켜진 채로 설정 시간이 지나면 접점이 켜져요. 0.1초 단위예요.', use:n => `<code>OUT ${n} K30</code> → 3초 타이머, <code>${n}</code> 접점은 시간이 다 되면 ON`},
+    C:{hex:false, max:1023, name:'카운터', what:'코일 입력이 꺼짐→켜짐 될 때마다 1씩 세요. 설정값이 되면 접점 ON.', use:n => `<code>OUT ${n} K5</code> → 5회, <code>RST ${n}</code>로 0으로`},
+    D:{hex:false, max:12287, name:'데이터 레지스터', what:'숫자 하나(-32768 ~ 32767)를 저장하는 칸이에요.', use:n => `<code>MOV K10 ${n}</code>, <code>INCP ${n}</code>, <code>LD= ${n} K5</code>`},
+    W:{hex:true, max:0x1FFF, name:'링크 레지스터', what:'네트워크로 주고받는 숫자 칸이에요.', use:n => `<code>MOV ${n} D0</code>`},
+    SM:{hex:false, max:2047, name:'특수 릴레이', what:'CPU가 정해 둔 상태 비트예요. 접점으로 읽기만 해요.', use:n => `<code>${n}</code> 접점`},
+    SD:{hex:false, max:2047, name:'특수 레지스터', what:'CPU 상태를 담은 숫자예요.', use:n => `<code>MOV ${n} D0</code>`},
+  };
+  const SMS = {400:'항상 ON', 401:'항상 OFF', 402:'RUN 직후 1스캔만 ON', 403:'RUN 직후 1스캔만 OFF', 409:'0.01초 클럭', 410:'0.1초 주기로 깜빡임', 411:'0.2초 주기로 깜빡임', 412:'1초 주기로 깜빡임', 413:'2초 주기로 깜빡임'};
+  const SDS = {520:'현재 스캔 시간 (ms)', 524:'최소 스캔 시간 (ms)', 526:'최대 스캔 시간 (ms)'};
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const fmt = (t, n) => t + (DEV[t].hex ? n.toString(16).toUpperCase() : String(n));
+  const tag = (cls, t) => `<span class="tag ${cls}">${t}</span>`;
+
+  function explain(raw) {
+    const s = raw.trim().toUpperCase().replace(/\s+/g, '');
+    if (!s) return '<p class="muted">디바이스를 입력하세요.</p>';
+    let m;
+    const out = (name, tags, rows) => `<div class="head"><span class="name">${esc(name)}</span>${tags}</div><dl>${rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('')}</dl>`;
+    if ((m = /^K(-?\d+)$/.exec(s))) {
+      const v = parseInt(m[1], 10);
+      const rows = [['뜻', `10진 상수 — 그냥 숫자 <b>${v}</b>이에요.`]];
+      if (v < -32768 || v > 32767) rows.push(['주의', '16비트 명령에서는 -32768 ~ 32767 범위를 넘어요.']);
+      if (v >= 0 && v <= 32767) rows.push(['타이머 설정값이면', `<code>OUT T0 K${v}</code> = ${(v / 10).toFixed(1)}초`]);
+      rows.push(['2진수', (v >>> 0 & 0xFFFF).toString(2).padStart(16, '0').replace(/(\d{4})(?=\d)/g, '$1 ')]);
+      return out('K' + v, tag('dec', '상수'), rows);
+    }
+    if ((m = /^H([0-9A-F]{1,4})$/.exec(s))) {
+      const v = parseInt(m[1], 16);
+      return out('H' + v.toString(16).toUpperCase(), tag('hex', '16진 상수'), [['뜻', `16진수로 쓴 숫자 — 10진수로 <b>${v}</b>이에요.`], ['2진수', v.toString(2).padStart(16, '0').replace(/(\d{4})(?=\d)/g, '$1 ')]]);
+    }
+    if ((m = /^K([1-8])(X|Y|M|L|B)([0-9A-F]+)$/.exec(s))) {
+      const k = +m[1], t = m[2], d = DEV[t];
+      if (!d.hex && /[A-F]/.test(m[3])) return `<p class="err">${t}은(는) 10진수 번호라 A~F를 쓸 수 없어요.</p>`;
+      const n = parseInt(m[3], d.hex ? 16 : 10);
+      const last = n + k * 4 - 1;
+      if (last > d.max) return `<p class="err">범위를 넘어요: ${fmt(t, n)}부터 ${k * 4}비트면 ${t} 최대 번호를 지나쳐요.</p>`;
+      return out(`K${k}${fmt(t, n)}`, tag('word', '비트 묶음'), [
+        ['뜻', `${t}(${d.name}) <b>${k * 4}개</b>를 묶어 숫자 하나처럼 써요 (K${k} = 4비트 × ${k}).`],
+        ['범위', `<code>${fmt(t, n)}</code> ~ <code>${fmt(t, last)}</code> · 1의 자리는 가장 작은 번호인 <code>${fmt(t, n)}</code>`],
+        ['예', t === 'X' ? `<code>MOV K${k}${fmt(t, n)} D0</code> → 입력 ${k * 4}개 상태를 숫자로 D0에` : `<code>MOV D0 K${k}${fmt(t, n)}</code> → D0 값을 ${k * 4}개 비트로 표시`],
+      ]);
+    }
+    if ((m = /^(SM|SD|X|Y|M|L|B|T|C|D|W)([0-9A-Z]+)$/.exec(s))) {
+      const t = m[1], d = DEV[t], num = m[2];
+      if (d.hex && /[G-Z]/.test(num)) return `<p class="err">${t} 번호는 16진수라 0~9와 A~F만 써요. "${esc(num)}"에는 다른 글자가 있어요.</p>`;
+      if (!d.hex && /[A-Z]/.test(num)) return `<p class="err">${t}(${d.name})은(는) 10진수 번호라 A~F를 쓸 수 없어요. 예: ${t}10, ${t}31</p>`;
+      const n = parseInt(num, d.hex ? 16 : 10);
+      if (n > d.max) return `<p class="err">${fmt(t, n)}은(는) Q03UDV 기본 범위(${fmt(t, 0)} ~ ${fmt(t, d.max)})를 넘어요.</p>`;
+      const name = fmt(t, n);
+      const isBit = ['X','Y','M','L','B','SM'].includes(t);
+      const tags = (d.hex ? tag('hex', '16진수 번호') : tag('dec', '10진수 번호')) + ' ' + (isBit ? tag('bit', '비트') : t === 'T' || t === 'C' ? tag('bit', '비트') + ' ' + tag('word', '현재값') : tag('word', '워드'));
+      const rows = [['종류', `<b>${t} = ${d.name}</b> — ${d.what}`]];
+      if (d.hex) {
+        rows.push(['번호', `16진수 ${n.toString(16).toUpperCase()} = 10진수 <b>${n}</b> → ${t}0부터 세면 <b>${n + 1}번째</b>`]);
+        if (t === 'X' || t === 'Y') {
+          const gs = Math.floor(n / 32) * 32;
+          rows.push(['32점 모듈로 보면', `${fmt(t, gs)} ~ ${fmt(t, gs + 31)} 묶음의 ${n - gs + 1}번째 단자`]);
+        }
+      } else {
+        rows.push(['번호', `10진수 ${n} → ${t}0부터 세면 <b>${n + 1}번째</b>`]);
+      }
+      if (t === 'SM' && SMS[n]) rows.push(['동작', `<b>${SMS[n]}</b>`]);
+      if (t === 'SD' && SDS[n]) rows.push(['내용', `<b>${SDS[n]}</b>`]);
+      rows.push(['래더에서', d.use(name)]);
+      if (t === 'Y') rows.push(['참고', '출력 모듈이 이 번호에 없으면 프로그램 안에서만 켜지고 바깥 램프는 안 켜져요.']);
+      return out(name, tags, rows);
+    }
+    return '<p class="err">Q03UDV에서 쓰는 디바이스 형식이 아니에요. X Y M L B T C D W SM SD 뒤에 번호, 또는 K·H 상수를 써 보세요.</p>';
+  }
+  const inp = document.getElementById('decIn'), outEl = document.getElementById('decOut');
+  const run = () => { outEl.innerHTML = explain(inp.value); };
+  inp.addEventListener('input', run);
+  const chips = document.getElementById('decChips');
+  ['Y1','X10','X1F','Y20','M100','T0','C5','D10','SM412','K30','H1F','K1Y24','MA'].forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = c;
+    b.addEventListener('click', () => { inp.value = c; run(); inp.focus(); });
+    chips.appendChild(b);
+  });
+  run();
+})();
+</script>
+</body>
+</html>

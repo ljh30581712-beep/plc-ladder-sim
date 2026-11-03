@@ -1,0 +1,25 @@
+# Q03UDV 래더 시뮬레이터
+
+GX Works2처럼 래더를 짜고, 브라우저에서 바로 돌려보는 미쓰비시 Q03UDV PLC 연습 사이트.
+
+**사이트:** https://ljh30581712-beep.github.io/plc-ladder-sim/
+
+## 페이지
+
+| 파일 | 내용 |
+|---|---|
+| `index.html` | 메인 소개 페이지 |
+| `simulator.html` | 래더 편집기 + 시뮬레이터 |
+| `devices.html` | 디바이스 설명 (X, Y, M, T, C, D, SM, K, H, KnY) + 번호 해석기 |
+
+## 기능
+
+- GX Works2와 같은 단축키: F5 a접점, F6 b접점, F7 코일, F8 응용명령, F9 가로선, Shift+F9 세로선
+- F4 변환: 회로 오류 검사 + 명령 리스트(LD, AND, OR, ANB, ORB, MPS …) 생성
+- 시뮬레이션: X 입력 스위치, Y 출력 램프, 타이머·카운터 현재값, 디바이스 모니터
+- 예제 회로 8개 (`simulator.html#ex-1` ~ `#ex-8`로 바로 열기)
+- 브라우저 자동 저장, .json 파일 내보내기/불러오기
+
+## 참고
+
+PLC 수업 연습용 프로젝트입니다. 미쓰비시전기의 공식 소프트웨어가 아니며, GX Works2·MELSEC은 미쓰비시전기의 상표입니다.
