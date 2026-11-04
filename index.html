@@ -50,20 +50,20 @@
     <div>
       <div class="eyebrow">PLC 래더 연습 · Q03UDV</div>
       <h1>GX Works2처럼 래더를 짜고, 브라우저에서 바로 돌려보기</h1>
-      <p>설치 없이 F5·F6·F7 단축키로 래더를 입력하고, F4로 변환한 다음 가상 Q03UDV CPU에서 실행해요. 켜진 접점은 파랗게, 출력 램프는 빨갛게 보여요.</p>
+      <p>설치 없이 F5·F6·F7 단축키로 래더를 입력하고, F4로 변환한 다음 가상 Q03UDV CPU에서 실행해요. 공급 실린더·컨베이어·센서가 달린 가상 실습 장비가 내가 짠 래더대로 움직여요.</p>
       <div class="actions">
         <a class="btn primary" href="simulator.html">시뮬레이터 열기 →</a>
         <a class="btn ghost" href="devices.html">Y1이 뭐예요? 디바이스 설명</a>
       </div>
       <div class="facts">
-        <div><b>8개</b>예제 회로</div>
+        <div><b>10개</b>예제 회로</div>
         <div><b>17개</b>응용 명령 + 비교 접점</div>
         <div><b>10ms</b>스캔 주기</div>
       </div>
     </div>
     <figure class="shot" style="margin:0">
-      <img src="assets/preview.png" width="1280" height="760" alt="시뮬레이터 화면: ON 딜레이 타이머 예제를 모니터 모드로 실행 중. 켜진 접점이 파랗게 칠해져 있고 오른쪽에 X 입력 스위치와 Y 출력 램프가 있다.">
-      <figcaption>ON 딜레이 타이머 예제를 모니터 모드로 실행한 실제 화면</figcaption>
+      <img src="assets/preview.png" width="1280" height="800" alt="시뮬레이터 화면: 위에는 모니터 중인 래더, 아래에는 가상 설비. 금속 자재가 컨베이어를 따라 스토퍼 쪽으로 이동하고 있다.">
+      <figcaption>설비 자동 예제 실행 화면 — 래더 모니터와 가상 설비가 같이 움직여요</figcaption>
     </figure>
   </div>
 </div>
@@ -101,7 +101,19 @@
   </div>
 </section>
 
-<section id="start">
+<section id="plant">
+  <div class="wrap">
+    <h2>가상 설비: 래더대로 움직이는 실습 장비</h2>
+    <p class="lead">학교 실습 장비처럼 매거진, 공급 실린더, 컨베이어, 근접센서, 스토퍼, 배출 실린더가 있어요. 래더의 Y 출력이 실린더와 모터를 움직이고, 센서는 X 입력으로 래더에 들어가요.</p>
+    <div class="grid3">
+      <div class="card"><h3>출력 Y → 설비가 움직임</h3><p><code>Y20</code> 공급 실린더, <code>Y21</code> 컨베이어, <code>Y22</code> 스토퍼, <code>Y23</code> 배출 실린더, <code>Y24~Y26</code> 램프.</p></div>
+      <div class="card"><h3>센서 → 입력 X로 들어옴</h3><p>리드 스위치(실린더 전진·후진), 매거진 감지, 용량형(모든 자재)·유도형(금속만) 근접센서, 광센서. 번호는 <b>I/O 할당</b>에서 학교 장비에 맞게 바꿀 수 있어요.</p></div>
+      <div class="card"><h3>바로 해 보기</h3><p><a href="simulator.html#ex-10">설비 자동 예제</a>를 열고 ▶ 시뮬레이션 시작 → 설비 그림의 초록 PB1. 금속은 배출함으로, 플라스틱은 컨베이어 끝까지 가요.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="start" class="alt">
   <div class="wrap">
     <h2>3단계로 시작하기</h2>
     <p class="lead">처음이면 자기유지 회로부터 만들어 보세요. 기동 버튼(X0)을 한 번 누르면 모터(Y20)가 계속 돌고, 정지 버튼(X1)을 누르면 멈추는 회로예요.</p>
@@ -146,7 +158,7 @@
   </div>
 </section>
 
-<section class="alt" id="examples">
+<section id="examples">
   <div class="wrap">
     <h2>예제 회로로 바로 시작</h2>
     <p class="lead">누르면 시뮬레이터에 바로 열려요. 하던 작업이 있으면 자동으로 백업해 둬서, 프로젝트 → 열기에서 다시 복구할 수 있어요.</p>
@@ -159,11 +171,13 @@
       <a class="ex" href="simulator.html#ex-6"><span class="n">6</span><div><b>신호등 (순차 제어)</b><span>빨강 5초 → 초록 4초 → 노랑 1초 반복</span><div class="devs"><i>T0~T2</i><i>Y20~Y22</i></div></div><span class="go">열기 →</span></a>
       <a class="ex" href="simulator.html#ex-7"><span class="n">7</span><div><b>데이터 처리 (INC·비교·MOV)</b><span>누른 횟수를 D0에 세고 5 이상이면 Y20 ON, Y24~Y27에 2진수 표시</span><div class="devs"><i>INC D0</i><i>LD&gt;= D0 K5</i><i>K1Y24</i></div></div><span class="go">열기 →</span></a>
       <a class="ex" href="simulator.html#ex-8"><span class="n">8</span><div><b>한 버튼 ON/OFF (ALTP)</b><span>X0을 누를 때마다 Y20이 켜졌다 꺼졌다</span><div class="devs"><i>ALTP Y20</i></div></div><span class="go">열기 →</span></a>
+      <a class="ex" href="simulator.html#ex-9"><span class="n">9</span><div><b>설비 기초: 공급 + 컨베이어</b><span>가상 설비 — PB1로 컨베이어 운전, PB2 누르는 동안 공급 실린더 전진</span><div class="devs"><i>Y20 공급</i><i>Y21 컨베이어</i></div></div><span class="go">열기 →</span></a>
+      <a class="ex" href="simulator.html#ex-10"><span class="n">10</span><div><b>설비 자동: 공급 → 이송 → 금속 분류</b><span>가상 설비 — 자재를 하나씩 공급해서 금속은 배출함, 플라스틱은 끝까지</span><div class="devs"><i>SET/RST</i><i>X9 유도형</i><i>Y23 배출</i></div></div><span class="go">열기 →</span></a>
     </div>
   </div>
 </section>
 
-<section id="keys">
+<section id="keys" class="alt">
   <div class="wrap">
     <h2>자주 쓰는 단축키</h2>
     <p class="lead">GX Works2와 같은 키예요. 이 사이트에서는 F5(새로고침) 같은 브라우저 키가 래더 입력용으로 바뀌어요.</p>
@@ -188,7 +202,7 @@
   </div>
 </section>
 
-<section class="alt">
+<section>
   <div class="wrap">
     <div class="final">
       <a href="devices.html"><b>X, Y, M, T가 헷갈린다면</b><span>Y1이 왜 "출력 1번"인지, X10이 왜 10번째가 아닌지, 학교 장비는 왜 Y20부터인지 그림으로 정리했어요.</span><br><em>디바이스 설명 보기 →</em></a>

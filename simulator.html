@@ -93,7 +93,18 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
 #nav .head{padding:3px 10px;color:var(--muted);font-weight:600}
 #nav .foot{margin:14px 10px 0;padding-top:10px;border-top:1px solid #dde3ea;color:var(--muted);font-size:11.5px;line-height:1.5}
 
-#center{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0;min-height:0;background:var(--paper)}
+#center{display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;min-width:0;min-height:0;background:var(--paper)}
+#plantPane{display:none;border-top:2px solid #9fb0c6;background:#eef1f5;height:340px;grid-template-rows:auto minmax(0,1fr)}
+#plantPane.show{display:grid}
+#plantPane.big{height:480px}
+#plantHead{display:flex;align-items:center;gap:6px;padding:4px 10px;background:#e6ebf1;border-bottom:1px solid #d3dae3;font-size:12px;flex-wrap:wrap}
+#plantHead b{font-size:12.5px;margin-right:4px}
+#plantHead .chip{font:600 11px var(--font-mono);background:#fff;border:1px solid #d5dce5;border-radius:10px;padding:1px 8px;color:#3b4757;white-space:nowrap}
+#plantHead .grow{flex:1}
+#plantHead .btn{padding:2px 8px;font-size:12px}
+#plantWrap{position:relative;min-height:0}
+#plantCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#btnPlant.on{background:#22324a;color:#fff;border-color:#22324a}
 #tabs{display:flex;gap:2px;padding:4px 6px 0;background:#e9edf2;border-bottom:1px solid var(--line);overflow-x:auto}
 .tab{border:1px solid var(--line);border-bottom:0;background:#dfe5ec;padding:4px 12px;border-radius:4px 4px 0 0;cursor:pointer;white-space:nowrap;font-size:12.5px;color:#3b4757}
 .tab.active{background:#fff;color:var(--ink);font-weight:600;position:relative;top:1px}
@@ -258,6 +269,7 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
     </div>
     <span class="sep"></span>
     <button class="btn" id="btnSim" data-cmd="toggleSim">▶ 시뮬레이션 시작</button>
+    <button class="btn" id="btnPlant" data-cmd="togglePlant" title="공급·컨베이어 실습 장비를 가상으로 보기">가상 설비</button>
     <span class="grow"></span>
     <label class="chk"><input type="checkbox" id="chkCm"> 코멘트 표시</label>
     <label class="chk"><input type="checkbox" id="chkFlow"> 전류 흐름</label>
@@ -317,6 +329,19 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
           <p class="sub">코멘트는 래더의 접점·코일 아래에 표시됩니다. 프로그램에 쓰인 디바이스는 자동으로 목록에 나옵니다.</p>
           <table class="dtable"><thead><tr><th style="width:110px">디바이스</th><th style="width:320px">코멘트</th><th></th></tr></thead><tbody id="cmBody"></tbody></table>
         </div>
+      </div>
+      <div id="plantPane" aria-label="가상 설비">
+        <div id="plantHead">
+          <b>가상 설비</b><span class="muted">공급 · 컨베이어 · 금속 분류</span>
+          <span class="chip" id="plMag">매거진 0</span><span class="chip" id="plBox">배출함 0</span><span class="chip" id="plDone">완료 0</span>
+          <span class="grow"></span>
+          <button class="btn" id="plRefill" title="매거진에 자재를 6개까지 채움">자재 보충</button>
+          <button class="btn" id="plReset" title="자재·실린더를 처음 상태로">설비 초기화</button>
+          <button class="btn" id="plIO" title="센서·실린더가 연결된 X·Y 번호 보기/바꾸기">I/O 할당</button>
+          <button class="btn" id="plSize">크게</button>
+          <button class="btn" data-cmd="togglePlant" title="설비 패널 닫기">닫기</button>
+        </div>
+        <div id="plantWrap"><canvas id="plantCanvas" aria-label="가상 설비 화면. 버튼은 마우스로 누를 수 있음"></canvas></div>
       </div>
       <div id="outPane">
         <div id="outHead"><span>출력</span><span class="muted" style="font-weight:400" id="outSummary"></span><span class="grow"></span><button id="outClear">지우기</button><button id="outToggle">접기</button></div>
@@ -1644,12 +1669,12 @@ function monitorAt(r, c) {
 const MENU = [
   {t:'프로젝트', items:[['새 프로젝트','newProject'],['열기 · 예제…','openDialog','Ctrl+O'],null,['저장','save','Ctrl+S'],['다른 이름으로 저장…','saveAs'],null,['파일로 내보내기 (.json)','exportFile'],['파일에서 불러오기…','importFile']]},
   {t:'편집', items:[['되돌리기','undo','Ctrl+Z'],['다시 실행','redo','Ctrl+Y'],null,['잘라내기','cut','Ctrl+X'],['복사','copy','Ctrl+C'],['붙여넣기','paste','Ctrl+V'],['삭제','del','Del'],null,['행 삽입','insRow','Shift+Ins'],['행 삭제','delRow','Shift+Del'],null,['디바이스 코멘트 편집 모드','commentMode']]},
-  {t:'보기', items:[['코멘트 표시','toggleCm'],['전류 흐름 표시 (모니터)','toggleFlow'],null,['래더','tabLadder'],['명령 리스트','tabList','Alt+F1'],['디바이스 코멘트','tabComments']]},
+  {t:'보기', items:[['코멘트 표시','toggleCm'],['전류 흐름 표시 (모니터)','toggleFlow'],['가상 설비 (공급·컨베이어 장비)','togglePlant'],null,['래더','tabLadder'],['명령 리스트','tabList','Alt+F1'],['디바이스 코멘트','tabComments']]},
   {t:'변환', items:[['변환','convert','F4']]},
   {t:'디버그', items:[['시뮬레이션 시작 / 정지','toggleSim'],null,['쓰기 모드','modeWrite','F2'],['읽기 모드','modeRead','Shift+F2'],['모니터 모드','modeMonitor','F3'],null,['현재값 변경…','modify']]},
   {t:'도움말', items:[['단축키 · 입력 방법','helpKeys','F1'],['지원 명령어','helpIns'],['PLC 파라미터 (디바이스 범위)','param'],null,['디바이스 설명 페이지 (X·Y·M·T…)','devGuide','새 탭'],['메인 페이지','goHome']]},
 ];
-const CHECKS = {toggleCm:() => ED.showCm, toggleFlow:() => ED.flow, commentMode:() => ED.cmEdit};
+const CHECKS = {toggleCm:() => ED.showCm, toggleFlow:() => ED.flow, commentMode:() => ED.cmEdit, togglePlant:() => PL.on};
 function buildMenus() {
   const bar = $('#menubar');
   MENU.forEach(m => {
@@ -2161,6 +2186,42 @@ const EXAMPLES = [
     {c:{0:'LD SM400'}, o:'MOV D0 K1Y24'}], cm:{X0:'+1 버튼', X1:'초기화', D0:'누른 횟수', Y20:'5회 이상', SM400:'항상 ON'}},
   {name:'한 버튼 ON/OFF (ALTP)', desc:'X0을 누를 때마다 Y20이 켜졌다 꺼졌다 반복', rows:[
     {c:{0:'LD X0'}, o:'ALTP Y20'}], cm:{X0:'토글 버튼', Y20:'램프'}},
+  {name:'설비 기초: 공급 + 컨베이어', desc:'가상 설비 — PB1 컨베이어 운전, PB3 정지, PB2 누르는 동안 공급 실린더 전진', plant:true, rows:[
+    {c:{0:'LD X0', 1:'LDI X2'}, o:'OUT M0', v:[1]},
+    {c:{0:'LD M0'}},
+    {c:{0:'LD M0'}, o:'OUT Y21', v:[11]},
+    {o:'OUT Y24'},
+    {c:{0:'LD X1', 1:'LD X6'}, o:'OUT Y20'},
+    {c:{0:'LDI M0'}, o:'OUT Y26'}],
+    cm:{X0:'PB1 시작', X1:'PB2 공급', X2:'PB3 정지', X6:'매거진 자재', M0:'운전', Y20:'공급 실린더', Y21:'컨베이어', Y24:'운전 램프', Y26:'정지 램프'}},
+  {name:'설비 자동: 공급 → 이송 → 금속 분류', desc:'가상 설비 — PB1 누르면 자재를 하나씩 공급, 금속은 배출함으로, 비금속은 컨베이어 끝까지', plant:true, rows:[
+    {c:{0:'LD X0', 1:'LDI X2'}, o:'OUT M0', v:[1]},
+    {c:{0:'LD M0'}},
+    {c:{0:'LD M0'}, o:'OUT Y24'},
+    {c:{0:'LDI M0'}, o:'OUT Y26'},
+    {c:{0:'LD M0', 1:'LD X6', 2:'LD X4', 3:'LDI M10', 4:'LDI M11', 5:'LDI M12', 6:'LDI M13'}, o:'SET M10'},
+    {c:{0:'LD M10'}, o:'OUT Y20'},
+    {c:{0:'LD M10', 1:'LD X5'}, o:'SET M11', v:[11]},
+    {o:'RST M10'},
+    {c:{0:'LD M11'}, o:'OUT Y22'},
+    {c:{0:'LD M11'}, o:'OUT Y21', v:[1]},
+    {c:{0:'LD M13'}},
+    {c:{0:'LD M11', 1:'LD X9'}, o:'SET M20'},
+    {c:{0:'LD M20'}, o:'OUT Y25'},
+    {c:{0:'LD M11', 1:'LD X7', 2:'LD M20'}, o:'SET M12', v:[11]},
+    {o:'RST M11'},
+    {c:{0:'LD M11', 1:'LD X7', 2:'LDI M20'}, o:'SET M13', v:[11]},
+    {o:'RST M11'},
+    {c:{0:'LD M12', 1:'LDI M14'}, o:'OUT Y23'},
+    {c:{0:'LD M12', 1:'LD XB'}, o:'SET M14'},
+    {c:{0:'LD M14', 1:'LD XA'}, o:'RST M12', v:[11]},
+    {o:'RST M14', v:[11]},
+    {o:'RST M20'},
+    {c:{0:'LD M13', 1:'LD XC'}, o:'RST M13', v:[11]},
+    {o:'RST M20'}],
+    cm:{X0:'PB1 시작', X2:'PB3 정지', X4:'공급 후진', X5:'공급 전진', X6:'매거진 자재', X7:'스토퍼 도착', X9:'금속 감지', XA:'배출 후진', XB:'배출 전진', XC:'끝 도착',
+      Y20:'공급 실린더', Y21:'컨베이어', Y22:'스토퍼', Y23:'배출 실린더', Y24:'운전 램프', Y25:'금속 램프', Y26:'정지 램프',
+      M0:'운전', M10:'공급 단계', M11:'이송 단계', M12:'배출 단계', M13:'통과 단계', M14:'배출 전진 끝', M20:'금속 기억'}},
 ];
 function buildRows(spec) {
   return spec.map(s => {
@@ -2186,6 +2247,7 @@ function loadExample(i) {
   const rows = buildRows(ex.rows);
   loadProject({format:'q03udv-ladder', name:ex.name, rows:rows.map(r => ({c:r.c, v:r.v.map((b, k) => (b ? k : -1)).filter(k => k > 0)})), cm:ex.cm});
   log('info', `예제 "${ex.name}" 열기 — ${ex.desc}`);
+  if (ex.plant) { showPlant(true); plantReset(); log('info', '가상 설비가 열렸습니다 — ▶ 시뮬레이션 시작 후 설비 그림의 PB1(초록 버튼)을 누르세요.'); }
 }
 
 /* =====================================================================
@@ -2257,6 +2319,7 @@ const CMD = {
   helpKeys, helpIns, param:paramDialog,
   devGuide:() => { const w = window.open('devices.html', '_blank', 'noopener'); if (!w) location.href = 'devices.html'; },
   goHome:() => { location.href = 'index.html'; },
+  togglePlant:() => showPlant(!PL.on),
 };
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-cmd]');
@@ -2376,8 +2439,351 @@ scr.addEventListener('dblclick', ev => {
 scr.addEventListener('scroll', () => { closeInput(); render(); });
 new ResizeObserver(() => { layout(); render(); }).observe($('#viewLadder'));
 
+/* =====================================================================
+   14. 가상 설비 (매거진 · 공급 실린더 · 컨베이어 · 센서 · 스토퍼 · 배출)
+   ===================================================================== */
+const PLANT_IO = [
+  {k:'pb1', dir:'in', name:'PB1 버튼 (초록)', def:'X0'},
+  {k:'pb2', dir:'in', name:'PB2 버튼 (노랑)', def:'X1'},
+  {k:'pb3', dir:'in', name:'PB3 버튼 (빨강)', def:'X2'},
+  {k:'supB', dir:'in', name:'공급 실린더 후진 (리드 스위치)', def:'X4'},
+  {k:'supF', dir:'in', name:'공급 실린더 전진 (리드 스위치)', def:'X5'},
+  {k:'mag', dir:'in', name:'매거진 자재 감지', def:'X6'},
+  {k:'stopS', dir:'in', name:'스토퍼 위치 도착 (광센서)', def:'X7'},
+  {k:'cap', dir:'in', name:'용량형 근접센서 (모든 자재)', def:'X8'},
+  {k:'ind', dir:'in', name:'유도형 근접센서 (금속만)', def:'X9'},
+  {k:'ejB', dir:'in', name:'배출 실린더 후진 (리드 스위치)', def:'XA'},
+  {k:'ejF', dir:'in', name:'배출 실린더 전진 (리드 스위치)', def:'XB'},
+  {k:'end', dir:'in', name:'컨베이어 끝 도착 (광센서)', def:'XC'},
+  {k:'sup', dir:'out', name:'공급 실린더 솔레노이드', def:'Y20'},
+  {k:'conv', dir:'out', name:'컨베이어 모터', def:'Y21'},
+  {k:'stop', dir:'out', name:'스토퍼 실린더', def:'Y22'},
+  {k:'ej', dir:'out', name:'배출 실린더 솔레노이드', def:'Y23'},
+  {k:'lg', dir:'out', name:'램프 초록', def:'Y24'},
+  {k:'ly', dir:'out', name:'램프 노랑', def:'Y25'},
+  {k:'lr', dir:'out', name:'램프 빨강', def:'Y26'},
+];
+const PIO_KEY = 'q03udv-ladder:plantio';
+const PG = {W:1000, H:330, R:20, cy:178, b0:205, b1:860, bt:148, bb:208, magX:150, supTip0:104, supStroke:100, capX:390, indX:455, stopX:640, v:120};
+PG.ejX = PG.stopX - 5 - PG.R;
+PG.endLim = PG.b1 - 4 - PG.R;
+PG.boxX0 = PG.ejX - 48; PG.boxX1 = PG.ejX + 48; PG.boxY0 = PG.bb + 14; PG.boxY1 = PG.bb + 100;
+const PL = {on:false, big:false, dev:{}, ops:{}, cyl:{sup:0, stop:0, ej:0}, belt:0, stack:[], pieces:[], box:[], done:0, doneKinds:[], pb:{}, sens:{}, last:0, uid:1, btns:[]};
+const KINDS = ['metal', 'white', 'black'];
+const KIND_KO = {metal:'금속', white:'흰색 플라스틱', black:'검정 플라스틱'};
+
+function loadPlantIO() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(PIO_KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  for (const s of PLANT_IO) {
+    let o = parseOperand(saved[s.k] || s.def);
+    if (o.err || o.t !== (s.dir === 'in' ? 'X' : 'Y')) o = parseOperand(s.def);
+    PL.ops[s.k] = o; PL.dev[s.k] = o.text;
+  }
+}
+function plantRefill() {
+  const need = 6 - PL.stack.length;
+  for (let i = 0; i < need; i++) PL.stack.push(KINDS[Math.floor(Math.random() * 3)]);
+  if (!PL.stack.includes('metal')) PL.stack[PL.stack.length - 1] = 'metal';
+  if (PL.stack.every(k => k === 'metal')) PL.stack[0] = 'white';
+}
+function plantReset() {
+  PL.cyl = {sup:0, stop:0, ej:0}; PL.pieces = []; PL.stack = []; PL.box = []; PL.done = 0; PL.doneKinds = [];
+  plantRefill(); plantStep(0); updatePlantHead();
+}
+function showPlant(on) {
+  PL.on = on;
+  $('#plantPane').classList.toggle('show', on);
+  $('#btnPlant').classList.toggle('on', on);
+  if (on && !PL.stack.length && !PL.pieces.length && !PL.box.length && !PL.done) plantReset();
+  if (on && !$('#outPane').classList.contains('collapsed')) { $('#outPane').classList.add('collapsed'); $('#outToggle').textContent = '펼치기'; }
+  if (!on) for (const s of PLANT_IO) if (s.dir === 'in' && s.k.indexOf('pb') !== 0) XIN[PL.ops[s.k].n] = 0;
+  PL.last = 0;
+  requestAnimationFrame(() => { layout(); render(); renderPlant(); updateIO(true); });
+}
+function plantY(k) { return !!(SIM.on && SIM.state === 'RUN' && SIM.mem && PL.ops[k] && rdBit(SIM.mem, PL.ops[k])); }
+function plantStep(dt) {
+  const R = PG.R;
+  const mv = (cur, on, sec) => clamp(cur + (on ? 1 : -1) * dt / sec, 0, 1);
+  PL.cyl.sup = mv(PL.cyl.sup, plantY('sup'), 0.45);
+  PL.cyl.stop = mv(PL.cyl.stop, plantY('stop'), 0.25);
+  PL.cyl.ej = mv(PL.cyl.ej, plantY('ej'), 0.4);
+  const conv = plantY('conv');
+  if (conv) PL.belt = (PL.belt + PG.v * dt) % 40;
+  // 공급: 매거진 맨 아래 자재를 실린더가 밀어 컨베이어 위로
+  const tip = PG.supTip0 + PG.supStroke * PL.cyl.sup;
+  let slot = PL.pieces.find(p => p.st === 'slot');
+  if (!slot && PL.stack.length && tip < PG.magX - R - 4 && !PL.pieces.some(p => p.st === 'belt' && p.x < PG.magX + 2 * R + 2)) {
+    slot = {id:PL.uid++, kind:PL.stack.shift(), x:PG.magX, y:PG.cy, st:'slot', t:0};
+    PL.pieces.push(slot);
+  }
+  if (slot) { if (tip > slot.x - R) slot.x = tip + R; if (slot.x >= PG.b0 + 12) slot.st = 'belt'; }
+  // 컨베이어 이동 (앞 자재·스토퍼·끝 벽에서 멈춤)
+  const belt = PL.pieces.filter(p => p.st === 'belt').sort((a, b) => b.x - a.x);
+  const stopOn = PL.cyl.stop > 0.5;
+  let ahead = null;
+  for (const p of belt) {
+    if (p.x - R < tip) p.x = tip + R;
+    if (conv) {
+      let lim = PG.endLim;
+      if (stopOn && p.x <= PG.ejX + 0.5) lim = Math.min(lim, PG.ejX);
+      if (ahead) lim = Math.min(lim, ahead.x - 2 * R - 1);
+      if (p.x < lim) p.x = Math.min(lim, p.x + PG.v * dt);
+    }
+    ahead = p;
+  }
+  // 배출 실린더: 컨베이어 옆으로 밀어 배출함으로
+  const ejTip = 132 + 96 * PL.cyl.ej;
+  for (const p of PL.pieces) {
+    if ((p.st === 'belt' || p.st === 'eject') && Math.abs(p.x - PG.ejX) < R + 8 && ejTip > p.y - R) { p.y = ejTip + R; p.st = 'eject'; }
+    if (p.st === 'eject') {
+      if (p.y - R > PG.bb - 8) { p.gone = true; PL.box.push(p.kind); }
+      else if (ejTip < p.y - R - 1 && p.y < PG.cy + 14) { p.st = 'belt'; p.y = PG.cy; }
+    }
+  }
+  // 끝에 도착한 자재는 2.5초 뒤 치움
+  for (const p of PL.pieces) {
+    if (p.st === 'belt' && p.x >= PG.endLim - 0.5) { p.t += dt; if (p.t > 2.5) { p.gone = true; PL.done++; PL.doneKinds.push(p.kind); } }
+    else p.t = 0;
+  }
+  PL.pieces = PL.pieces.filter(p => !p.gone);
+  // 센서 → X 입력
+  const near = (x, w, f) => PL.pieces.some(p => p.st === 'belt' && Math.abs(p.x - x) < w && (!f || f(p)));
+  const S = {
+    supB:PL.cyl.sup < 0.03, supF:PL.cyl.sup > 0.97, ejB:PL.cyl.ej < 0.03, ejF:PL.cyl.ej > 0.97,
+    mag:PL.stack.length > 0 || PL.pieces.some(p => p.st === 'slot' && p.x < PG.magX + R),
+    stopS:near(PG.ejX, 7), cap:near(PG.capX, 16), ind:near(PG.indX, 14, p => p.kind === 'metal'), end:near(PG.endLim, 12),
+  };
+  PL.sens = S;
+  for (const k in S) { const o = PL.ops[k]; if (o) XIN[o.n] = S[k] ? 1 : 0; }
+}
+function updatePlantHead() {
+  const inMag = PL.stack.length + (PL.pieces.some(p => p.st === 'slot' && p.x < PG.magX + PG.R) ? 1 : 0);
+  const t1 = `매거진 ${inMag}`, t2 = `배출함 ${PL.box.length}`, t3 = `완료 ${PL.done}`;
+  if ($('#plMag').textContent !== t1) $('#plMag').textContent = t1;
+  if ($('#plBox').textContent !== t2) $('#plBox').textContent = t2;
+  if ($('#plDone').textContent !== t3) $('#plDone').textContent = t3;
+}
+
+/* ---- 설비 그리기 ---- */
+const pcv = $('#plantCanvas'), pctx = pcv.getContext('2d');
+const PV = {s:1, ox:0, oy:0};
+function pieceDraw(c, x, y, r, kind, alpha) {
+  c.save(); c.globalAlpha = alpha == null ? 1 : alpha;
+  if (kind === 'metal') {
+    const g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.15, x, y, r);
+    g.addColorStop(0, '#fbfcfd'); g.addColorStop(0.55, '#c3cad3'); g.addColorStop(1, '#7f8893');
+    c.fillStyle = g;
+  } else c.fillStyle = kind === 'white' ? '#f7f7f4' : '#26292e';
+  c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+  c.lineWidth = 1.5; c.strokeStyle = kind === 'white' ? '#b8bec7' : kind === 'black' ? '#5a616b' : '#6d7681'; c.stroke();
+  c.beginPath(); c.arc(x, y, r * 0.38, 0, Math.PI * 2);
+  c.fillStyle = kind === 'black' ? '#3a3f46' : kind === 'white' ? '#e4e6e9' : '#9aa3ad'; c.fill();
+  c.restore();
+}
+function ptext(c, t, x, y, size, color, align, weight) {
+  c.font = `${weight || 600} ${size}px "IBM Plex Sans KR", "Malgun Gothic", sans-serif`;
+  c.fillStyle = color; c.textAlign = align || 'center'; c.textBaseline = 'alphabetic'; c.fillText(t, x, y);
+}
+function pmono(c, t, x, y, size, color, align) {
+  c.font = `700 ${size}px "JetBrains Mono", Consolas, monospace`;
+  c.fillStyle = color; c.textAlign = align || 'center'; c.textBaseline = 'alphabetic'; c.fillText(t, x, y);
+}
+function led(c, x, y, on, color) {
+  c.beginPath(); c.arc(x, y, 4, 0, Math.PI * 2);
+  c.fillStyle = on ? (color || '#ff3b2f') : '#6b7480'; c.fill();
+  if (on) { c.save(); c.globalAlpha = 0.35; c.beginPath(); c.arc(x, y, 8, 0, Math.PI * 2); c.fill(); c.restore(); }
+}
+function cylBody(c, x, y, w, h) {
+  const g = c.createLinearGradient(x, y, x, y + h);
+  g.addColorStop(0, '#e6eaef'); g.addColorStop(0.5, '#c3cbd5'); g.addColorStop(1, '#a3adb9');
+  c.fillStyle = g; c.fillRect(x, y, w, h);
+  c.strokeStyle = '#7d8896'; c.lineWidth = 1; c.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+}
+function renderPlant() {
+  if (!PL.on) return;
+  const W = pcv.clientWidth, H = pcv.clientHeight;
+  if (!W || !H) return;
+  const dpr = window.devicePixelRatio || 1;
+  if (pcv.width !== Math.round(W * dpr) || pcv.height !== Math.round(H * dpr)) { pcv.width = Math.round(W * dpr); pcv.height = Math.round(H * dpr); }
+  const s = Math.min(W / PG.W, H / PG.H);
+  PV.s = s; PV.ox = (W - PG.W * s) / 2; PV.oy = (H - PG.H * s) / 2;
+  const c = pctx;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.fillStyle = '#d9dee5'; c.fillRect(0, 0, W, H);
+  c.setTransform(dpr * s, 0, 0, dpr * s, dpr * PV.ox, dpr * PV.oy);
+  const R = PG.R, S = PL.sens, D = PL.dev;
+  // 알루미늄 베이스 (프로파일 홈)
+  c.fillStyle = '#e8ecf0'; c.fillRect(0, 0, PG.W, PG.H);
+  for (let y = 12; y < PG.H; y += 26) { c.fillStyle = '#d5dbe2'; c.fillRect(0, y, PG.W, 6); c.fillStyle = '#c4ccd5'; c.fillRect(0, y + 2, PG.W, 2); }
+  // 컨베이어 프레임과 벨트
+  c.fillStyle = '#a9b3bf'; c.fillRect(PG.b0 - 12, PG.bt - 9, PG.b1 - PG.b0 + 24, PG.bb - PG.bt + 18);
+  c.fillStyle = '#2a2f37'; c.fillRect(PG.b0, PG.bt, PG.b1 - PG.b0, PG.bb - PG.bt);
+  c.save(); c.beginPath(); c.rect(PG.b0, PG.bt, PG.b1 - PG.b0, PG.bb - PG.bt); c.clip();
+  c.strokeStyle = '#3b424c'; c.lineWidth = 3;
+  for (let x = PG.b0 - 40 + PL.belt; x < PG.b1 + 40; x += 40) { c.beginPath(); c.moveTo(x, PG.bt); c.lineTo(x + 14, (PG.bt + PG.bb) / 2); c.lineTo(x, PG.bb); c.stroke(); }
+  c.restore();
+  c.fillStyle = '#8b95a1'; c.fillRect(PG.b0 - 12, PG.bt - 2, 10, PG.bb - PG.bt + 4); c.fillRect(PG.b1 + 2, PG.bt - 2, 10, PG.bb - PG.bt + 4);
+  // 모터
+  const conv = plantY('conv');
+  c.fillStyle = '#4f5966'; c.fillRect(PG.b1 + 8, PG.bb + 12, 56, 40);
+  c.fillStyle = '#39414b'; c.fillRect(PG.b1 + 8, PG.bb + 12, 10, 40);
+  pmono(c, 'M', PG.b1 + 42, PG.bb + 38, 15, '#e8edf3');
+  led(c, PG.b1 + 58, PG.bb + 20, conv, '#22c55e');
+  ptext(c, '컨베이어', PG.b1 + 36, PG.bb + 68, 11.5, '#26313f');
+  pmono(c, D.conv, PG.b1 + 36, PG.bb + 82, 11.5, '#0b3f9c');
+  // 공급 경사판 + 매거진
+  c.fillStyle = '#cfd6de'; c.fillRect(PG.supTip0, PG.cy - R - 5, PG.b0 - PG.supTip0, 2 * R + 10);
+  c.strokeStyle = '#aab4bf'; c.lineWidth = 1; c.strokeRect(PG.supTip0 + 0.5, PG.cy - R - 4.5, PG.b0 - PG.supTip0 - 1, 2 * R + 9);
+  // 매거진 옆모습 (쌓인 순서)
+  const st = PL.stack;
+  c.fillStyle = '#d3d9e1'; c.fillRect(PG.magX - 24, 26, 48, 104);
+  c.strokeStyle = '#9aa6b4'; c.strokeRect(PG.magX - 23.5, 26.5, 47, 103);
+  for (let i = 0; i < Math.min(st.length, 8); i++) {
+    const y = 118 - i * 12;
+    c.fillStyle = st[i] === 'metal' ? '#b3bbc5' : st[i] === 'white' ? '#fbfbf8' : '#2a2e34';
+    c.fillRect(PG.magX - 19, y, 38, 10);
+    c.strokeStyle = st[i] === 'white' ? '#b8bec7' : '#5a636e'; c.strokeRect(PG.magX - 18.5, y + 0.5, 37, 9);
+  }
+  ptext(c, '매거진', PG.magX, 19, 11.5, '#26313f');
+  c.beginPath(); c.arc(PG.magX, PG.cy, R + 7, 0, Math.PI * 2);
+  c.fillStyle = 'rgba(255,255,255,.55)'; c.fill(); c.lineWidth = 4; c.strokeStyle = '#c7ced7'; c.stroke();
+  if (st.length) pieceDraw(c, PG.magX, PG.cy, R - 2, st[0], 0.35);
+  led(c, PG.magX + 30, PG.cy - 30, S.mag);
+  pmono(c, D.mag, PG.magX + 38, PG.cy - 26, 10.5, '#0b3f9c', 'left');
+  // 공급 실린더
+  const tip = PG.supTip0 + PG.supStroke * PL.cyl.sup;
+  cylBody(c, 26, PG.cy - 15, 74, 30);
+  c.fillStyle = '#9da7b3'; c.fillRect(100, PG.cy - 4, tip - 106, 8);
+  c.fillStyle = '#6f7a87'; c.fillRect(tip - 6, PG.cy - 17, 6, 34);
+  led(c, 36, PG.cy - 20, S.supB); led(c, 90, PG.cy - 20, S.supF);
+  ptext(c, '공급 실린더', 63, PG.cy + 32, 11.5, '#26313f');
+  pmono(c, D.sup, 63, PG.cy + 46, 11.5, '#0b3f9c');
+  pmono(c, `후진${D.supB} 전진${D.supF}`, 63, PG.cy - 28, 9.5, '#5b6878');
+  // 용량형 센서 (위) / 유도형 센서 (아래)
+  c.fillStyle = '#3d74c8'; c.fillRect(PG.capX - 9, PG.bt - 34, 18, 22); c.beginPath(); c.arc(PG.capX, PG.bt - 12, 9, 0, Math.PI); c.fill();
+  led(c, PG.capX + 16, PG.bt - 28, S.cap);
+  ptext(c, '용량형', PG.capX, PG.bt - 52, 11, '#26313f'); pmono(c, D.cap, PG.capX, PG.bt - 39, 10.5, '#0b3f9c');
+  c.fillStyle = '#d99a1e'; c.fillRect(PG.indX - 9, PG.bb + 12, 18, 22); c.beginPath(); c.arc(PG.indX, PG.bb + 12, 9, Math.PI, 0); c.fill();
+  led(c, PG.indX + 16, PG.bb + 28, S.ind);
+  ptext(c, '유도형 (금속)', PG.indX, PG.bb + 50, 11, '#26313f'); pmono(c, D.ind, PG.indX, PG.bb + 63, 10.5, '#0b3f9c');
+  // 배출함
+  c.fillStyle = '#1e232a'; c.fillRect(PG.boxX0, PG.boxY0, PG.boxX1 - PG.boxX0, PG.boxY1 - PG.boxY0);
+  c.strokeStyle = '#0f1216'; c.lineWidth = 2; c.strokeRect(PG.boxX0 + 1, PG.boxY0 + 1, PG.boxX1 - PG.boxX0 - 2, PG.boxY1 - PG.boxY0 - 2);
+  PL.box.slice(-12).forEach((k, i) => pieceDraw(c, PG.boxX0 + 16 + (i % 4) * 21, PG.boxY1 - 16 - Math.floor(i / 4) * 21, 9, k));
+  ptext(c, `배출함 ${PL.box.length}개`, PG.boxX1 + 8, PG.boxY1 - 4, 11, '#26313f', 'left');
+  // 광센서 (스토퍼 위치 / 끝)
+  const photo = (x, on, label, dev, right) => {
+    const hx = right ? x + 50 : x - 40, hy = PG.bt - 22;
+    c.setLineDash(on ? [] : [4, 4]); c.strokeStyle = on ? 'rgba(255,59,47,.9)' : 'rgba(255,59,47,.45)'; c.lineWidth = on ? 2 : 1.4;
+    c.beginPath(); c.moveTo(hx + 8, hy + 6); c.lineTo(x, PG.cy); c.stroke(); c.setLineDash([]);
+    c.fillStyle = '#39424e'; c.fillRect(hx - 9, hy - 9, 18, 16);
+    led(c, hx + (right ? 16 : -16), hy - 1, on);
+    if (right) { ptext(c, label, hx + 26, hy + 2, 11, '#26313f', 'left'); pmono(c, dev, hx + 26, hy + 15, 10.5, '#0b3f9c', 'left'); }
+    else { ptext(c, label, hx - 2, hy - 18, 11, '#26313f', 'right'); pmono(c, dev, hx + 2, hy - 18, 10.5, '#0b3f9c', 'left'); }
+  };
+  photo(PG.ejX, S.stopS, '도착', D.stopS, true);
+  photo(PG.endLim, S.end, '끝', D.end);
+  // 스토퍼
+  const sTip = 126 + 76 * PL.cyl.stop;
+  cylBody(c, PG.stopX - 8, 76, 16, 50);
+  c.fillStyle = '#9da7b3'; c.fillRect(PG.stopX - 4, 126, 8, sTip - 126);
+  c.fillStyle = '#6f7a87'; c.fillRect(PG.stopX - 6, sTip - 5, 12, 6);
+  ptext(c, '스토퍼', PG.stopX + 14, 86, 11.5, '#26313f', 'left'); pmono(c, D.stop, PG.stopX + 14, 100, 11.5, '#0b3f9c', 'left');
+  // 배출 실린더
+  const eTip = 132 + 96 * PL.cyl.ej;
+  cylBody(c, PG.ejX - 14, 48, 28, 80);
+  c.fillStyle = '#9da7b3'; c.fillRect(PG.ejX - 4, 128, 8, eTip - 134);
+  c.fillStyle = '#6f7a87'; c.fillRect(PG.ejX - 21, eTip - 6, 42, 6);
+  led(c, PG.ejX - 20, 56, S.ejB); led(c, PG.ejX - 20, 120, S.ejF);
+  ptext(c, '배출 실린더', PG.ejX - 28, 74, 11.5, '#26313f', 'right'); pmono(c, D.ej, PG.ejX - 28, 88, 11.5, '#0b3f9c', 'right');
+  pmono(c, `후진${D.ejB}`, PG.ejX - 28, 60, 9.5, '#5b6878', 'right'); pmono(c, `전진${D.ejF}`, PG.ejX - 28, 124, 9.5, '#5b6878', 'right');
+  // 자재
+  for (const p of PL.pieces) pieceDraw(c, p.x, p.y, R, p.kind, p.st === 'belt' && p.t > 1.8 ? 1 - (p.t - 1.8) / 0.7 : 1);
+  ptext(c, `완료 ${PL.done}개`, PG.endLim, PG.bb + 26, 11, '#26313f');
+  // 조작 패널
+  c.fillStyle = '#2c3440'; c.beginPath(); c.roundRect ? c.roundRect(20, 236, 236, 86, 8) : c.rect(20, 236, 236, 86); c.fill();
+  ptext(c, '조작 패널', 32, 252, 11, '#c7d2e0', 'left');
+  PL.btns = [];
+  [['pb1', '#21b357', 'PB1'], ['pb2', '#f0c02c', 'PB2'], ['pb3', '#e5483b', 'PB3']].forEach(([k, col, lb], i) => {
+    const x = 70 + i * 68, y = 280, pressed = !!XIN[PL.ops[k].n];
+    c.beginPath(); c.arc(x, y + 2, 19, 0, Math.PI * 2); c.fillStyle = '#151a20'; c.fill();
+    c.beginPath(); c.arc(x, y + (pressed ? 2 : 0), 17, 0, Math.PI * 2); c.fillStyle = col; c.fill();
+    if (pressed) { c.fillStyle = 'rgba(0,0,0,.25)'; c.fill(); }
+    c.lineWidth = 2; c.strokeStyle = 'rgba(255,255,255,.35)'; c.stroke();
+    pmono(c, `${lb} ${D[k]}`, x, 314, 10, '#e7edf5');
+    PL.btns.push({k, x, y, r:20});
+  });
+  // 램프
+  const lx = 960;
+  c.fillStyle = '#59636f'; c.fillRect(lx - 3, 236, 6, 90);
+  [['lg', '#22c55e', 246], ['ly', '#f2b705', 272], ['lr', '#ef4444', 298]].forEach(([k, col, y]) => {
+    const on = plantY(k);
+    if (on) { c.save(); c.globalAlpha = 0.35; c.beginPath(); c.arc(lx, y, 18, 0, Math.PI * 2); c.fillStyle = col; c.fill(); c.restore(); }
+    c.beginPath(); c.arc(lx, y, 11, 0, Math.PI * 2); c.fillStyle = on ? col : '#8a929c'; c.fill();
+    c.lineWidth = 1.5; c.strokeStyle = '#3c444e'; c.stroke();
+    pmono(c, D[k], lx - 16, y + 4, 10.5, '#0b3f9c', 'right');
+  });
+  ptext(c, '램프', lx, 232, 11, '#26313f');
+  // 상태 안내
+  if (!SIM.on || SIM.state !== 'RUN') {
+    c.fillStyle = 'rgba(28,42,62,.86)'; c.fillRect(300, 8, 400, 30);
+    ptext(c, !SIM.on ? '▶ 시뮬레이션 시작을 누르면 설비가 래더대로 움직여요' : `CPU ${SIM.state} — RUN으로 바꾸면 움직여요`, 500, 28, 12.5, '#fff');
+  }
+}
+function plantHit(ev) {
+  const r = pcv.getBoundingClientRect();
+  const x = (ev.clientX - r.left - PV.ox) / PV.s, y = (ev.clientY - r.top - PV.oy) / PV.s;
+  return PL.btns.find(b => Math.hypot(b.x - x, b.y - y) <= b.r + 4);
+}
+pcv.addEventListener('pointerdown', ev => {
+  const b = plantHit(ev);
+  if (!b) return;
+  ev.preventDefault();
+  PL.pb = {k:b.k, id:ev.pointerId};
+  XIN[PL.ops[b.k].n] = 1;
+  try { pcv.setPointerCapture(ev.pointerId); } catch (e) { /* 무시 */ }
+  updateIO(true); renderPlant();
+});
+const plantRelease = () => { if (PL.pb && PL.pb.k) { XIN[PL.ops[PL.pb.k].n] = 0; PL.pb = {}; updateIO(true); renderPlant(); } };
+pcv.addEventListener('pointerup', plantRelease);
+pcv.addEventListener('pointercancel', plantRelease);
+pcv.addEventListener('pointermove', ev => { pcv.style.cursor = plantHit(ev) ? 'pointer' : 'default'; });
+$('#plRefill').addEventListener('click', () => { plantRefill(); updatePlantHead(); renderPlant(); });
+$('#plReset').addEventListener('click', () => { plantReset(); renderPlant(); });
+$('#plSize').addEventListener('click', () => { PL.big = !PL.big; $('#plantPane').classList.toggle('big', PL.big); $('#plSize').textContent = PL.big ? '작게' : '크게'; requestAnimationFrame(() => { layout(); render(); renderPlant(); }); });
+$('#plIO').addEventListener('click', plantIODialog);
+function plantIODialog() {
+  const row = s => `<tr><td>${s.dir === 'in' ? '입력' : '출력'}</td><td>${esc(s.name)}</td><td><input data-pio="${s.k}" value="${esc(PL.dev[s.k])}" style="width:80px;font-family:var(--font-mono);text-transform:uppercase" aria-label="${esc(s.name)}"></td></tr>`;
+  showModal('가상 설비 I/O 할당', `<p>센서·버튼은 <b>X 입력</b>, 실린더·모터·램프는 <b>Y 출력</b>으로 연결돼요. 학교 장비 배선표에 맞게 번호를 바꿔도 돼요.</p>
+    <table><tr><th>방향</th><th>신호</th><th>디바이스</th></tr>${PLANT_IO.map(row).join('')}</table>`,
+    [{label:'기본값', onClick:() => { $$('#mBody [data-pio]').forEach(i => { i.value = PLANT_IO.find(s => s.k === i.dataset.pio).def; }); return false; }},
+     {label:'취소'},
+     {label:'저장', primary:true, onClick:() => {
+       const map = {}, used = new Set();
+       for (const i of $$('#mBody [data-pio]')) {
+         const s = PLANT_IO.find(z => z.k === i.dataset.pio);
+         const o = parseOperand(i.value.trim());
+         const want = s.dir === 'in' ? 'X' : 'Y';
+         if (o.err || o.t !== want) { toast(`${s.name}: ${want} 디바이스를 입력하세요`, 'err'); i.focus(); return false; }
+         if (used.has(o.text)) { toast(`${o.text}이(가) 두 번 쓰였어요`, 'err'); i.focus(); return false; }
+         used.add(o.text); map[s.k] = o.text;
+       }
+       for (const s of PLANT_IO) if (s.dir === 'in') XIN[PL.ops[s.k].n] = 0;
+       try { localStorage.setItem(PIO_KEY, JSON.stringify(map)); } catch (e) { /* 저장 안 됨 */ }
+       loadPlantIO(); renderPlant(); toast('I/O 할당을 바꿨어요');
+     }}]);
+}
+loadPlantIO();
+
 let lastUi = 0;
 function uiLoop(ts) {
+  if (PL.on) {
+    const dt = PL.last ? clamp((ts - PL.last) / 1000, 0, 0.1) : 0;
+    PL.last = ts;
+    plantStep(dt); renderPlant(); updatePlantHead();
+    if (!SIM.on && ts - lastUi > 120) { lastUi = ts; updateIO(); }
+  }
   if (SIM.on && ts - lastUi > 50) {
     lastUi = ts;
     if (ED.mode === 'monitor' && ED.tab === 'ladder') render();
@@ -2392,8 +2798,8 @@ window.addEventListener('error', e => { try { log('err', '프로그램 오류: '
    ===================================================================== */
 buildMenus(); buildSymbar(); buildSymSelect(); buildBanks(); buildIO();
 function hashExample() {
-  const m = /^#ex-([1-9])$/.exec(location.hash || '');
-  return m && +m[1] <= EXAMPLES.length ? +m[1] - 1 : -1;
+  const m = /^#ex-(\d{1,2})$/.exec(location.hash || '');
+  return m && +m[1] >= 1 && +m[1] <= EXAMPLES.length ? +m[1] - 1 : -1;
 }
 function openHashExample() {
   const i = hashExample();
@@ -2428,7 +2834,7 @@ setTimeout(() => scr.focus({preventScroll:true}), 0);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); render(); });
 requestAnimationFrame(uiLoop);
 initCapabilities();
-window.__ladder = {P, ED, SIM, XIN, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
+window.__ladder = {P, ED, SIM, XIN, PL, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
 })();
 </script>
 </body>
