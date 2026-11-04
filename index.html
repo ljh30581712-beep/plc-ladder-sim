@@ -57,7 +57,7 @@
       </div>
       <div class="facts">
         <div><b>10개</b>예제 회로</div>
-        <div><b>3개</b>학습 미션</div>
+        <div><b>4개</b>학습 미션</div>
         <div><b>89개</b>동작 자가 검사 항목</div>
       </div>
     </div>
@@ -88,7 +88,7 @@
       <div class="card">
         <svg class="sym" viewBox="0 0 120 30" aria-hidden="true"><path d="M2 15H24M36 15H70" stroke="#0e9a52" stroke-width="3" fill="none"/><rect x="24" y="5" width="12" height="20" fill="#1f5fff"/><path d="M24 5V25M36 5V25" stroke="currentColor" stroke-width="2"/><ellipse cx="88" cy="15" rx="16" ry="10" fill="#1f5fff"/><path d="M76 5Q68 15 76 25M100 5Q108 15 100 25" stroke="currentColor" stroke-width="2" fill="none"/><path d="M104 15H118" stroke="currentColor" stroke-width="2"/></svg>
         <h3>시뮬레이션 · 모니터</h3>
-        <p>X 스위치로 입력을 넣고 Y 램프로 결과를 봐요. 타이머·카운터 현재값, D 레지스터 값도 실시간으로 바뀌어요.</p>
+        <p>X 스위치로 입력을 넣고 Y 램프로 결과를 봐요. 타이머·카운터 현재값, D 레지스터 값도 실시간으로 바뀌어요. 휴대폰에서는 칸을 한 번 누르면 선택, 한 번 더 누르면 입력이에요.</p>
         <div class="keys"><kbd>F3</kbd><kbd>더블클릭 = 강제 ON/OFF</kbd></div>
       </div>
       <div class="card">
@@ -117,10 +117,11 @@
   <div class="wrap">
     <h2>학습 미션: 예제를 구경하고 끝내지 않게</h2>
     <p class="lead">미션 카드가 단계마다 할 일을 알려주고, 시뮬레이션 결과를 보고 성공했는지 자동으로 체크해요. 순서는 <b>목표 → 결과 예상 → 직접 수정 → 결과 확인 → 이유 정리</b>예요.</p>
-    <div class="grid3">
+    <div class="grid4">
       <a class="card" href="simulator.html#ex-1" style="text-decoration:none;color:inherit"><h3>미션 1 · 자기유지 회로</h3><p>Y20 병렬 접점을 지우면 어떻게 될지 예상하고, 직접 지워서 확인한 뒤 다시 고쳐요.</p></a>
       <a class="card" href="simulator.html#ex-3" style="text-decoration:none;color:inherit"><h3>미션 2 · ON 딜레이 타이머</h3><p>K30을 K50으로 바꾸면 몇 초일지, 중간에 멈추면 현재값이 어떻게 되는지 확인해요.</p></a>
       <a class="card" href="simulator.html#ex-5" style="text-decoration:none;color:inherit"><h3>미션 3 · 카운터</h3><p>버튼을 계속 누르고 있으면 몇 번 셀지 예상하고, 설정값을 바꿔 봐요.</p></a>
+      <a class="card" href="simulator.html#ex-10" style="text-decoration:none;color:inherit"><h3>미션 4 · 설비 자동 분류</h3><p>가상 설비로 공급 → 이송 → 분류 단계(스텝 제어)를 따라가고, 정지 후 이어서 움직이는 걸 확인해요.</p></a>
     </div>
     <div class="grid3" style="margin-top:14px">
       <div class="card"><h3>"왜?" 원인 설명</h3><p>모니터 중 커서를 둔 줄의 출력이 왜 켜졌는지, 어느 접점 때문에 꺼졌는지 문장으로 알려줘요.</p></div>
@@ -133,9 +134,9 @@
 <section id="start">
   <div class="wrap">
     <h2>3단계로 시작하기</h2>
-    <p class="lead">처음이면 자기유지 회로부터 만들어 보세요. 기동 버튼(X0)을 한 번 누르면 모터(Y20)가 계속 돌고, 정지 버튼(X1)을 누르면 멈추는 회로예요.</p>
+    <p class="lead">직접 짜 보고 싶다면 자기유지 회로부터 만들어 보세요. 따라 하기가 편하면 위의 학습 미션부터 해도 돼요. 기동 버튼(X0)을 한 번 누르면 모터(Y20)가 계속 돌고, 정지 버튼(X1)을 누르면 멈추는 회로예요.</p>
     <ol class="steps">
-      <li><h3>래더 그리기</h3><p>시뮬레이터에서 <code>X0</code> Enter → <code>LDI X1</code> Enter → <code>OUT Y20</code> Enter. 아래 줄 첫 칸에서 <kbd>Shift+F5</kbd> 누르고 <code>Y20</code> Enter.</p></li>
+      <li><h3>래더 그리기</h3><p><a href="simulator.html#new">빈 프로젝트</a>를 열고 <code>X0</code> Enter → <code>LDI X1</code> Enter → <code>OUT Y20</code> Enter. 아래 줄 첫 칸에서 <kbd>Shift+F5</kbd> 누르고 <code>Y20</code> Enter.</p></li>
       <li><h3>변환하기</h3><p><kbd>F4</kbd>를 눌러요. 회색이던 부분이 흰색으로 바뀌고 왼쪽에 스텝 번호가 붙으면 성공이에요. 오류는 아래 출력 창에 나와요.</p></li>
       <li><h3>실행하기</h3><p><b>▶ 시뮬레이션 시작</b>을 누르고 오른쪽 <b>X0</b> 버튼을 눌렀다 떼 보세요. Y20 램프가 켜지고 래더 접점이 파랗게 바뀌어요.</p></li>
     </ol>
