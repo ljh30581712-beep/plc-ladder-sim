@@ -105,6 +105,33 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
 #plantWrap{position:relative;min-height:0}
 #plantCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
 #btnPlant.on{background:#22324a;color:#fff;border-color:#22324a}
+#missionCard{border-color:#9db7ee !important;background:#f7faff !important}
+#missionCard h3 .mini{border:0;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px}
+.msgoal{margin:0 0 6px;font-weight:600;font-size:12.5px;color:#1f3a6b}
+.mstep{border-top:1px dashed #d3dce8;padding:7px 0 3px;font-size:12.5px;line-height:1.5}
+.mstep.done{color:#7a8696}
+.mstep .mt{font:600 10.5px var(--font-mono);color:#fff;background:#8796a8;border-radius:3px;padding:1px 5px;margin-right:6px;white-space:nowrap}
+.mstep.cur .mt{background:var(--accent)}
+.mstep .choices{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.mstep .choices .btn{text-align:left;white-space:normal}
+.mstep .btn.primary{margin-top:6px}
+.mstep .fb,#msBody>.fb{margin-top:6px;padding:6px 8px;border-radius:5px;background:#e8f5ec;color:#1d6b3a}
+.mstep .fb.no{background:#fdeeee;color:#a32020}
+.mstep .wait{color:#8a5a00;margin-top:4px;font-size:12px}
+.mstep .hint{margin-top:4px;padding:5px 8px;background:#fff8e6;border-radius:5px;font-size:12px;color:#5c4300}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;text-decoration:underline;padding:0;font-size:12px}
+.mtag{font:600 10.5px var(--font-ui);color:#fff;background:var(--accent);border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+#whyBar{position:absolute;left:54px;right:20px;bottom:14px;background:rgba(24,36,54,.93);color:#e9eff7;border-radius:7px;padding:7px 12px;font-size:12.5px;line-height:1.5;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.22)}
+#whyBar .q{display:inline-block;background:#2f6ee0;color:#fff;font-weight:700;border-radius:4px;padding:0 6px;margin-right:4px}
+#whyBar b{color:#cfe0ff;font-weight:600}
+#whyBar .off{color:#ffb4a8;font-weight:600}
+#whyBar .on{color:#9ff0bb;font-weight:600}
+.evlist{list-style:none;margin:0;padding:0;font:12px/1.65 var(--font-mono);max-height:190px;overflow:auto}
+.evlist li{display:flex;gap:8px;white-space:nowrap}
+.evlist .t{color:var(--muted);min-width:54px;text-align:right}
+.evlist .on{color:#0b46c9;font-weight:700;min-width:70px}
+.evlist .off{color:#8a96a6;min-width:70px}
+.evlist .cm{color:var(--muted);font-family:var(--font-ui);overflow:hidden;text-overflow:ellipsis}
 #tabs{display:flex;gap:2px;padding:4px 6px 0;background:#e9edf2;border-bottom:1px solid var(--line);overflow-x:auto}
 .tab{border:1px solid var(--line);border-bottom:0;background:#dfe5ec;padding:4px 12px;border-radius:4px 4px 0 0;cursor:pointer;white-space:nowrap;font-size:12.5px;color:#3b4757}
 .tab.active{background:#fff;color:var(--ink);font-weight:600;position:relative;top:1px}
@@ -308,6 +335,7 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
         <div class="view active" id="viewLadder">
           <div id="ladderScroll" tabindex="0" aria-label="래더 편집 화면"><div id="ladderSpacer"></div></div>
           <canvas id="ladderCanvas"></canvas>
+          <div id="whyBar" hidden aria-live="polite"></div>
           <div id="inDlg" hidden>
             <div class="ttl"><span>래더 입력</span><span>Enter 확인 · Esc 취소</span></div>
             <div class="row">
@@ -350,6 +378,11 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
     </section>
 
     <aside id="side" aria-label="시뮬레이터">
+      <div class="card" id="missionCard" hidden>
+        <h3><span id="msTitle">학습 미션</span><span class="grow"></span><small id="msProg"></small><button class="mini" id="msClose" title="미션 닫기" aria-label="미션 닫기">✕</button></h3>
+        <p class="msgoal" id="msGoal"></p>
+        <div id="msBody"></div>
+      </div>
       <div class="card">
         <h3>시뮬레이터 <span class="cpu">Q03UDV</span><span class="grow"></span><small id="simState">꺼짐</small></h3>
         <div class="leds"><span class="led g" id="ledPow"><i></i>POWER</span><span class="led g" id="ledRun"><i></i>RUN</span><span class="led r" id="ledErr"><i></i>ERR</span><span class="led y" id="ledUsr"><i></i>SM412</span></div>
@@ -358,6 +391,10 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
           <button class="btn" id="swStop" title="STOP">STOP</button>
           <button class="btn" id="swReset" title="디바이스 메모리 초기화">RESET</button>
         </div>
+        <div class="swrow">
+          <button class="btn" id="swPause" title="시간을 멈추고 한 스캔씩 실행해 보기">일시정지</button>
+          <button class="btn" id="swStep" title="일시정지 중 한 스캔(10ms)만 실행">한 스캔 ▸</button>
+        </div>
         <div id="simInfo">시뮬레이션을 시작하면 변환된 프로그램이 가상 CPU에 쓰여 실행됩니다.</div>
         <button class="btn" id="simBig" data-cmd="toggleSim">▶ 시뮬레이션 시작</button>
       </div>
@@ -365,7 +402,7 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
         <div class="iohead">입력 X
           <select id="xBank" aria-label="입력 범위"></select>
           <span class="grow"></span>
-          <div class="seg sm" id="pushSeg"><button data-push="0" class="active">토글</button><button data-push="1">푸시</button></div>
+          <div class="seg sm" id="pushSeg"><button data-push="0">토글</button><button data-push="1" class="active">푸시</button></div>
         </div>
         <div class="iogrid" id="xGrid"></div>
         <div class="iohead">출력 Y <select id="yBank" aria-label="출력 범위"></select></div>
@@ -376,6 +413,10 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
         <h3>디바이스 모니터 <span class="grow"></span><small>값을 누르면 변경</small></h3>
         <div class="watchadd"><input id="watchIn" placeholder="추가: D0, M10, T0…" aria-label="모니터에 추가할 디바이스"><button class="btn" id="watchAdd">추가</button></div>
         <table id="watchTbl"><thead><tr><th>디바이스</th><th>현재값</th><th>코멘트</th><th></th></tr></thead><tbody id="watchBody"></tbody></table>
+      </div>
+      <div class="card">
+        <h3>변화 기록 <span class="grow"></span><small>최근 것이 위</small></h3>
+        <ol class="evlist" id="evList"></ol>
       </div>
     </aside>
   </div>
@@ -569,6 +610,7 @@ function parseInput(text, symId) {
   if (!toks.length) return {err:'디바이스나 명령을 입력하세요'};
   const sym = SYM[symId] || SYM.NO;
   const h = toks[0];
+  if (['LD','AND','OR'].includes(h) && toks[1] && /^(=|<>|>=|<=|>|<)$/.test(toks[1])) return mkCmp(toks[1], h === 'OR', toks.slice(2));
   if (CONTACT_MN[h]) return mkContact(CONTACT_MN[h][0], !!CONTACT_MN[h][1], toks.slice(1));
   const cm = /^(LD|AND|OR)?(=|<>|>=|<=|>|<)$/.exec(h);
   if (cm) return mkCmp(cm[2], cm[1] ? cm[1] === 'OR' : !!sym.or, toks.slice(1));
@@ -648,7 +690,7 @@ function edit(fn) {
   if (fn() === false) return false;
   ED.undo.push(snap); if (ED.undo.length > 120) ED.undo.shift();
   ED.redo.length = 0;
-  P.changed = true;
+  P.changed = true; P.pristine = false;
   afterChange();
   return true;
 }
@@ -661,6 +703,7 @@ function setCursor(r, c, keepSel) {
   ED.c = clamp(c, 0, OC);
   if (!keepSel) ED.anchor = null;
   ensureVisible(); render(); updateStatus();
+  if (SIM.on && typeof updateWhy === 'function') updateWhy();
 }
 function hasSel() { return ED.anchor && (ED.anchor.r !== ED.r || ED.anchor.c !== ED.c); }
 function selRect() {
@@ -1186,10 +1229,16 @@ function tick() {
   const now = performance.now();
   let dt = now - SIM.last;
   SIM.last = now;
-  dt = clamp(dt, 0, 1000);
-  if (SIM.state !== 'RUN') return;
-  SIM.t += dt;
-  try { scan(dt); }
+  if (document.hidden) return;
+  dt = clamp(dt, 0, 200);
+  SIM.avgDt = SIM.avgDt ? SIM.avgDt * 0.95 + dt * 0.05 : dt;
+  if (SIM.state === 'PAUSE') return;
+  if (SIM.state !== 'RUN') { if (PL.on) plantStep(dt / 1000); return; }
+  const n = Math.max(1, Math.ceil(dt / 20)), sub = dt / n;
+  try {
+    for (let i = 0; i < n; i++) { if (PL.on) plantStep(sub / 1000); SIM.t += sub; scan(sub); }
+    recordEvents();
+  }
   catch (e) {
     SIM.state = 'ERROR';
     SIM.err = e;
@@ -1206,8 +1255,10 @@ function simStart() {
   if (P.changed || !ED.prog) { if (!convert(true)) { toast('변환 오류를 먼저 고치세요 (출력 창 참고)', 'err'); return; } }
   if (!ED.prog.il.length) { toast('프로그램이 비어 있습니다. 래더를 먼저 작성하세요', 'err'); return; }
   SIM.prog = ED.prog; resetSlots(SIM.prog);
-  SIM.mem = memNew(); SIM.on = true; SIM.state = 'RUN'; SIM.first = true; SIM.t = 0; SIM.scans = 0; SIM.err = null;
+  SIM.mem = memNew(); if (SIM.latchL) SIM.mem.L.set(SIM.latchL);
+  SIM.on = true; SIM.state = 'RUN'; SIM.first = true; SIM.t = 0; SIM.scans = 0; SIM.err = null; SIM.avgDt = 0;
   SIM.last = performance.now();
+  evReset();
   SIM.iv = setInterval(tick, 10);
   autoBanks();
   ED.mode = 'monitor';
@@ -1217,7 +1268,8 @@ function simStart() {
 function simStop() {
   if (!SIM.on) return;
   clearInterval(SIM.iv); SIM.on = false; SIM.state = 'OFF';
-  if (SIM.mem) SIM.mem.Y.fill(0);
+  if (SIM.mem) { SIM.mem.Y.fill(0); SIM.latchL = SIM.mem.L.slice(); }
+  if (PL.on) { PL.cyl = {sup:0, stop:0, ej:0}; plantStep(0); }
   ED.mode = 'write';
   log('info', '시뮬레이션 종료');
   updateModeUI(); updateSimUI(); updateIO(true); updateWatch(true); render();
@@ -1225,17 +1277,34 @@ function simStop() {
 function simSwitch(st) {
   if (!SIM.on) return toast('먼저 시뮬레이션을 시작하세요');
   if (st === 'RESET') {
-    SIM.mem = memNew(); resetSlots(SIM.prog); SIM.first = true; SIM.t = 0; SIM.scans = 0; SIM.err = null;
+    const keepL = SIM.mem.L.slice();
+    SIM.mem = memNew(); SIM.mem.L.set(keepL); resetSlots(SIM.prog); SIM.first = true; SIM.t = 0; SIM.scans = 0; SIM.err = null;
     SIM.state = SIM.state === 'STOP' ? 'STOP' : 'RUN';
-    log('info', 'RESET — 디바이스 메모리 초기화');
+    evReset();
+    log('info', 'RESET — 디바이스 메모리 초기화 (래치 릴레이 L은 유지)');
   } else if (st === 'RUN') {
     if (SIM.state === 'ERROR') return toast('오류 상태입니다. RESET을 먼저 누르세요', 'err');
     if (SIM.state !== 'RUN') { SIM.state = 'RUN'; SIM.first = true; SIM.last = performance.now(); log('info', 'STOP → RUN'); }
   } else if (st === 'STOP') {
-    if (SIM.state === 'RUN') { SIM.state = 'STOP'; SIM.mem.Y.fill(0); log('info', 'RUN → STOP (출력 Y 모두 OFF)'); }
+    if (SIM.state === 'RUN' || SIM.state === 'PAUSE') { SIM.state = 'STOP'; SIM.mem.Y.fill(0); log('info', 'STOP (출력 Y 모두 OFF)'); }
+  } else if (st === 'PAUSE') {
+    if (SIM.state === 'RUN') { SIM.state = 'PAUSE'; log('info', '일시정지 — "한 스캔"으로 한 번씩 실행해 볼 수 있어요'); }
+    else if (SIM.state === 'PAUSE') { SIM.state = 'RUN'; SIM.last = performance.now(); log('info', '계속 실행'); }
+    else return toast('RUN 중일 때만 일시정지할 수 있어요');
+  } else if (st === 'STEP') {
+    if (SIM.state !== 'PAUSE') return toast('먼저 일시정지를 누르세요');
+    try { if (PL.on) plantStep(0.01); SIM.t += 10; scan(10); recordEvents(); }
+    catch (e) { SIM.state = 'ERROR'; SIM.mem.Y.fill(0); log('err', `CPU 오류 ${e.code || ''}: ${e.message}`); }
+    updateIO(true); updateWatch(true); renderEvents(); updateWhy();
+    if (PL.on) renderPlant();
   }
   updateSimUI(); render();
 }
+document.addEventListener('visibilitychange', () => {
+  if (!SIM.on) return;
+  if (document.hidden) { if (SIM.state === 'RUN') log('info', '탭이 가려져서 시뮬레이션 시간을 멈췄어요 (돌아오면 이어서 실행)'); }
+  else SIM.last = performance.now();
+});
 function toggleSim() { SIM.on ? simStop() : simStart(); }
 
 /* =====================================================================
@@ -1517,7 +1586,7 @@ function convert(quiet) {
     updateStatus();
     return false;
   }
-  ED.prog = prog;
+  ED.prog = prog; ED.progAt = performance.now();
   P.rows.forEach(r => { r.d = false; });
   P.changed = false;
   const wasRunning = SIM.on;
@@ -1525,6 +1594,7 @@ function convert(quiet) {
   else log('ok', `변환 완료 — ${prog.endStep + 1}스텝, 래더 블록 ${prog.blocks.length}개`);
   if (!quiet && !wasRunning) toast(`변환 완료 (${prog.endStep + 1}스텝)`);
   rebuildWatch(); renderList(); renderComments(); updateIOUsed();
+  if (SIM.on) evReset(true);
   render(); updateStatus(); scheduleLocalSave();
   return true;
 }
@@ -1549,7 +1619,7 @@ function expandOut() { $('#outPane').classList.remove('collapsed'); $('#outToggl
 /* =====================================================================
    8. 모니터 · I/O · 워치
    ===================================================================== */
-const IO = {xBase:0, yBase:0x20, push:false};
+const IO = {xBase:0, yBase:0x20, push:true};
 let usedX = new Set(), usedY = new Set();
 function buildBanks() {
   const xs = $('#xBank'), ys = $('#yBank');
@@ -1672,9 +1742,10 @@ const MENU = [
   {t:'보기', items:[['코멘트 표시','toggleCm'],['전류 흐름 표시 (모니터)','toggleFlow'],['가상 설비 (공급·컨베이어 장비)','togglePlant'],null,['래더','tabLadder'],['명령 리스트','tabList','Alt+F1'],['디바이스 코멘트','tabComments']]},
   {t:'변환', items:[['변환','convert','F4']]},
   {t:'디버그', items:[['시뮬레이션 시작 / 정지','toggleSim'],null,['쓰기 모드','modeWrite','F2'],['읽기 모드','modeRead','Shift+F2'],['모니터 모드','modeMonitor','F3'],null,['현재값 변경…','modify']]},
+  {t:'학습', items:[['미션 1: 자기유지 회로','mission0'],['미션 2: ON 딜레이 타이머','mission2'],['미션 3: 카운터','mission4'],null,['동작 원인 설명 (모니터 중 "왜?")','toggleWhy'],['시뮬레이터 지원 범위','scope'],['동작 자가 검사','selfTest']]},
   {t:'도움말', items:[['단축키 · 입력 방법','helpKeys','F1'],['지원 명령어','helpIns'],['PLC 파라미터 (디바이스 범위)','param'],null,['디바이스 설명 페이지 (X·Y·M·T…)','devGuide','새 탭'],['메인 페이지','goHome']]},
 ];
-const CHECKS = {toggleCm:() => ED.showCm, toggleFlow:() => ED.flow, commentMode:() => ED.cmEdit, togglePlant:() => PL.on};
+const CHECKS = {toggleCm:() => ED.showCm, toggleFlow:() => ED.flow, commentMode:() => ED.cmEdit, togglePlant:() => PL.on, toggleWhy:() => whyOn};
 function buildMenus() {
   const bar = $('#menubar');
   MENU.forEach(m => {
@@ -1773,7 +1844,7 @@ function setMode(m) {
   }
   ED.mode = m;
   closeInput();
-  updateModeUI(); render();
+  updateModeUI(); render(); updateWhy();
 }
 function updateModeUI() {
   $$('#modeSeg button').forEach(b => b.classList.toggle('active', b.dataset.mode === ED.mode));
@@ -1803,13 +1874,17 @@ function updateSimUI() {
   $('#simState').textContent = on ? SIM.state : '꺼짐';
   $('#swRun').classList.toggle('active', on && SIM.state === 'RUN');
   $('#swStop').classList.toggle('active', on && SIM.state === 'STOP');
+  $('#swPause').classList.toggle('active', on && SIM.state === 'PAUSE');
+  $('#swPause').textContent = on && SIM.state === 'PAUSE' ? '계속 실행' : '일시정지';
+  if (!on) { const wb = $('#whyBar'); if (wb) wb.hidden = true; }
   if (!on) $('#simInfo').textContent = '시뮬레이션을 시작하면 변환된 프로그램이 가상 CPU에 쓰여 실행됩니다.';
 }
 function updateSimInfo() {
   if (!SIM.on) return;
   const M = SIM.mem;
   $('#ledUsr').classList.toggle('on', !!(M && M.SM[412] && SIM.state === 'RUN'));
-  $('#simInfo').textContent = `${SIM.state === 'RUN' ? '실행 중' : SIM.state === 'STOP' ? '정지(STOP)' : '오류 정지'} · 스캔 ${SIM.scans.toLocaleString()}회 · ${(SIM.t / 1000).toFixed(1)}초 · 스캔 주기 약 10ms`;
+  const st = {RUN:'실행 중', STOP:'정지(STOP)', PAUSE:'일시정지', ERROR:'오류 정지'}[SIM.state] || SIM.state;
+  $('#simInfo').textContent = `${st} · 스캔 ${SIM.scans.toLocaleString()}회 · ${(SIM.t / 1000).toFixed(1)}초 · 목표 10ms (실제 평균 ${Math.round(SIM.avgDt || 10)}ms)`;
 }
 
 /* ---- 입력 대화상자 ---- */
@@ -1906,6 +1981,7 @@ function setComment(dev, val) {
   if (o.err || o.t === 'K' || o.t === 'H') return toast(o.err || '상수에는 코멘트를 달 수 없습니다', 'err');
   const v = String(val || '').trim().slice(0, 32);
   if (v) P.cm[o.text] = v; else delete P.cm[o.text];
+  P.pristine = false;
   scheduleLocalSave(); render(); updateIOUsed();
   if (ED.tab === 'comments') renderComments();
   if (ED.tab === 'list') renderList();
@@ -1992,13 +2068,28 @@ function modifyDialog(dev) {
    10. 저장 / 불러오기 / 예제
    ===================================================================== */
 const LS_KEY = 'q03udv-ladder:current';
-const BK_KEY = 'q03udv-ladder:backup';
-function readBackup() {
-  try { const o = JSON.parse(localStorage.getItem(BK_KEY) || 'null'); return o && Array.isArray(o.rows) ? o : null; }
-  catch (e) { return null; }
+const BKS_KEY = 'q03udv-ladder:backups';
+function readBackups() {
+  let list = [];
+  try { const a = JSON.parse(localStorage.getItem(BKS_KEY) || '[]'); if (Array.isArray(a)) list = a.filter(b => b && b.data && Array.isArray(b.data.rows)); } catch (e) { list = []; }
+  try {
+    const old = JSON.parse(localStorage.getItem('q03udv-ladder:backup') || 'null');
+    if (old && Array.isArray(old.rows)) { list.unshift({at:Date.now(), name:old.name, reason:'예전 백업', data:old}); localStorage.removeItem('q03udv-ladder:backup'); localStorage.setItem(BKS_KEY, JSON.stringify(list.slice(0, 5))); }
+  } catch (e) { /* 예전 백업 없음 */ }
+  return list;
+}
+function needsBackup() { return !P.pristine && P.rows.some(r => r.c.some(Boolean)); }
+function backupCurrent(reason) {
+  if (!needsBackup()) return false;
+  try {
+    const list = readBackups();
+    list.unshift({at:Date.now(), name:P.name, reason:reason || '', data:Object.assign(serialize(), {id:P.id})});
+    localStorage.setItem(BKS_KEY, JSON.stringify(list.slice(0, 5)));
+    return true;
+  } catch (e) { return false; }
 }
 function serialize() {
-  return {format:'q03udv-ladder', version:1, name:P.name, rows:P.rows.map(r => ({c:r.c, v:r.v.map((b, i) => (b ? i : -1)).filter(i => i > 0)})), cm:P.cm};
+  return {format:'q03udv-ladder', version:2, name:P.name, rows:P.rows.map(r => ({c:r.c, v:r.v.map((b, i) => (b ? i : -1)).filter(i => i > 0)})), cm:P.cm, plantIO:Object.assign({}, PL.dev)};
 }
 function sanitizeCell(x) {
   if (!x || typeof x !== 'object') return null;
@@ -2009,9 +2100,12 @@ function sanitizeCell(x) {
   return null;
 }
 function loadProject(obj, opts) {
+  opts = opts || {};
   if (!obj || obj.format !== 'q03udv-ladder' || !Array.isArray(obj.rows)) throw new Error('이 프로그램의 프로젝트 파일이 아닙니다');
+  const backedUp = opts.noBackup ? false : backupCurrent(opts.reason || '다른 프로젝트를 열기 전');
   if (SIM.on) simStop();
-  P = {name:String(obj.name || '새 프로젝트').slice(0, 60), id:(opts && opts.id) || null, rows:[], cm:{}, changed:true};
+  SIM.latchL = null;
+  P = {name:String(obj.name || '새 프로젝트').slice(0, 60), id:opts.id || null, rows:[], cm:{}, changed:true, pristine:!!opts.pristine};
   for (const r of obj.rows.slice(0, 4000)) {
     const row = newRow();
     if (Array.isArray(r.c)) for (let c = 0; c < NCOL; c++) row.c[c] = sanitizeCell(r.c[c]);
@@ -2019,6 +2113,8 @@ function loadProject(obj, opts) {
     P.rows.push(row);
   }
   if (obj.cm && typeof obj.cm === 'object') for (const [k, v] of Object.entries(obj.cm)) { const o = parseOperand(k); if (!o.err && typeof v === 'string') P.cm[o.text] = v.slice(0, 32); }
+  if (obj.plantIO && typeof obj.plantIO === 'object') applyPlantIO(obj.plantIO, true);
+  if (typeof missionEnd === 'function') missionEnd(true);
   ED.prog = null; ED.undo = []; ED.redo = []; ED.r = 0; ED.c = 0; ED.anchor = null; ED.mode = 'write'; ED.cmEdit = false;
   watchUser = [];
   layout();
@@ -2026,13 +2122,14 @@ function loadProject(obj, opts) {
   if (ok) convert(true); else { rebuildWatch(); renderList(); }
   scr.scrollTop = 0; scr.scrollLeft = 0;
   updateModeUI(); updateIOUsed(); render(); renderComments();
-  if (!(opts && opts.keepSave)) scheduleLocalSave();
+  if (!opts.keepSave) scheduleLocalSave();
+  if (backedUp) log('info', '하던 작업은 백업해 두었어요 — 프로젝트 → 열기 → 백업에서 복구할 수 있어요.');
 }
 let lsT = 0;
 function scheduleLocalSave() {
   clearTimeout(lsT);
   lsT = setTimeout(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(Object.assign(serialize(), {id:P.id}))); setSaveState(P.changed ? '이 브라우저에 자동 저장됨 (미변환)' : '이 브라우저에 자동 저장됨'); }
+    try { localStorage.setItem(LS_KEY, JSON.stringify(Object.assign(serialize(), {id:P.id, pristine:!!P.pristine, exIdx:P.exIdx}))); setSaveState(P.changed ? '이 브라우저에 자동 저장됨 (미변환)' : '이 브라우저에 자동 저장됨'); }
     catch (e) { setSaveState('자동 저장을 쓸 수 없는 환경입니다 — 파일로 내보내기를 쓰세요'); }
   }, 400);
 }
@@ -2072,14 +2169,14 @@ function saveAs() {
     body => body.addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#mFoot .primary').click(); }));
 }
 function newProject() {
-  showModal('새 프로젝트', `<div class="field"><label for="npName">프로젝트 이름</label><input id="npName" maxlength="60" value="새 프로젝트"></div><p class="muted">CPU: Q03UDV · 프로그램: MAIN. 지금 프로젝트에서 저장하지 않은 내용은 사라집니다.</p>`,
-    [{label:'취소'}, {label:'만들기', primary:true, onClick:() => { const v = $('#npName').value.trim() || '새 프로젝트'; loadProject({format:'q03udv-ladder', name:v, rows:[], cm:{}}); P.changed = true; updateStatus(); log('info', `새 프로젝트 "${v}"`); }}],
+  showModal('새 프로젝트', `<div class="field"><label for="npName">프로젝트 이름</label><input id="npName" maxlength="60" value="새 프로젝트"></div><p class="muted">CPU: Q03UDV · 프로그램: MAIN. 지금 작업은 자동으로 백업돼요 (프로젝트 → 열기 → 백업).</p>`,
+    [{label:'취소'}, {label:'만들기', primary:true, onClick:() => { const v = $('#npName').value.trim() || '새 프로젝트'; loadProject({format:'q03udv-ladder', name:v, rows:[], cm:{}}, {reason:'새 프로젝트를 만들기 전'}); P.changed = true; updateStatus(); log('info', `새 프로젝트 "${v}"`); }}],
     body => body.addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#mFoot .primary').click(); }));
 }
 async function openDialog() {
-  const exHtml = EXAMPLES.map((e, i) => `<div class="pitem"><div class="grow"><div class="nm">${esc(e.name)}</div><div class="ds">${esc(e.desc)}</div></div><button class="btn" data-ex="${i}">열기</button></div>`).join('');
-  const bk = readBackup();
-  const bkHtml = bk ? `<h4>이전 작업 백업</h4><div class="plist"><div class="pitem"><div class="grow"><div class="nm">${esc(bk.name || '이름 없음')}</div><div class="ds">예제 링크로 들어오기 전에 하던 작업 · ${bk.rows.length}행</div></div><button class="btn" data-restore="1">복구</button></div></div>` : '';
+  const exHtml = EXAMPLES.map((e, i) => `<div class="pitem"><div class="grow"><div class="nm">${esc(e.name)}${MISSIONS[i] ? ' <span class="mtag">학습 미션</span>' : ''}</div><div class="ds">${esc(e.desc)}</div></div><button class="btn" data-ex="${i}">열기</button></div>`).join('');
+  const bks = readBackups();
+  const bkHtml = bks.length ? `<h4>백업 (최근 ${bks.length}개)</h4><div class="plist">${bks.map((b, i) => `<div class="pitem"><div class="grow"><div class="nm">${esc(b.name || '이름 없음')}</div><div class="ds">${new Date(b.at).toLocaleString('ko-KR')} · ${esc(b.reason || '')} · ${b.data.rows.length}행</div></div><button class="btn" data-restore="${i}">복구</button></div>`).join('')}</div>` : '';
   showModal('프로젝트 열기', `
     ${CLOUD.db ? '<h4>내 프로젝트</h4><div class="plist" id="cloudList"><div class="muted">불러오는 중…</div></div>' : ''}
     ${bkHtml}
@@ -2089,15 +2186,20 @@ async function openDialog() {
     [{label:'닫기'}], body => {
       body.addEventListener('click', async ev => {
         const ex = ev.target.dataset.ex, op = ev.target.dataset.open, del = ev.target.dataset.delp;
-        if (ev.target.dataset.restore && bk) {
-          try { loadProject(bk); try { localStorage.removeItem(BK_KEY); } catch (_) {} log('info', `백업한 작업 "${P.name}" 복구`); modalClose && modalClose(); }
-          catch (e) { toast('복구 실패: ' + e.message, 'err'); }
+        if (ev.target.dataset.restore != null) {
+          const b = bks[+ev.target.dataset.restore];
+          if (!b) return;
+          try {
+            loadProject(b.data, {id:b.data.id || null, reason:'백업을 복구하기 전'});
+            try { localStorage.setItem(BKS_KEY, JSON.stringify(readBackups().filter(x => x.at !== b.at))); } catch (_) { /* 무시 */ }
+            log('info', `백업한 작업 "${P.name}" 복구`); modalClose && modalClose();
+          } catch (e) { toast('복구 실패: ' + e.message, 'err'); }
           return;
         }
-        if (ex != null) { loadExample(+ex); modalClose && modalClose(); }
+        if (ex != null) { confirmExample(+ex); return; }
         if (ev.target.id === 'odFile') { modalClose && modalClose(); $('#fileIn').click(); }
         if (op) {
-          try { const snap = await withTimeout(projCol().doc(op).get(), 10000); if (!snap.exists) throw new Error('프로젝트를 찾을 수 없습니다'); loadProject(JSON.parse(snap.data().data), {id:op}); log('info', `"${P.name}" 열기`); modalClose && modalClose(); }
+          try { const snap = await withTimeout(projCol().doc(op).get(), 10000); if (!snap.exists) throw new Error('프로젝트를 찾을 수 없습니다'); loadProject(JSON.parse(snap.data().data), {id:op, reason:'다른 프로젝트를 열기 전'}); log('info', `"${P.name}" 열기`); modalClose && modalClose(); }
           catch (e) { toast('열기 실패: ' + (e.message || e.code), 'err'); }
         }
         if (del) {
@@ -2141,7 +2243,7 @@ $('#fileIn').addEventListener('change', ev => {
   const f = ev.target.files[0]; ev.target.value = '';
   if (!f) return;
   const rd = new FileReader();
-  rd.onload = () => { try { loadProject(JSON.parse(rd.result)); log('info', `파일 "${f.name}" 불러오기`); toast('불러왔습니다'); } catch (e) { toast('불러오기 실패: ' + e.message, 'err'); } };
+  rd.onload = () => { try { loadProject(JSON.parse(rd.result), {reason:'파일을 불러오기 전'}); log('info', `파일 "${f.name}" 불러오기`); toast('불러왔습니다'); } catch (e) { toast('불러오기 실패: ' + e.message, 'err'); } };
   rd.readAsText(f);
 });
 
@@ -2245,9 +2347,24 @@ function buildRows(spec) {
 function loadExample(i) {
   const ex = EXAMPLES[i];
   const rows = buildRows(ex.rows);
-  loadProject({format:'q03udv-ladder', name:ex.name, rows:rows.map(r => ({c:r.c, v:r.v.map((b, k) => (b ? k : -1)).filter(k => k > 0)})), cm:ex.cm});
+  loadProject({format:'q03udv-ladder', name:ex.name, rows:rows.map(r => ({c:r.c, v:r.v.map((b, k) => (b ? k : -1)).filter(k => k > 0)})), cm:ex.cm}, {reason:`예제 "${ex.name}"을(를) 열기 전`});
+  P.pristine = true; P.exIdx = i; scheduleLocalSave();
   log('info', `예제 "${ex.name}" 열기 — ${ex.desc}`);
-  if (ex.plant) { showPlant(true); plantReset(); log('info', '가상 설비가 열렸습니다 — ▶ 시뮬레이션 시작 후 설비 그림의 PB1(초록 버튼)을 누르세요.'); }
+  setPush(true);
+  if (ex.plant) { showPlant(true); plantReset(); log('info', '가상 설비가 열렸어요 — ▶ 시뮬레이션 시작 후 설비 그림의 PB1(초록 버튼)을 누르세요.'); checkExampleIO(); }
+  if (MISSIONS[i]) missionStart(i);
+}
+function confirmExample(i) {
+  if (!needsBackup()) { if (modalClose) modalClose(); loadExample(i); return; }
+  showModal('예제 열기', `<p>예제 <b>${esc(EXAMPLES[i].name)}</b>을(를) 열면 지금 작업 <b>${esc(P.name)}</b>이(가) 화면에서 바뀌어요.</p><p>지금 작업은 백업에 저장되고, <b>프로젝트 → 열기 → 백업</b>에서 언제든 다시 불러올 수 있어요.</p>`,
+    [{label:'취소'}, {label:'백업하고 예제 열기', primary:true, onClick:() => { setTimeout(() => loadExample(i), 0); }}]);
+}
+function checkExampleIO() {
+  const diff = PLANT_IO.filter(s => PL.dev[s.k] !== s.def);
+  if (!diff.length) return;
+  setTimeout(() => showModal('설비 I/O 할당이 예제와 달라요', `<p>이 예제 래더는 기본 I/O 기준으로 짜여 있어요. 지금 설비 I/O 할당이 <b>${diff.length}곳</b> 달라서 그대로 실행하면 설비가 다르게 움직일 수 있어요.</p>
+    <table><tr><th>신호</th><th>지금</th><th>예제 기준</th></tr>${diff.map(s => `<tr><td>${esc(s.name)}</td><td class="mono">${esc(PL.dev[s.k])}</td><td class="mono">${esc(s.def)}</td></tr>`).join('')}</table>`,
+    [{label:'지금 설정 유지'}, {label:'기본값으로 바꾸기', primary:true, onClick:() => { const m = {}; PLANT_IO.forEach(z => { m[z.k] = z.def; }); applyPlantIO(m, false); toast('설비 I/O를 기본값으로 바꿨어요'); }}]), 0);
 }
 
 /* =====================================================================
@@ -2298,7 +2415,7 @@ function helpIns() {
 }
 function paramDialog() {
   const rows = Object.entries(DEV).map(([t, d]) => `<tr><td class="mono">${t}</td><td>${esc(d.name)}</td><td class="mono">${fmtDev(t, 0)} ~ ${fmtDev(t, d.max)}</td><td>${d.hex ? '16진수' : '10진수'}</td></tr>`).join('');
-  showModal('PLC 파라미터 — Q03UDV', `<p>CPU: <b>Q03UDV</b> (프로그램 용량 30K 스텝) · 타이머: 100ms 저속 타이머 · 스캔 주기: 약 10ms (시뮬레이션)</p>
+  showModal('PLC 파라미터 — Q03UDV', `<p>CPU: <b>Q03UDV</b> (프로그램 용량 30K 스텝) · 타이머: 100ms 저속 타이머 · 스캔 주기: 목표 10ms (브라우저 타이머라 실제 간격은 조금씩 달라요. 탭을 가리면 시뮬레이션 시간도 멈춰요)</p>
     <table><tr><th>디바이스</th><th>이름</th><th>범위</th><th>번호</th></tr>${rows}</table>
     <p class="muted" style="margin-top:10px">학교 실습 장비마다 입출력 모듈 번호가 다를 수 있습니다 (예: 입력 X0~X1F, 출력 Y20~Y3F). 오른쪽 I/O 패널에서 범위를 바꿔 보세요.</p>`, [{label:'닫기', primary:true}]);
 }
@@ -2320,6 +2437,9 @@ const CMD = {
   devGuide:() => { const w = window.open('devices.html', '_blank', 'noopener'); if (!w) location.href = 'devices.html'; },
   goHome:() => { location.href = 'index.html'; },
   togglePlant:() => showPlant(!PL.on),
+  mission0:() => openMission(0), mission2:() => openMission(2), mission4:() => openMission(4),
+  toggleWhy:() => { whyOn = !whyOn; updateWhy(); toast(whyOn ? '모니터 중 커서 줄의 동작 원인을 보여줘요' : '동작 원인 설명을 껐어요'); },
+  scope:() => scopeDialog(), selfTest:() => selfTest(),
 };
 document.addEventListener('click', ev => {
   const b = ev.target.closest('[data-cmd]');
@@ -2334,6 +2454,8 @@ $$('#pushSeg button').forEach(b => b.addEventListener('click', () => { IO.push =
 $('#swRun').addEventListener('click', () => simSwitch('RUN'));
 $('#swStop').addEventListener('click', () => simSwitch('STOP'));
 $('#swReset').addEventListener('click', () => simSwitch('RESET'));
+$('#swPause').addEventListener('click', () => simSwitch('PAUSE'));
+$('#swStep').addEventListener('click', () => simSwitch('STEP'));
 $('#outClear').addEventListener('click', () => { $('#outList').innerHTML = ''; $('#outSummary').textContent = ''; });
 $('#outToggle').addEventListener('click', () => { const p = $('#outPane'); p.classList.toggle('collapsed'); $('#outToggle').textContent = p.classList.contains('collapsed') ? '펼치기' : '접기'; requestAnimationFrame(() => { layout(); render(); }); });
 $('#outList').addEventListener('click', ev => { const d = ev.target.closest('[data-r]'); if (d) { switchTab('ladder'); setCursor(+d.dataset.r, +d.dataset.c); } });
@@ -2501,7 +2623,7 @@ function showPlant(on) {
   PL.last = 0;
   requestAnimationFrame(() => { layout(); render(); renderPlant(); updateIO(true); });
 }
-function plantY(k) { return !!(SIM.on && SIM.state === 'RUN' && SIM.mem && PL.ops[k] && rdBit(SIM.mem, PL.ops[k])); }
+function plantY(k) { return !!(SIM.on && (SIM.state === 'RUN' || SIM.state === 'PAUSE') && SIM.mem && PL.ops[k] && rdBit(SIM.mem, PL.ops[k])); }
 function plantStep(dt) {
   const R = PG.R;
   const mv = (cur, on, sec) => clamp(cur + (on ? 1 : -1) * dt / sec, 0, 1);
@@ -2769,29 +2891,337 @@ function plantIODialog() {
          if (used.has(o.text)) { toast(`${o.text}이(가) 두 번 쓰였어요`, 'err'); i.focus(); return false; }
          used.add(o.text); map[s.k] = o.text;
        }
-       for (const s of PLANT_IO) if (s.dir === 'in') XIN[PL.ops[s.k].n] = 0;
-       try { localStorage.setItem(PIO_KEY, JSON.stringify(map)); } catch (e) { /* 저장 안 됨 */ }
-       loadPlantIO(); renderPlant(); toast('I/O 할당을 바꿨어요');
+       applyPlantIO(map, false); P.pristine = false; scheduleLocalSave(); toast('I/O 할당을 바꿨어요 (프로젝트 파일에도 같이 저장돼요)');
      }}]);
+}
+function applyPlantIO(map, fromProject) {
+  const next = {};
+  for (const s of PLANT_IO) {
+    const o = parseOperand(String(map[s.k] || s.def));
+    next[s.k] = (!o.err && o.t === (s.dir === 'in' ? 'X' : 'Y')) ? o.text : s.def;
+  }
+  if (new Set(Object.values(next)).size !== PLANT_IO.length) return false;
+  if (!PLANT_IO.some(s => next[s.k] !== PL.dev[s.k])) return true;
+  for (const s of PLANT_IO) if (s.dir === 'in' && PL.ops[s.k]) XIN[PL.ops[s.k].n] = 0;
+  try { localStorage.setItem(PIO_KEY, JSON.stringify(next)); } catch (e) { /* 이 브라우저에 저장 안 됨 */ }
+  for (const s of PLANT_IO) { PL.ops[s.k] = parseOperand(next[s.k]); PL.dev[s.k] = next[s.k]; }
+  if (fromProject) log('info', '프로젝트에 저장된 설비 I/O 할당을 적용했어요 (가상 설비 → I/O 할당에서 확인)');
+  renderPlant();
+  return true;
 }
 loadPlantIO();
 
 let lastUi = 0;
 function uiLoop(ts) {
   if (PL.on) {
-    const dt = PL.last ? clamp((ts - PL.last) / 1000, 0, 0.1) : 0;
-    PL.last = ts;
-    plantStep(dt); renderPlant(); updatePlantHead();
+    renderPlant(); updatePlantHead();
     if (!SIM.on && ts - lastUi > 120) { lastUi = ts; updateIO(); }
   }
   if (SIM.on && ts - lastUi > 50) {
     lastUi = ts;
     if (ED.mode === 'monitor' && ED.tab === 'ladder') render();
     updateIO(); updateWatch(); updateSimInfo();
+    missionTick(); updateWhy(); renderEvents();
   }
   requestAnimationFrame(uiLoop);
 }
 window.addEventListener('error', e => { try { log('err', '프로그램 오류: ' + e.message); } catch (_) {} });
+
+/* =====================================================================
+   15. 변화 기록 · 동작 원인 설명 · 학습 미션 · 지원 범위 · 자가 검사
+   ===================================================================== */
+const EV = {list:[], watch:[], prev:[], shown:-1};
+function evReset(keepList) {
+  if (!keepList) EV.list = [];
+  const prog = SIM.prog || ED.prog;
+  EV.watch = prog ? prog.devs.map(parseOperand).filter(o => ['X','Y','M','L','B','T','C'].includes(o.t)) : [];
+  EV.prev = EV.watch.map(o => (SIM.mem && rdBit(SIM.mem, o) ? 1 : 0));
+  EV.shown = -1;
+  renderEvents();
+}
+function recordEvents() {
+  const M = SIM.mem;
+  if (!M) return;
+  for (let i = 0; i < EV.watch.length; i++) {
+    const v = rdBit(M, EV.watch[i]) ? 1 : 0;
+    if (v !== EV.prev[i]) { EV.prev[i] = v; EV.list.push({t:SIM.t, at:performance.now(), dev:EV.watch[i].text, v}); }
+  }
+  if (EV.list.length > 400) EV.list.splice(0, EV.list.length - 400);
+}
+function renderEvents() {
+  const ol = $('#evList');
+  if (!ol || EV.shown === EV.list.length) return;
+  EV.shown = EV.list.length;
+  if (!EV.list.length) { ol.innerHTML = `<li class="muted" style="font-family:var(--font-ui)">${SIM.on ? '아직 바뀐 게 없어요. 입력을 눌러 보세요.' : '시뮬레이션을 시작하면 X·Y·M·T·C가 바뀐 순서가 여기에 쌓여요.'}</li>`; return; }
+  ol.innerHTML = EV.list.slice(-14).reverse().map(e => `<li><span class="t">${(e.t / 1000).toFixed(2)}s</span><span class="${e.v ? 'on' : 'off'}">${esc(e.dev)} ${e.v ? 'ON' : 'OFF'}</span><span class="cm">${esc(P.cm[e.dev] || '')}</span></li>`).join('');
+}
+
+/* ---- 동작 원인 설명 ---- */
+let whyOn = true;
+function devTxt(d) { return P.cm[d] ? `${d}(${P.cm[d]})` : d; }
+function contactWhy(e, ok) {
+  const ins = ED.prog.cellIns.get(e.r * NCOL + e.c);
+  if (!ins) return '?';
+  if (ins.kind === 'CMP') {
+    const M = SIM.mem, a = ins.ops.map(o => s16(rdWord(M, o)));
+    return `[${ins.cmp} ${ins.ops[0].text} ${ins.ops[1].text}] 조건이 ${ok ? '참' : '거짓'} (${a[0]} ${ins.cmp} ${a[1]})`;
+  }
+  const d = esc(devTxt(ins.ops[0].text));
+  if (ins.kind === 'NO') return ok ? `${d} a접점 ON` : `${d} a접점이 열림 (OFF)`;
+  if (ins.kind === 'NC') return ok ? `${d} b접점 닫힘 (OFF)` : `${d} b접점이 열림 (ON이라서)`;
+  if (ins.kind === 'P') return ok ? `${d} 상승 펄스` : `${d} 상승 펄스 — OFF→ON 순간 1스캔만 통과`;
+  return ok ? `${d} 하강 펄스` : `${d} 하강 펄스 — ON→OFF 순간 1스캔만 통과`;
+}
+function outWhy(ins) {
+  const M = SIM.mem, o = ins.ops[0];
+  if (ins.base === 'OUT') {
+    if (o.t === 'T') return `${esc(devTxt(o.text))} 타이머 코일 (현재값 ${M.TN[o.n]} / ${ins.ops[1].text})`;
+    if (o.t === 'C') return `${esc(devTxt(o.text))} 카운터 코일 (현재값 ${M.CN[o.n]} / ${ins.ops[1].text})`;
+    return `${esc(devTxt(o.text))} 코일 (${rdBit(M, o) ? 'ON' : 'OFF'})`;
+  }
+  return `[${esc(ins.name)} ${esc(ins.ops.map(x => x.text).join(' '))}]`;
+}
+function explainRow(r) {
+  const prog = ED.prog;
+  if (r >= P.rows.length) return '<b>END</b> — 커서를 코일이 있는 줄에 두면, 그 출력이 왜 켜지고 꺼지는지 여기에 나와요.';
+  const blk = prog.rowBlock[r];
+  if (!blk || blk.bad) return '커서를 래더 줄 위에 두면, 그 줄 출력이 왜 켜지고 꺼지는지 알려줘요.';
+  let orow = P.rows[r].c[OC] ? r : -1;
+  for (let i = blk.s; orow < 0 && i <= blk.e; i++) if (P.rows[i].c[OC]) orow = i;
+  if (orow < 0) return null;
+  const ins = prog.cellIns.get(orow * NCOL + OC);
+  if (!ins) return null;
+  const pf = blk.pf, pw = evalPower(blk);
+  const node = pf.nodes[(orow - blk.s) * NCOL + OC];
+  const cond = e => e.h || !!(prog.cellIns.get(e.r * NCOL + e.c) || {}).lv;
+  const head = `<b>행 ${orow + 1} · ${outWhy(ins)}</b>`;
+  if (pw.get(node)) {
+    const path = [];
+    let n = node, guard = 0;
+    while (n !== pf.L && guard++ < 60) {
+      const e = pf.edges.find(x => x.v === n && pw.get(x.u) && cond(x));
+      if (!e) break;
+      if (!e.h) path.unshift(e);
+      n = e.u;
+    }
+    let extra = '';
+    if (ins.base === 'OUT' && isBitWrite(ins.ops[0]) && !rdBit(SIM.mem, ins.ops[0])) extra = ' <span class="off">그런데 출력은 OFF예요 — 같은 디바이스를 다른 줄에서도 OUT하는지(이중 코일) 확인하세요.</span>';
+    return `${head} <span class="on">입력 ON</span> — 전류 길: ${path.length ? path.map(e => contactWhy(e, true)).join(' → ') : '모선에서 바로'}${extra}`;
+  }
+  const bwd = new Set([node]);
+  for (const e of pf.edges.slice().sort((a, b) => b.c - a.c)) if (bwd.has(e.v)) bwd.add(e.u);
+  const fwd = new Set([pf.L]);
+  for (const e of pf.edges) if (fwd.has(e.u)) fwd.add(e.v);
+  const blockers = pf.edges.filter(e => !e.h && !cond(e) && fwd.has(e.u) && bwd.has(e.v));
+  return `${head} <span class="off">입력 OFF</span> — ${blockers.length ? blockers.map(e => contactWhy(e, false)).join(', ') + ' 때문에 전류가 끊겼어요' : '모선에서 이어지는 길이 없어요'}`;
+}
+function updateWhy() {
+  const bar = $('#whyBar');
+  const show = whyOn && ED.mode === 'monitor' && SIM.on && ED.prog && !P.changed && SIM.prog === ED.prog && ED.tab === 'ladder';
+  if (!show) { if (!bar.hidden) bar.hidden = true; return; }
+  let html = null;
+  try { html = explainRow(ED.r); } catch (e) { html = null; }
+  html = html ? `<span class="q">왜?</span> ${html}` : null;
+  bar.hidden = !html;
+  if (html && bar.innerHTML !== html) bar.innerHTML = html;
+}
+
+/* ---- 학습 미션 ---- */
+const MC = {
+  bit:d => { const o = parseOperand(d); if (o.t === 'X') return XIN[o.n] ? 1 : 0; return SIM.mem && rdBit(SIM.mem, o) ? 1 : 0; },
+  word:d => (SIM.mem ? rdWord(SIM.mem, parseOperand(d)) : 0),
+  run:() => SIM.on && SIM.state === 'RUN',
+  seen:(d, v, since) => EV.list.some(e => e.dev === d && e.v === v && e.at >= (since == null ? MS.t0 : since)),
+  fresh:() => !!(ED.prog && !P.changed && SIM.prog === ED.prog && (ED.progAt || 0) >= MS.t0),
+  hasContact:d => !!(ED.prog && !P.changed && ED.prog.il.some(x => ['LD','AND','OR'].includes(x.op) && x.kind !== 'CMP' && x.ops[0].text === d)),
+  hasIns:t => !!(ED.prog && !P.changed && ED.prog.il.some(x => `${x.name} ${(x.ops || []).map(o => o.text).join(' ')}` === t)),
+  held:d => {
+    let onAt = null, best = 0;
+    for (const e of EV.list) { if (e.dev !== d || e.at < MS.t0) continue; if (e.v) onAt = e.at; else if (onAt != null) { best = Math.max(best, e.at - onAt); onAt = null; } }
+    if (onAt != null && MC.bit(d)) best = Math.max(best, performance.now() - onAt);
+    return best;
+  },
+};
+const MISSIONS = {
+  0:{title:'자기유지 회로', goal:'버튼(X0)에서 손을 떼도 모터(Y20)가 계속 켜져 있게 하기', steps:[
+    {t:'task', text:'▶ 시뮬레이션 시작을 누르고, 오른쪽 입력에서 X0을 눌렀다가 떼 보세요. (입력 방식은 "푸시"예요)', check:c => c.run() && c.seen('X0', 1) && !c.bit('X0') && c.bit('Y20'), ok:'X0은 OFF인데 Y20은 계속 ON이에요. 이게 자기유지예요.', hint:'X0 버튼을 마우스로 누르고 있다가 떼면 돼요.'},
+    {t:'predict', text:'아래 줄의 Y20 접점(X0과 병렬로 붙은 a접점)을 지우면, X0에서 손을 뗐을 때 Y20은 어떻게 될까요?', choices:['계속 켜져 있다', '꺼진다', '처음부터 안 켜진다'], answer:1, explain:'Y20 접점이 X0 대신 전류 길을 만들어 주던 거라서, 지우면 X0을 떼는 순간 꺼져요.'},
+    {t:'task', text:'직접 확인: F2(쓰기 모드) → 아래 줄 Y20 접점에 커서를 두고 Del → F4(변환) → F3(모니터) → X0을 눌렀다 떼 보세요.', check:c => c.fresh() && !c.hasContact('Y20') && c.seen('X0', 1, ED.progAt) && !c.bit('X0') && !c.bit('Y20'), ok:'예상대로 X0을 떼자마자 Y20이 꺼졌어요.', hint:'시뮬레이션은 켜 둔 채로 F2 → 수정 → F4를 누르면 "RUN 중 쓰기"로 바로 반영돼요.'},
+    {t:'task', text:'다시 자기유지로 고쳐 보세요: F2 → Ctrl+Z(되돌리기) 또는 아래 줄 첫 칸에서 Shift+F5 → Y20 → F4 → F3 → X0을 눌렀다 떼기', check:c => c.fresh() && c.hasContact('Y20') && c.seen('X0', 1, ED.progAt) && !c.bit('X0') && c.bit('Y20'), ok:'자기유지 회로를 다시 완성했어요.'},
+    {t:'task', text:'마지막으로 X1(정지 버튼)을 눌러 Y20을 꺼 보세요.', check:c => c.seen('X1', 1) && !c.bit('Y20'), ok:'X1 b접점이 열리면서 전류 길이 끊겼어요.'},
+    {t:'explain', text:'정리: Y20이 켜지면 Y20 a접점이 닫혀서 X0과 나란한(병렬) 길이 하나 더 생겨요. 그래서 X0을 떼도 전류가 Y20 접점으로 계속 흘러요. X1 b접점을 누르면 그 길이 끊겨서 꺼져요. 실제 장비의 기동·정지 회로가 이 모양이에요.'},
+  ]},
+  2:{title:'ON 딜레이 타이머', goal:'시작(X0)을 누르고 정해진 시간 뒤에 램프(Y20) 켜기', steps:[
+    {t:'task', text:'▶ 시뮬레이션 시작 → X0을 눌렀다 떼고, T0 코일 아래 파란 현재값이 30까지 올라가는 걸 보세요.', check:c => c.run() && c.bit('Y20'), ok:'현재값이 30(=3.0초)이 되자 T0 접점이 켜지고 Y20이 ON 됐어요.'},
+    {t:'predict', text:'OUT T0 K30을 K50으로 바꾸면 몇 초 뒤에 Y20이 켜질까요?', choices:['3초', '5초', '50초'], answer:1, explain:'Q 시리즈 기본 타이머는 0.1초 단위라 K50 = 5.0초예요.'},
+    {t:'task', text:'직접 바꿔 보기: X1로 멈춤 → F2 → 3번째 줄 T0 코일을 더블클릭해서 T0 K50으로 바꾸기 → F4 → F3 → X0', check:c => c.hasIns('OUT T0 K50') && c.word('T0') === 50 && c.bit('Y20'), ok:'현재값 50에서 켜졌어요. 5초 걸렸죠?', hint:'코일 입력칸에 "T0 K50"이라고 쓰면 돼요.'},
+    {t:'predict', text:'타이머가 도는 중(현재값 20쯤)에 X1(정지)을 누르면 T0 현재값은 어떻게 될까요?', choices:['20에서 멈춰 있다', '0으로 돌아간다', '계속 올라간다'], answer:1, explain:'OUT T 코일 입력이 꺼지면 현재값이 바로 0으로 리셋돼요.'},
+    {t:'task', text:'직접 확인: X0 → 2초쯤 뒤, 타이머가 다 차기 전에 X1 → T0 현재값 보기', track:'T0', check:c => c.seen('X1', 1) && c.word('T0') === 0 && MS.lastPeak >= 5 && MS.lastPeak < 50, ok:'중간에 멈추니 현재값이 0으로 돌아갔어요.', hint:'타이머가 50까지 다 차기 전에 X1을 눌러야 해요.'},
+    {t:'explain', text:'정리: OUT T0 K□는 코일 입력이 켜져 있는 동안 0.1초씩 세고, 설정값이 되면 T0 접점이 ON 돼요. 입력이 꺼지면 바로 0으로 돌아가요. 끊겨도 이어서 세야 하면 적산 타이머(ST)를 써요.'},
+  ]},
+  4:{title:'카운터', goal:'X0을 정해진 횟수만큼 누르면 완료 램프(Y20) 켜기', steps:[
+    {t:'task', text:'▶ 시뮬레이션 시작 → X0을 5번 눌렀다 떼 보세요. C0 코일 아래 숫자가 하나씩 올라가요.', check:c => c.run() && c.bit('Y20'), ok:'5번째에서 C0 접점이 켜지고 Y20이 ON 됐어요.'},
+    {t:'predict', text:'X0을 떼지 않고 계속 누르고 있으면 카운트는 어떻게 될까요?', choices:['누르는 동안 계속 올라간다', '1만 올라간다', '0으로 돌아간다'], answer:1, explain:'카운터는 입력이 OFF→ON으로 바뀌는 순간(상승)만 세요.'},
+    {t:'task', text:'직접 확인: X1로 리셋 → X0을 2초 이상 꾹 누르고 있다가 떼기 → C0 현재값 보기', check:c => c.seen('X1', 1) && c.held('X0') >= 1500 && c.word('C0') === 1, ok:'2초 넘게 눌렀는데도 1만 올라갔어요.', hint:'푸시 모드에서 X0 버튼을 마우스로 누른 채 2초 기다리세요.'},
+    {t:'task', text:'설정 바꾸기: F2 → C0 코일을 더블클릭해서 C0 K3으로 → F4 → F3 → X1로 리셋 → X0 3번', check:c => c.hasIns('OUT C0 K3') && c.word('C0') === 3 && c.bit('Y20'), ok:'3번 만에 켜졌어요.'},
+    {t:'explain', text:'정리: OUT C0 K□는 입력이 켜질 때마다 1씩 세고 설정값이 되면 C0 접점이 ON 돼요. 코일이 꺼져도 숫자를 기억하기 때문에, 다시 세려면 RST C0으로 0을 만들어야 해요.'},
+  ]},
+};
+const MS = {i:-1, step:0, t0:0, answer:null, okAt:0, peak:0, lastPeak:0, hint:false, done:false};
+function setPush(on) { IO.push = !!on; $$('#pushSeg button').forEach(x => x.classList.toggle('active', (x.dataset.push === '1') === IO.push)); }
+function missionStart(i) {
+  const m = MISSIONS[i];
+  if (!m) return;
+  Object.assign(MS, {i, step:0, t0:performance.now(), answer:null, okAt:0, peak:0, lastPeak:0, hint:false, done:false});
+  setPush(true);
+  $('#missionCard').hidden = false;
+  $('#side').scrollTop = 0;
+  renderMission();
+  log('info', `학습 미션 "${m.title}" 시작 — 오른쪽 미션 카드를 따라 해 보세요.`);
+}
+function missionEnd() { MS.i = -1; const c = $('#missionCard'); if (c) c.hidden = true; }
+function missionNext() { Object.assign(MS, {step:MS.step + 1, t0:performance.now(), answer:null, okAt:0, peak:0, lastPeak:0, hint:false}); renderMission(); }
+function renderMission() {
+  const m = MISSIONS[MS.i];
+  if (!m) return;
+  const kinds = {task:'실습', predict:'예상', explain:'정리'};
+  $('#msTitle').textContent = `학습 미션 · ${m.title}`;
+  $('#msProg').textContent = MS.done ? '완료' : `${MS.step + 1} / ${m.steps.length}`;
+  $('#msGoal').textContent = '목표: ' + m.goal;
+  let html = '';
+  m.steps.forEach((st, k) => {
+    if (k > MS.step) return;
+    const cur = k === MS.step && !MS.done;
+    html += `<div class="mstep ${cur ? 'cur' : 'done'}"><span class="mt">${cur ? k + 1 : '✓'} ${kinds[st.t]}</span>${esc(st.text)}`;
+    if (cur && st.t === 'predict') {
+      if (MS.answer == null) html += `<div class="choices">${st.choices.map((c, j) => `<button class="btn" data-ans="${j}">${esc(c)}</button>`).join('')}</div>`;
+      else html += `<div class="fb ${MS.answer === st.answer ? '' : 'no'}">${MS.answer === st.answer ? '맞았어요!' : `아쉬워요. 정답은 "${esc(st.choices[st.answer])}"예요.`} ${esc(st.explain)}</div><button class="btn primary" data-next="1">다음</button>`;
+    } else if (cur && st.t === 'task') {
+      if (MS.okAt) html += `<div class="fb">${esc(st.ok || '성공!')}</div><button class="btn primary" data-next="1">다음</button>`;
+      else html += `<div class="wait">확인 중… 조건이 맞으면 자동으로 체크돼요.${st.hint ? ' <button class="linkbtn" data-hint="1">힌트</button>' : ''}</div>${MS.hint && st.hint ? `<div class="hint">${esc(st.hint)}</div>` : ''}`;
+    } else if (cur) html += `<div><button class="btn primary" data-finish="1">미션 완료</button></div>`;
+    html += '</div>';
+  });
+  if (MS.done) html += `<div class="fb">미션 완료! 다른 미션은 위쪽 메뉴 <b>학습</b>에서 열 수 있어요.</div>`;
+  $('#msBody').innerHTML = html;
+}
+function missionTick() {
+  if (MS.i < 0 || MS.done) return;
+  const st = MISSIONS[MS.i].steps[MS.step];
+  if (!st || st.t !== 'task' || MS.okAt) return;
+  if (st.track && SIM.mem) { const v = MC.word(st.track); if (v === 0) { if (MS.peak) MS.lastPeak = MS.peak; MS.peak = 0; } else MS.peak = Math.max(MS.peak, v); }
+  let ok = false;
+  try { ok = !!st.check(MC); } catch (e) { ok = false; }
+  if (ok) { MS.okAt = performance.now(); renderMission(); toast('미션 단계 성공!'); }
+}
+$('#msBody').addEventListener('click', ev => {
+  const b = ev.target.closest('button');
+  if (!b) return;
+  if (b.dataset.ans != null) { MS.answer = +b.dataset.ans; renderMission(); }
+  else if (b.dataset.next) missionNext();
+  else if (b.dataset.hint) { MS.hint = true; renderMission(); }
+  else if (b.dataset.finish) { MS.done = true; renderMission(); log('ok', `학습 미션 "${MISSIONS[MS.i].title}" 완료`); }
+  scr.focus({preventScroll:true});
+});
+$('#msClose').addEventListener('click', missionEnd);
+function openMission(i) { if (P.pristine && P.exIdx === i) { missionStart(i); return; } confirmExample(i); }
+
+/* ---- 지원 범위 ---- */
+function scopeDialog() {
+  showModal('시뮬레이터 지원 범위', `<p>실제 Q03UDV와 똑같이 동작하는 게 목표지만, 브라우저에서 돌아가는 학습용이라 다른 점이 있어요.</p>
+    <h4>지원</h4><p>a·b접점, 상승·하강 펄스, 비교 접점(= &lt;&gt; &gt; &lt; &gt;= &lt;=), OUT, SET, RST, PLS, PLF, ALT(P), MOV(P), + − × ÷, INC/DEC, BCD/BIN, BMOV, FMOV, ZRST, 100ms 타이머, 카운터, 특수 릴레이 SM400~SM413, 비트 지정(K1Y20 등), 모니터, 강제 ON/OFF, 현재값 변경, RUN 중 쓰기, 연산 오류(4100) 정지</p>
+    <h4>단순화한 부분</h4><p>• 스캔 주기는 목표 10ms예요. 브라우저 타이머라 실제 간격은 조금씩 달라요. PLC와 가상 설비는 같은 시뮬레이션 시간으로 움직이고, 탭을 가리면 둘 다 멈춰요.<br>
+    • 타이머는 코일이 실행될 때 경과 시간을 더해요 (실제 CPU는 END 처리에서 갱신).<br>
+    • 스텝 수는 근사값이에요.<br>
+    • 래치 릴레이 L은 시뮬레이션을 다시 시작하거나 RESET해도 유지되고, 다른 프로젝트를 열면 초기화돼요.<br>
+    • 입력은 스캔 시작에 한 번 읽고, 출력은 바로 반영돼요.</p>
+    <h4>지원하지 않음</h4><p>고속 타이머(OUTH), 적산 타이머(ST), 32비트 명령(DMOV 등), 인덱스 레지스터(Z), 파일 레지스터(R), 점프·서브루틴(CJ, CALL, FEND), 인터럽트, FOR~NEXT, 시프트(SFT), INV·MEP·MEF, 문자열, 실제 네트워크(B·W는 메모리로만), 실제 PLC 연결</p>`, [{label:'닫기', primary:true}]);
+}
+
+/* ---- 동작 자가 검사 ---- */
+function headless(rows, totalMs, actions, usePlant) {
+  const prog = compile(rows);
+  if (prog.errors.length) throw new Error('변환 오류: ' + prog.errors[0].msg);
+  const keep = {mem:SIM.mem, prog:SIM.prog, t:SIM.t, first:SIM.first, scans:SIM.scans, state:SIM.state, on:SIM.on, xin:XIN.slice()};
+  try {
+    XIN.fill(0);
+    Object.assign(SIM, {mem:memNew(), prog, t:0, first:true, scans:0, state:'RUN', on:true});
+    resetSlots(prog);
+    actions = actions.slice().sort((a, b) => a.at - b.at);
+    let ai = 0;
+    for (let t = 0; t <= totalMs; t += 10) {
+      while (ai < actions.length && actions[ai].at <= t) actions[ai++].fn(SIM.mem);
+      if (usePlant) plantStep(0.01);
+      SIM.t += 10; scan(10);
+    }
+    while (ai < actions.length) actions[ai++].fn(SIM.mem);
+  } finally {
+    Object.assign(SIM, {mem:keep.mem, prog:keep.prog, t:keep.t, first:keep.first, scans:keep.scans, state:keep.state, on:keep.on});
+    XIN.set(keep.xin);
+  }
+}
+function selfTest() {
+  if (SIM.on) return toast('시뮬레이션을 정지한 뒤에 자가 검사를 실행하세요', 'err');
+  const R = [];
+  const add = (g, name, pass, detail) => R.push({g, name, pass:!!pass, detail:detail || ''});
+  // 1) 입력 문법: 안내 페이지·도움말에 나오는 표현
+  const OKS = ['X0','LDI X1','OR Y20','ANI T0','LDP X0','ORF X3','OUT Y20','OUT T0 K30','OUT C0 K5','OUT T1 K5','SET M0','RST C0','SET L0','PLS M1','PLF M2','ALTP Y20','MOV K10 D0','MOVP K0 D0','MOV D0 K1Y24','MOV SD520 D0','MOV W0 D0','+ D0 K5 D2','- D0 K1 D2','* D0 K2 D10','/ D0 K3 D10','INC D0','INCP D0','DECP D0','BCD D0 K4Y20','BIN K4X0 D0','BMOV D0 D100 K5','FMOV K0 D0 K10','ZRST M0 M15','= D0 K10','LD>= D0 K5','LD >= D0 K5','AND<> D1 K0','OR= D1 K2','LD SM400'];
+  for (const t of OKS) { const r = parseInput(t, 'NO'); add('입력 문법', t, !r.err, r.err || (r.type === 'out' ? '명령/코일' : r.type === 'cmp' ? '비교 접점' : '접점')); }
+  for (const t of ['MA','OUT X0','T0 K30','LD >= D0','XG']) { const r = parseInput(t, 'NO'); add('입력 문법', `${t} → 오류 안내`, !!r.err, r.err || '오류를 못 잡음'); }
+  // 2) 변환
+  const il = rows => { const p = compile(rows); return p.errors.length ? 'ERR' : p.il.map(x => `${x.name}${(x.ops || []).length ? ' ' + x.ops.map(o => o.text).join(' ') : ''}`).join(' | '); };
+  EXAMPLES.forEach((ex, i) => { const p = compile(buildRows(ex.rows)); add('래더 변환', `예제 ${i + 1} ${ex.name}`, !p.errors.length, p.errors.length ? p.errors[0].msg : `${p.endStep + 1}스텝`); });
+  const CASES = [
+    ['자기유지 → OR', EXAMPLES[0].rows, 'LD X0 | OR Y20 | ANI X1 | OUT Y20'],
+    ['분기 출력 → MPS/MPP', [{c:{0:'X0', 1:'X1'}, o:'OUT Y0', v:[1]}, {c:{1:'X2'}, o:'OUT Y1'}], 'LD X0 | MPS | AND X1 | OUT Y0 | MPP | AND X2 | OUT Y1'],
+    ['병렬 블록 직렬 → ANB', [{c:{0:'X0', 1:'X2'}, o:'OUT Y0', v:[1, 2]}, {c:{0:'X1', 1:'X3'}}], 'LD X0 | OR X1 | LD X2 | OR X3 | ANB | OUT Y0'],
+    ['직렬 블록 병렬 → ORB', [{c:{0:'X0', 1:'X1'}, o:'OUT Y0', v:[2]}, {c:{0:'X2', 1:'X3'}}], 'LD X0 | AND X1 | LD X2 | AND X3 | ORB | OUT Y0'],
+    ['출력 없는 회로 → 오류', [{c:{0:'X0', 1:'X1'}}], 'ERR'],
+  ];
+  for (const [n, rows, want] of CASES) { const got = il(buildRows(rows)); add('래더 변환', n, got === want, got); }
+  // 3) 동작 (10ms 스캔으로 빠르게 돌려 보기)
+  const B = i => buildRows(EXAMPLES[i].rows);
+  const x = (n, v) => () => { XIN[n] = v; };
+  const pulse = (n, at, len) => [{at, fn:x(n, 1)}, {at:at + (len || 60), fn:x(n, 0)}];
+  const probe = (at, name, f) => ({at, fn:M => { const r = f(M); add('동작', name, r[0], r[1]); }});
+  const yb = (M, ...ns) => ns.map(n => M.Y[n]).join('');
+  try {
+    headless(B(0), 800, [...pulse(0, 0), probe(300, '자기유지: X0을 떼도 Y20 유지', M => [M.Y[0x20] === 1, `Y20=${M.Y[0x20]}`]), ...pulse(1, 400), probe(700, '자기유지: X1을 누르면 Y20 OFF', M => [M.Y[0x20] === 0, `Y20=${M.Y[0x20]}`])]);
+    headless(B(1), 1200, [...pulse(0, 0), ...pulse(1, 200), probe(400, '인터록: 정회전 중 역회전 버튼 무시', M => [yb(M, 0x20, 0x21) === '10', `Y20·Y21=${yb(M, 0x20, 0x21)}`]), ...pulse(2, 500), ...pulse(1, 700), probe(1000, '인터록: 정지 후 역회전', M => [yb(M, 0x20, 0x21) === '01', `Y20·Y21=${yb(M, 0x20, 0x21)}`])]);
+    headless(B(2), 3300, [...pulse(0, 0), probe(2900, '타이머: 2.9초에는 아직 OFF', M => [M.Y[0x20] === 0, `T0=${M.TN[0]}`]), probe(3200, '타이머: 3초 뒤 Y20 ON', M => [M.Y[0x20] === 1, `T0=${M.TN[0]}`])]);
+    headless(B(3), 1900, [...pulse(0, 0), probe(250, '플리커: 0.25초 ON', M => [M.Y[0x20] === 1, '']), probe(750, '플리커: 0.75초 OFF', M => [M.Y[0x20] === 0, '']), probe(1250, '플리커: 1.25초 다시 ON', M => [M.Y[0x20] === 1, ''])]);
+    headless(B(4), 1400, [...[0, 1, 2, 3].flatMap(k => pulse(0, k * 120)), probe(560, '카운터: 4번이면 OFF', M => [M.Y[0x20] === 0, `C0=${M.CN[0]}`]), ...pulse(0, 600), probe(800, '카운터: 5번이면 ON', M => [M.Y[0x20] === 1, `C0=${M.CN[0]}`]), ...pulse(1, 900), probe(1100, '카운터: RST C0으로 0', M => [M.CN[0] === 0 && M.Y[0x20] === 0, `C0=${M.CN[0]}`])]);
+    headless(B(5), 10600, [...pulse(0, 0), probe(2500, '신호등: 2.5초 빨강', M => [yb(M, 0x20, 0x21, 0x22) === '100', yb(M, 0x20, 0x21, 0x22)]), probe(7000, '신호등: 7초 초록', M => [yb(M, 0x20, 0x21, 0x22) === '010', yb(M, 0x20, 0x21, 0x22)]), probe(9500, '신호등: 9.5초 노랑', M => [yb(M, 0x20, 0x21, 0x22) === '001', yb(M, 0x20, 0x21, 0x22)]), probe(10500, '신호등: 10.5초 다시 빨강', M => [yb(M, 0x20, 0x21, 0x22) === '100', yb(M, 0x20, 0x21, 0x22)])]);
+    headless(B(6), 900, [...[0, 1, 2, 3, 4, 5].flatMap(k => pulse(0, k * 120, 40)), probe(850, '데이터: 6번 누르면 D0=6, Y20 ON, Y24~27=0110', M => [M.D[0] === 6 && M.Y[0x20] === 1 && yb(M, 0x24, 0x25, 0x26, 0x27) === '0110', `D0=${M.D[0]} Y24~27=${yb(M, 0x24, 0x25, 0x26, 0x27)}`])]);
+    headless(B(7), 700, [{at:0, fn:x(0, 1)}, probe(200, 'ALTP: 누르고 있어도 한 번만 반전', M => [M.Y[0x20] === 1, '']), {at:300, fn:x(0, 0)}, ...pulse(0, 400), probe(600, 'ALTP: 다시 누르면 OFF', M => [M.Y[0x20] === 0, ''])]);
+  } catch (e) { add('동작', '실행 중 예외', false, e.message); }
+  try { headless(buildRows([{c:{0:'LD SM400'}, o:'/ D0 D1 D2'}]), 50, []); add('동작', '0으로 나누면 CPU 오류 4100', false, '오류가 안 남'); }
+  catch (e) { add('동작', '0으로 나누면 CPU 오류 4100', e.code === '4100', e.message); }
+  // 4) 가상 설비 (기본 I/O로 금속 분류)
+  const snap = {cyl:{...PL.cyl}, belt:PL.belt, stack:PL.stack.slice(), pieces:PL.pieces.map(p => ({...p})), box:PL.box.slice(), done:PL.done, doneKinds:PL.doneKinds.slice(), ops:PL.ops, dev:PL.dev, uid:PL.uid, sens:PL.sens};
+  try {
+    PL.ops = {}; PL.dev = {};
+    PLANT_IO.forEach(s => { PL.ops[s.k] = parseOperand(s.def); PL.dev[s.k] = s.def; });
+    Object.assign(PL, {cyl:{sup:0, stop:0, ej:0}, belt:0, pieces:[], box:[], done:0, doneKinds:[], stack:['metal', 'white', 'black', 'metal']});
+    plantStep(0);
+    headless(B(9), 40000, [...pulse(0, 100, 100)], true);
+    const boxOk = PL.box.length === 2 && PL.box.every(k => k === 'metal');
+    const doneOk = PL.doneKinds.length === 2 && PL.doneKinds.every(k => k !== 'metal');
+    add('가상 설비', '금속 2개 → 배출함', boxOk, `배출함: ${PL.box.map(k => KIND_KO[k]).join(', ') || '없음'}`);
+    add('가상 설비', '플라스틱 2개 → 컨베이어 끝', doneOk, `끝 도착: ${PL.doneKinds.map(k => KIND_KO[k]).join(', ') || '없음'}`);
+  } catch (e) { add('가상 설비', '실행 중 예외', false, e.message); }
+  finally { Object.assign(PL, snap); for (const s of PLANT_IO) if (s.dir === 'in' && PL.ops[s.k] && s.k.indexOf('pb') !== 0) XIN[PL.ops[s.k].n] = 0; if (PL.on) plantStep(0); }
+  const pass = R.filter(r => r.pass).length;
+  const when = new Date().toLocaleString('ko-KR');
+  const groups = [...new Set(R.map(r => r.g))];
+  const text = `동작 자가 검사 ${when}\n통과 ${pass} / ${R.length}\n` + R.map(r => `[${r.pass ? '통과' : '실패'}] ${r.g} · ${r.name} ${r.detail}`).join('\n');
+  showModal('동작 자가 검사', `<p><b style="font-size:16px;color:${pass === R.length ? '#137a3b' : '#b3261e'}">${pass === R.length ? '모두 통과' : '실패 있음'} — ${pass} / ${R.length}</b> <span class="muted">${esc(when)}</span></p>
+    <p class="muted">예제 회로와 입력 문법, 래더 변환, 타이머·카운터 동작, 가상 설비 분류를 정해진 입력으로 자동 실행해서 결과를 확인했어요.</p>
+    ${groups.map(g => `<h4>${esc(g)} (${R.filter(r => r.g === g && r.pass).length}/${R.filter(r => r.g === g).length})</h4><table>${R.filter(r => r.g === g).map(r => `<tr><td style="width:46px;color:${r.pass ? '#137a3b' : '#b3261e'};font-weight:700">${r.pass ? '통과' : '실패'}</td><td>${esc(r.name)}</td><td class="muted">${esc(r.detail)}</td></tr>`).join('')}</table>`).join('')}`,
+    [{label:'결과 복사', onClick:() => { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('결과를 복사했어요')).catch(() => toast('복사할 수 없는 환경이에요', 'err')); return false; }}, {label:'닫기', primary:true}]);
+  log(pass === R.length ? 'ok' : 'err', `동작 자가 검사: ${pass} / ${R.length} 통과`);
+  return {pass, total:R.length, results:R};
+}
 
 /* =====================================================================
    13. 시작
@@ -2804,37 +3234,34 @@ function hashExample() {
 function openHashExample() {
   const i = hashExample();
   if (i < 0) return false;
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      const o = JSON.parse(raw);
-      const isExample = EXAMPLES.some(e => e.name === o.name);
-      if (!isExample && Array.isArray(o.rows) && o.rows.length) localStorage.setItem(BK_KEY, raw);
-    }
-  } catch (e) { /* 백업 없이 진행 */ }
   loadExample(i);
   try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* 해시 유지 */ }
-  if (readBackup()) log('info', '하던 작업은 백업해 두었습니다 — 프로젝트 → 열기 → "이전 작업 백업"에서 복구할 수 있습니다.');
   return true;
 }
-let restored = openHashExample();
-if (!restored) {
+function restoreAutosave() {
   try {
     const raw = localStorage.getItem(LS_KEY);
-    if (raw) { const o = JSON.parse(raw); loadProject(o, {id:o.id || null, keepSave:true}); restored = true; log('info', `이전 작업 "${P.name}"을(를) 이 브라우저 자동 저장에서 불러왔습니다`); }
-  } catch (e) { restored = false; }
+    if (!raw) return false;
+    const o = JSON.parse(raw);
+    loadProject(o, {id:o.id || null, keepSave:true, noBackup:true, pristine:!!o.pristine});
+    if (o.pristine && Number.isInteger(o.exIdx)) P.exIdx = o.exIdx;
+    return true;
+  } catch (e) { return false; }
 }
+const hadAutosave = restoreAutosave();
+let restored = openHashExample();
+if (!restored && hadAutosave) { restored = true; log('info', `이전 작업 "${P.name}"을(를) 이 브라우저 자동 저장에서 불러왔어요`); }
 if (!restored) {
   loadExample(0);
   log('info', '처음 오셨네요 — 예제 "자기유지 회로"가 열려 있습니다. ▶ 시뮬레이션 시작을 누르고 오른쪽 X0, X1을 눌러 보세요.');
 }
 window.addEventListener('hashchange', () => { if (hashExample() >= 0) { openHashExample(); updateModeUI(); } });
-updateModeUI(); updateSimUI(); renderComments();
+updateModeUI(); updateSimUI(); renderComments(); renderEvents();
 setTimeout(() => scr.focus({preventScroll:true}), 0);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); render(); });
 requestAnimationFrame(uiLoop);
 initCapabilities();
-window.__ladder = {P, ED, SIM, XIN, PL, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
+window.__ladder = {P, ED, SIM, XIN, PL, MS, EV, selfTest, missionStart, explainRow, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
 })();
 </script>
 </body>

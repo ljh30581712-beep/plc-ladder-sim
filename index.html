@@ -57,8 +57,8 @@
       </div>
       <div class="facts">
         <div><b>10개</b>예제 회로</div>
-        <div><b>17개</b>응용 명령 + 비교 접점</div>
-        <div><b>10ms</b>스캔 주기</div>
+        <div><b>3개</b>학습 미션</div>
+        <div><b>81개</b>동작 자가 검사 항목</div>
       </div>
     </div>
     <figure class="shot" style="margin:0">
@@ -94,7 +94,7 @@
       <div class="card">
         <svg class="sym" viewBox="0 0 120 30" aria-hidden="true"><path d="M8 3H30L38 11V27H8Z M30 3V11H38" stroke="currentColor" stroke-width="2" fill="none"/><text x="12" y="23" font-family="monospace" font-size="8" fill="currentColor">.json</text><path d="M50 15H72M64 8L72 15L64 22" stroke="currentColor" stroke-width="2" fill="none"/><rect x="82" y="6" width="34" height="20" rx="3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
         <h3>저장 · 내보내기</h3>
-        <p>작업은 이 브라우저에 자동 저장돼요. 다른 컴퓨터로 옮길 땐 .json 파일로 내보냈다가 불러오면 돼요.</p>
+        <p>작업은 브라우저에 자동 저장되고, 예제를 열거나 새로 만들 때 하던 작업은 자동 백업돼요(최근 5개). .json 파일에는 설비 I/O 할당까지 같이 저장돼요.</p>
         <div class="keys"><kbd>Ctrl+S</kbd><kbd>Ctrl+Z</kbd></div>
       </div>
     </div>
@@ -113,7 +113,24 @@
   </div>
 </section>
 
-<section id="start" class="alt">
+<section id="missions" class="alt">
+  <div class="wrap">
+    <h2>학습 미션: 예제를 구경하고 끝내지 않게</h2>
+    <p class="lead">미션 카드가 단계마다 할 일을 알려주고, 시뮬레이션 결과를 보고 성공했는지 자동으로 체크해요. 순서는 <b>목표 → 결과 예상 → 직접 수정 → 결과 확인 → 이유 정리</b>예요.</p>
+    <div class="grid3">
+      <a class="card" href="simulator.html#ex-1" style="text-decoration:none;color:inherit"><h3>미션 1 · 자기유지 회로</h3><p>Y20 병렬 접점을 지우면 어떻게 될지 예상하고, 직접 지워서 확인한 뒤 다시 고쳐요.</p></a>
+      <a class="card" href="simulator.html#ex-3" style="text-decoration:none;color:inherit"><h3>미션 2 · ON 딜레이 타이머</h3><p>K30을 K50으로 바꾸면 몇 초일지, 중간에 멈추면 현재값이 어떻게 되는지 확인해요.</p></a>
+      <a class="card" href="simulator.html#ex-5" style="text-decoration:none;color:inherit"><h3>미션 3 · 카운터</h3><p>버튼을 계속 누르고 있으면 몇 번 셀지 예상하고, 설정값을 바꿔 봐요.</p></a>
+    </div>
+    <div class="grid3" style="margin-top:14px">
+      <div class="card"><h3>"왜?" 원인 설명</h3><p>모니터 중 커서를 둔 줄의 출력이 왜 켜졌는지, 어느 접점 때문에 꺼졌는지 문장으로 알려줘요.</p></div>
+      <div class="card"><h3>변화 기록 · 한 스캔 실행</h3><p>X0 ON → Y20 ON → X0 OFF처럼 바뀐 순서가 쌓이고, 일시정지한 뒤 한 스캔씩 실행해 볼 수 있어요.</p></div>
+      <div class="card"><h3>지원 범위 · 자가 검사</h3><p>학습 메뉴에서 실제 PLC와 다른 점을 확인하고, 예제·문법·설비 동작 81개 항목을 자동으로 검사할 수 있어요.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="start">
   <div class="wrap">
     <h2>3단계로 시작하기</h2>
     <p class="lead">처음이면 자기유지 회로부터 만들어 보세요. 기동 버튼(X0)을 한 번 누르면 모터(Y20)가 계속 돌고, 정지 버튼(X1)을 누르면 멈추는 회로예요.</p>
@@ -158,7 +175,7 @@
   </div>
 </section>
 
-<section id="examples">
+<section id="examples" class="alt">
   <div class="wrap">
     <h2>예제 회로로 바로 시작</h2>
     <p class="lead">누르면 시뮬레이터에 바로 열려요. 하던 작업이 있으면 자동으로 백업해 둬서, 프로젝트 → 열기에서 다시 복구할 수 있어요.</p>
@@ -177,7 +194,7 @@
   </div>
 </section>
 
-<section id="keys" class="alt">
+<section id="keys">
   <div class="wrap">
     <h2>자주 쓰는 단축키</h2>
     <p class="lead">GX Works2와 같은 키예요. 이 사이트에서는 F5(새로고침) 같은 브라우저 키가 래더 입력용으로 바뀌어요.</p>
@@ -202,7 +219,7 @@
   </div>
 </section>
 
-<section>
+<section class="alt">
   <div class="wrap">
     <div class="final">
       <a href="devices.html"><b>X, Y, M, T가 헷갈린다면</b><span>Y1이 왜 "출력 1번"인지, X10이 왜 10번째가 아닌지, 학교 장비는 왜 Y20부터인지 그림으로 정리했어요.</span><br><em>디바이스 설명 보기 →</em></a>
