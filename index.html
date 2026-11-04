@@ -58,7 +58,7 @@
       <div class="facts">
         <div><b>10개</b>예제 회로</div>
         <div><b>3개</b>학습 미션</div>
-        <div><b>81개</b>동작 자가 검사 항목</div>
+        <div><b>89개</b>동작 자가 검사 항목</div>
       </div>
     </div>
     <figure class="shot" style="margin:0">
@@ -108,7 +108,7 @@
     <div class="grid3">
       <div class="card"><h3>출력 Y → 설비가 움직임</h3><p><code>Y20</code> 공급 실린더, <code>Y21</code> 컨베이어, <code>Y22</code> 스토퍼, <code>Y23</code> 배출 실린더, <code>Y24~Y26</code> 램프.</p></div>
       <div class="card"><h3>센서 → 입력 X로 들어옴</h3><p>리드 스위치(실린더 전진·후진), 매거진 감지, 용량형(모든 자재)·유도형(금속만) 근접센서, 광센서. 번호는 <b>I/O 할당</b>에서 학교 장비에 맞게 바꿀 수 있어요.</p></div>
-      <div class="card"><h3>바로 해 보기</h3><p><a href="simulator.html#ex-10">설비 자동 예제</a>를 열고 ▶ 시뮬레이션 시작 → 설비 그림의 초록 PB1. 금속은 배출함으로, 플라스틱은 컨베이어 끝까지 가요.</p></div>
+      <div class="card"><h3>바로 해 보기</h3><p><a href="simulator.html#ex-10">설비 자동 예제</a>를 열고 ▶ 시뮬레이션 시작 → 설비 그림의 초록 PB1. 금속은 배출함으로, 플라스틱은 컨베이어 끝까지 가요. 빨강 PB3을 누르면 모든 동작이 그 자리에서 멈추고, 다시 PB1을 누르면 하던 단계부터 이어서 움직여요.</p></div>
     </div>
   </div>
 </section>
@@ -125,7 +125,7 @@
     <div class="grid3" style="margin-top:14px">
       <div class="card"><h3>"왜?" 원인 설명</h3><p>모니터 중 커서를 둔 줄의 출력이 왜 켜졌는지, 어느 접점 때문에 꺼졌는지 문장으로 알려줘요.</p></div>
       <div class="card"><h3>변화 기록 · 한 스캔 실행</h3><p>X0 ON → Y20 ON → X0 OFF처럼 바뀐 순서가 쌓이고, 일시정지한 뒤 한 스캔씩 실행해 볼 수 있어요.</p></div>
-      <div class="card"><h3>지원 범위 · 자가 검사</h3><p>학습 메뉴에서 실제 PLC와 다른 점을 확인하고, 예제·문법·설비 동작 81개 항목을 자동으로 검사할 수 있어요.</p></div>
+      <div class="card"><h3>지원 범위 · 자가 검사</h3><p>학습 메뉴에서 실제 PLC와 다른 점을 확인하고, 예제·문법·설비 동작 89개 항목을 자동으로 검사할 수 있어요.</p></div>
     </div>
   </div>
 </section>
@@ -189,7 +189,7 @@
       <a class="ex" href="simulator.html#ex-7"><span class="n">7</span><div><b>데이터 처리 (INC·비교·MOV)</b><span>누른 횟수를 D0에 세고 5 이상이면 Y20 ON, Y24~Y27에 2진수 표시</span><div class="devs"><i>INC D0</i><i>LD&gt;= D0 K5</i><i>K1Y24</i></div></div><span class="go">열기 →</span></a>
       <a class="ex" href="simulator.html#ex-8"><span class="n">8</span><div><b>한 버튼 ON/OFF (ALTP)</b><span>X0을 누를 때마다 Y20이 켜졌다 꺼졌다</span><div class="devs"><i>ALTP Y20</i></div></div><span class="go">열기 →</span></a>
       <a class="ex" href="simulator.html#ex-9"><span class="n">9</span><div><b>설비 기초: 공급 + 컨베이어</b><span>가상 설비 — PB1로 컨베이어 운전, PB2 누르는 동안 공급 실린더 전진</span><div class="devs"><i>Y20 공급</i><i>Y21 컨베이어</i></div></div><span class="go">열기 →</span></a>
-      <a class="ex" href="simulator.html#ex-10"><span class="n">10</span><div><b>설비 자동: 공급 → 이송 → 금속 분류</b><span>가상 설비 — 자재를 하나씩 공급해서 금속은 배출함, 플라스틱은 끝까지</span><div class="devs"><i>SET/RST</i><i>X9 유도형</i><i>Y23 배출</i></div></div><span class="go">열기 →</span></a>
+      <a class="ex" href="simulator.html#ex-10"><span class="n">10</span><div><b>설비 자동: 공급 → 이송 → 금속 분류</b><span>가상 설비 — 금속은 배출함, 플라스틱은 끝까지. PB3 정지는 그 자리에서 멈추고 PB1로 이어서</span><div class="devs"><i>SET/RST</i><i>X9 유도형</i><i>Y23 배출</i></div></div><span class="go">열기 →</span></a>
     </div>
   </div>
 </section>

@@ -118,6 +118,7 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
 .mstep .fb,#msBody>.fb{margin-top:6px;padding:6px 8px;border-radius:5px;background:#e8f5ec;color:#1d6b3a}
 .mstep .fb.no{background:#fdeeee;color:#a32020}
 .mstep .wait{color:#8a5a00;margin-top:4px;font-size:12px}
+.mstep .live{margin-top:6px;padding:5px 8px;border-radius:5px;background:#eaf1fd;color:#163f8a;font-weight:600;font-size:12px}
 .mstep .hint{margin-top:4px;padding:5px 8px;background:#fff8e6;border-radius:5px;font-size:12px;color:#5c4300}
 .linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;text-decoration:underline;padding:0;font-size:12px}
 .mtag{font:600 10.5px var(--font-ui);color:#fff;background:var(--accent);border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:1px}
@@ -1140,7 +1141,8 @@ function execOut(ins, acc, M, dt) {
         const n = a[0].n, set = Math.max(0, rdWord(M, a[1]));
         if (acc) {
           M.TC[n] = 1;
-          if (!M.TS[n]) { M.TA[n] += dt; const cur = Math.floor(M.TA[n] / 100); if (cur >= set) { M.TN[n] = set; M.TS[n] = 1; } else M.TN[n] = cur; }
+          if (M.TN[n] < set) { M.TA[n] += dt; M.TN[n] = Math.min(set, Math.floor(M.TA[n] / 100)); }
+          M.TS[n] = M.TN[n] >= set ? 1 : 0;
         } else { M.TC[n] = 0; M.TA[n] = 0; M.TN[n] = 0; M.TS[n] = 0; }
       } else if (a[0].t === 'C') {
         const n = a[0].n, set = Math.max(0, rdWord(M, a[1]));
@@ -2288,25 +2290,25 @@ const EXAMPLES = [
     {c:{0:'LD SM400'}, o:'MOV D0 K1Y24'}], cm:{X0:'+1 버튼', X1:'초기화', D0:'누른 횟수', Y20:'5회 이상', SM400:'항상 ON'}},
   {name:'한 버튼 ON/OFF (ALTP)', desc:'X0을 누를 때마다 Y20이 켜졌다 꺼졌다 반복', rows:[
     {c:{0:'LD X0'}, o:'ALTP Y20'}], cm:{X0:'토글 버튼', Y20:'램프'}},
-  {name:'설비 기초: 공급 + 컨베이어', desc:'가상 설비 — PB1 컨베이어 운전, PB3 정지, PB2 누르는 동안 공급 실린더 전진', plant:true, rows:[
+  {name:'설비 기초: 공급 + 컨베이어', desc:'가상 설비 — PB1 운전(컨베이어 ON), PB3 정지(모두 멈춤), 운전 중에 PB2를 누르고 있는 동안 공급 실린더 전진', plant:true, rows:[
     {c:{0:'LD X0', 1:'LDI X2'}, o:'OUT M0', v:[1]},
     {c:{0:'LD M0'}},
     {c:{0:'LD M0'}, o:'OUT Y21', v:[11]},
     {o:'OUT Y24'},
-    {c:{0:'LD X1', 1:'LD X6'}, o:'OUT Y20'},
+    {c:{0:'LD X1', 1:'LD X6', 2:'LD M0'}, o:'OUT Y20'},
     {c:{0:'LDI M0'}, o:'OUT Y26'}],
     cm:{X0:'PB1 시작', X1:'PB2 공급', X2:'PB3 정지', X6:'매거진 자재', M0:'운전', Y20:'공급 실린더', Y21:'컨베이어', Y24:'운전 램프', Y26:'정지 램프'}},
-  {name:'설비 자동: 공급 → 이송 → 금속 분류', desc:'가상 설비 — PB1 누르면 자재를 하나씩 공급, 금속은 배출함으로, 비금속은 컨베이어 끝까지', plant:true, rows:[
+  {name:'설비 자동: 공급 → 이송 → 금속 분류', desc:'가상 설비 — PB1 시작: 자재를 하나씩 공급해 금속은 배출함, 비금속은 컨베이어 끝으로. PB3 정지: 모든 동작이 그 자리에서 멈춤. 다시 PB1: 하던 단계부터 이어서', plant:true, rows:[
     {c:{0:'LD X0', 1:'LDI X2'}, o:'OUT M0', v:[1]},
     {c:{0:'LD M0'}},
     {c:{0:'LD M0'}, o:'OUT Y24'},
     {c:{0:'LDI M0'}, o:'OUT Y26'},
     {c:{0:'LD M0', 1:'LD X6', 2:'LD X4', 3:'LDI M10', 4:'LDI M11', 5:'LDI M12', 6:'LDI M13'}, o:'SET M10'},
-    {c:{0:'LD M10'}, o:'OUT Y20'},
+    {c:{0:'LD M10', 1:'LD M0'}, o:'OUT Y20'},
     {c:{0:'LD M10', 1:'LD X5'}, o:'SET M11', v:[11]},
     {o:'RST M10'},
-    {c:{0:'LD M11'}, o:'OUT Y22'},
-    {c:{0:'LD M11'}, o:'OUT Y21', v:[1]},
+    {c:{0:'LD M11', 1:'LD M0'}, o:'OUT Y22'},
+    {c:{0:'LD M11', 1:'LD M0'}, o:'OUT Y21', v:[1]},
     {c:{0:'LD M13'}},
     {c:{0:'LD M11', 1:'LD X9'}, o:'SET M20'},
     {c:{0:'LD M20'}, o:'OUT Y25'},
@@ -2314,7 +2316,7 @@ const EXAMPLES = [
     {o:'RST M11'},
     {c:{0:'LD M11', 1:'LD X7', 2:'LDI M20'}, o:'SET M13', v:[11]},
     {o:'RST M11'},
-    {c:{0:'LD M12', 1:'LDI M14'}, o:'OUT Y23'},
+    {c:{0:'LD M12', 1:'LDI M14', 2:'LD M0'}, o:'OUT Y23'},
     {c:{0:'LD M12', 1:'LD XB'}, o:'SET M14'},
     {c:{0:'LD M14', 1:'LD XA'}, o:'RST M12', v:[11]},
     {o:'RST M14', v:[11]},
@@ -2351,7 +2353,7 @@ function loadExample(i) {
   P.pristine = true; P.exIdx = i; scheduleLocalSave();
   log('info', `예제 "${ex.name}" 열기 — ${ex.desc}`);
   setPush(true);
-  if (ex.plant) { showPlant(true); plantReset(); log('info', '가상 설비가 열렸어요 — ▶ 시뮬레이션 시작 후 설비 그림의 PB1(초록 버튼)을 누르세요.'); checkExampleIO(); }
+  if (ex.plant) { showPlant(true); plantReset(); log('info', '가상 설비가 열렸어요 — ▶ 시뮬레이션 시작 후 설비 그림의 PB1(초록)을 누르세요. PB3(빨강)은 정지: 그 자리에서 멈추고, 다시 PB1을 누르면 하던 단계부터 이어서 움직여요.'); checkExampleIO(); }
   if (MISSIONS[i]) missionStart(i);
 }
 function confirmExample(i) {
@@ -2663,9 +2665,9 @@ function plantStep(dt) {
       else if (ejTip < p.y - R - 1 && p.y < PG.cy + 14) { p.st = 'belt'; p.y = PG.cy; }
     }
   }
-  // 끝에 도착한 자재는 2.5초 뒤 치움
+  // 끝(도착 센서 범위)에 멈춘 자재는 2.5초 뒤 치움
   for (const p of PL.pieces) {
-    if (p.st === 'belt' && p.x >= PG.endLim - 0.5) { p.t += dt; if (p.t > 2.5) { p.gone = true; PL.done++; PL.doneKinds.push(p.kind); } }
+    if (p.st === 'belt' && p.x >= PG.endLim - 14) { p.t += dt; if (p.t > 2.5) { p.gone = true; PL.done++; PL.doneKinds.push(p.kind); } }
     else p.t = 0;
   }
   PL.pieces = PL.pieces.filter(p => !p.gone);
@@ -2930,9 +2932,9 @@ window.addEventListener('error', e => { try { log('err', '프로그램 오류: '
 /* =====================================================================
    15. 변화 기록 · 동작 원인 설명 · 학습 미션 · 지원 범위 · 자가 검사
    ===================================================================== */
-const EV = {list:[], watch:[], prev:[], shown:-1};
+const EV = {list:[], watch:[], prev:[], seq:0, shown:-1};
 function evReset(keepList) {
-  if (!keepList) EV.list = [];
+  if (!keepList) { EV.list = []; EV.seq++; }
   const prog = SIM.prog || ED.prog;
   EV.watch = prog ? prog.devs.map(parseOperand).filter(o => ['X','Y','M','L','B','T','C'].includes(o.t)) : [];
   EV.prev = EV.watch.map(o => (SIM.mem && rdBit(SIM.mem, o) ? 1 : 0));
@@ -2944,14 +2946,14 @@ function recordEvents() {
   if (!M) return;
   for (let i = 0; i < EV.watch.length; i++) {
     const v = rdBit(M, EV.watch[i]) ? 1 : 0;
-    if (v !== EV.prev[i]) { EV.prev[i] = v; EV.list.push({t:SIM.t, at:performance.now(), dev:EV.watch[i].text, v}); }
+    if (v !== EV.prev[i]) { EV.prev[i] = v; EV.seq++; EV.list.push({t:SIM.t, at:performance.now(), dev:EV.watch[i].text, v}); }
   }
   if (EV.list.length > 400) EV.list.splice(0, EV.list.length - 400);
 }
 function renderEvents() {
   const ol = $('#evList');
-  if (!ol || EV.shown === EV.list.length) return;
-  EV.shown = EV.list.length;
+  if (!ol || EV.shown === EV.seq) return;
+  EV.shown = EV.seq;
   if (!EV.list.length) { ol.innerHTML = `<li class="muted" style="font-family:var(--font-ui)">${SIM.on ? '아직 바뀐 게 없어요. 입력을 눌러 보세요.' : '시뮬레이션을 시작하면 X·Y·M·T·C가 바뀐 순서가 여기에 쌓여요.'}</li>`; return; }
   ol.innerHTML = EV.list.slice(-14).reverse().map(e => `<li><span class="t">${(e.t / 1000).toFixed(2)}s</span><span class="${e.v ? 'on' : 'off'}">${esc(e.dev)} ${e.v ? 'ON' : 'OFF'}</span><span class="cm">${esc(P.cm[e.dev] || '')}</span></li>`).join('');
 }
@@ -3054,9 +3056,11 @@ const MISSIONS = {
   2:{title:'ON 딜레이 타이머', goal:'시작(X0)을 누르고 정해진 시간 뒤에 램프(Y20) 켜기', steps:[
     {t:'task', text:'▶ 시뮬레이션 시작 → X0을 눌렀다 떼고, T0 코일 아래 파란 현재값이 30까지 올라가는 걸 보세요.', check:c => c.run() && c.bit('Y20'), ok:'현재값이 30(=3.0초)이 되자 T0 접점이 켜지고 Y20이 ON 됐어요.'},
     {t:'predict', text:'OUT T0 K30을 K50으로 바꾸면 몇 초 뒤에 Y20이 켜질까요?', choices:['3초', '5초', '50초'], answer:1, explain:'Q 시리즈 기본 타이머는 0.1초 단위라 K50 = 5.0초예요.'},
-    {t:'task', text:'직접 바꿔 보기: X1로 멈춤 → F2 → 3번째 줄 T0 코일을 더블클릭해서 T0 K50으로 바꾸기 → F4 → F3 → X0', check:c => c.hasIns('OUT T0 K50') && c.word('T0') === 50 && c.bit('Y20'), ok:'현재값 50에서 켜졌어요. 5초 걸렸죠?', hint:'코일 입력칸에 "T0 K50"이라고 쓰면 돼요.'},
+    {t:'task', text:'직접 바꿔 보기: X1로 정지 → F2 → 3번째 줄 T0 코일을 더블클릭해서 T0 K50으로 바꾸기 → F4 → F3 → X0으로 다시 시작', check:c => c.hasIns('OUT T0 K50') && c.word('T0') === 50 && c.bit('Y20'), ok:'현재값 50에서 켜졌어요. 5초 걸렸죠?', hint:'코일 입력칸에 "T0 K50"이라고 쓰면 돼요. 바꾼 뒤에는 F4(변환)를 꼭 눌러야 반영돼요.',
+      live:c => (c.hasIns('OUT T0 K50') ? `반영됨 · T0 현재값 ${c.word('T0')} / 50` : '아직 OUT T0 K30이에요 — 바꾸고 F4를 누르세요')},
     {t:'predict', text:'타이머가 도는 중(현재값 20쯤)에 X1(정지)을 누르면 T0 현재값은 어떻게 될까요?', choices:['20에서 멈춰 있다', '0으로 돌아간다', '계속 올라간다'], answer:1, explain:'OUT T 코일 입력이 꺼지면 현재값이 바로 0으로 리셋돼요.'},
-    {t:'task', text:'직접 확인: X0 → 2초쯤 뒤, 타이머가 다 차기 전에 X1 → T0 현재값 보기', track:'T0', check:c => c.seen('X1', 1) && c.word('T0') === 0 && MS.lastPeak >= 5 && MS.lastPeak < 50, ok:'중간에 멈추니 현재값이 0으로 돌아갔어요.', hint:'타이머가 50까지 다 차기 전에 X1을 눌러야 해요.'},
+    {t:'task', text:'직접 확인: ① X1로 정지해서 현재값을 0으로 → ② X0으로 다시 시작 → ③ 2초쯤 뒤(현재값 20쯤), 다 차기 전에 X1 → T0 현재값 보기', track:'T0', check:c => c.seen('X1', 1) && c.word('T0') === 0 && MS.lastPeak >= 5 && MS.lastPeak < 50, ok:'중간에 멈추니 현재값이 0으로 돌아갔어요.', hint:'이미 50까지 다 찬 상태에서 X1을 누르면 "중간에 멈춘 것"이 아니라서 다시 해야 해요. X0으로 다시 시작하고 50이 되기 전에 X1을 누르세요.',
+      live:c => { const v = c.word('T0'); if (MS.lastPeak >= 50 && v === 0) return '방금은 다 찬 뒤에 멈췄어요. 이제 ② X0으로 다시 시작하세요.'; if (c.bit('Y20')) return '지금 타이머가 다 찬 상태(Y20 ON)예요. ① X1로 먼저 정지하세요.'; if (v > 0) return `타이머 진행 중: 현재값 ${v} / 50 — 다 차기 전에 X1!`; return '대기 중: ② X0으로 시작하세요.'; }},
     {t:'explain', text:'정리: OUT T0 K□는 코일 입력이 켜져 있는 동안 0.1초씩 세고, 설정값이 되면 T0 접점이 ON 돼요. 입력이 꺼지면 바로 0으로 돌아가요. 끊겨도 이어서 세야 하면 적산 타이머(ST)를 써요.'},
   ]},
   4:{title:'카운터', goal:'X0을 정해진 횟수만큼 누르면 완료 램프(Y20) 켜기', steps:[
@@ -3098,7 +3102,7 @@ function renderMission() {
       else html += `<div class="fb ${MS.answer === st.answer ? '' : 'no'}">${MS.answer === st.answer ? '맞았어요!' : `아쉬워요. 정답은 "${esc(st.choices[st.answer])}"예요.`} ${esc(st.explain)}</div><button class="btn primary" data-next="1">다음</button>`;
     } else if (cur && st.t === 'task') {
       if (MS.okAt) html += `<div class="fb">${esc(st.ok || '성공!')}</div><button class="btn primary" data-next="1">다음</button>`;
-      else html += `<div class="wait">확인 중… 조건이 맞으면 자동으로 체크돼요.${st.hint ? ' <button class="linkbtn" data-hint="1">힌트</button>' : ''}</div>${MS.hint && st.hint ? `<div class="hint">${esc(st.hint)}</div>` : ''}`;
+      else html += `${st.live ? '<div class="live" id="msLive"></div>' : ''}<div class="wait">확인 중… 조건이 맞으면 자동으로 체크돼요.${st.hint ? ' <button class="linkbtn" data-hint="1">힌트</button>' : ''}</div>${MS.hint && st.hint ? `<div class="hint">${esc(st.hint)}</div>` : ''}`;
     } else if (cur) html += `<div><button class="btn primary" data-finish="1">미션 완료</button></div>`;
     html += '</div>';
   });
@@ -3110,6 +3114,7 @@ function missionTick() {
   const st = MISSIONS[MS.i].steps[MS.step];
   if (!st || st.t !== 'task' || MS.okAt) return;
   if (st.track && SIM.mem) { const v = MC.word(st.track); if (v === 0) { if (MS.peak) MS.lastPeak = MS.peak; MS.peak = 0; } else MS.peak = Math.max(MS.peak, v); }
+  if (st.live) { const el = $('#msLive'); if (el) { let t = ''; try { t = SIM.on ? st.live(MC) || '' : '▶ 시뮬레이션을 시작하세요'; } catch (e) { t = ''; } if (el.textContent !== t) el.textContent = t; } }
   let ok = false;
   try { ok = !!st.check(MC); } catch (e) { ok = false; }
   if (ok) { MS.okAt = performance.now(); renderMission(); toast('미션 단계 성공!'); }
@@ -3183,7 +3188,7 @@ function selfTest() {
   const B = i => buildRows(EXAMPLES[i].rows);
   const x = (n, v) => () => { XIN[n] = v; };
   const pulse = (n, at, len) => [{at, fn:x(n, 1)}, {at:at + (len || 60), fn:x(n, 0)}];
-  const probe = (at, name, f) => ({at, fn:M => { const r = f(M); add('동작', name, r[0], r[1]); }});
+  const probe = (at, name, f, g) => ({at, fn:M => { const r = f(M); add(g || '동작', name, r[0], r[1]); }});
   const yb = (M, ...ns) => ns.map(n => M.Y[n]).join('');
   try {
     headless(B(0), 800, [...pulse(0, 0), probe(300, '자기유지: X0을 떼도 Y20 유지', M => [M.Y[0x20] === 1, `Y20=${M.Y[0x20]}`]), ...pulse(1, 400), probe(700, '자기유지: X1을 누르면 Y20 OFF', M => [M.Y[0x20] === 0, `Y20=${M.Y[0x20]}`])]);
@@ -3194,6 +3199,13 @@ function selfTest() {
     headless(B(5), 10600, [...pulse(0, 0), probe(2500, '신호등: 2.5초 빨강', M => [yb(M, 0x20, 0x21, 0x22) === '100', yb(M, 0x20, 0x21, 0x22)]), probe(7000, '신호등: 7초 초록', M => [yb(M, 0x20, 0x21, 0x22) === '010', yb(M, 0x20, 0x21, 0x22)]), probe(9500, '신호등: 9.5초 노랑', M => [yb(M, 0x20, 0x21, 0x22) === '001', yb(M, 0x20, 0x21, 0x22)]), probe(10500, '신호등: 10.5초 다시 빨강', M => [yb(M, 0x20, 0x21, 0x22) === '100', yb(M, 0x20, 0x21, 0x22)])]);
     headless(B(6), 900, [...[0, 1, 2, 3, 4, 5].flatMap(k => pulse(0, k * 120, 40)), probe(850, '데이터: 6번 누르면 D0=6, Y20 ON, Y24~27=0110', M => [M.D[0] === 6 && M.Y[0x20] === 1 && yb(M, 0x24, 0x25, 0x26, 0x27) === '0110', `D0=${M.D[0]} Y24~27=${yb(M, 0x24, 0x25, 0x26, 0x27)}`])]);
     headless(B(7), 700, [{at:0, fn:x(0, 1)}, probe(200, 'ALTP: 누르고 있어도 한 번만 반전', M => [M.Y[0x20] === 1, '']), {at:300, fn:x(0, 0)}, ...pulse(0, 400), probe(600, 'ALTP: 다시 누르면 OFF', M => [M.Y[0x20] === 0, ''])]);
+    headless(buildRows([{c:{0:'LD X0'}, o:'OUT T0 D0'}, {c:{0:'LD T0'}, o:'OUT Y20'}]), 5400, [
+      {at:0, fn:M => { M.D[0] = 30; XIN[0] = 1; }},
+      probe(3100, '타이머: 설정 30에서 완료', M => [M.Y[0x20] === 1 && M.TN[0] === 30, `T0=${M.TN[0]}`]),
+      {at:3200, fn:M => { M.D[0] = 50; }},
+      probe(3500, '타이머: 설정을 50으로 키우면 OFF로 바뀌고 이어서 셈', M => [M.Y[0x20] === 0 && M.TN[0] > 30 && M.TN[0] < 50, `T0=${M.TN[0]}`]),
+      probe(5000, '타이머: 30에서 멈춰 있던 0.2초는 빼고 셈', M => [M.Y[0x20] === 0 && M.TN[0] < 50, `T0=${M.TN[0]}`]),
+      probe(5350, '타이머: 50에서 다시 ON', M => [M.Y[0x20] === 1 && M.TN[0] === 50, `T0=${M.TN[0]}`])]);
   } catch (e) { add('동작', '실행 중 예외', false, e.message); }
   try { headless(buildRows([{c:{0:'LD SM400'}, o:'/ D0 D1 D2'}]), 50, []); add('동작', '0으로 나누면 CPU 오류 4100', false, '오류가 안 남'); }
   catch (e) { add('동작', '0으로 나누면 CPU 오류 4100', e.code === '4100', e.message); }
@@ -3209,8 +3221,28 @@ function selfTest() {
     const doneOk = PL.doneKinds.length === 2 && PL.doneKinds.every(k => k !== 'metal');
     add('가상 설비', '금속 2개 → 배출함', boxOk, `배출함: ${PL.box.map(k => KIND_KO[k]).join(', ') || '없음'}`);
     add('가상 설비', '플라스틱 2개 → 컨베이어 끝', doneOk, `끝 도착: ${PL.doneKinds.map(k => KIND_KO[k]).join(', ') || '없음'}`);
+    // 이송 중 PB3 정지 → 그 자리 멈춤 → PB1로 이어서
+    Object.assign(PL, {cyl:{sup:0, stop:0, ej:0}, belt:0, pieces:[], box:[], done:0, doneKinds:[], stack:['metal', 'white']});
+    plantStep(0);
+    let posAt = null;
+    headless(B(9), 30000, [...pulse(0, 100, 100), ...pulse(2, 2500, 100),
+      {at:3000, fn:() => { const p0 = PL.pieces.find(z => z.st === 'belt'); posAt = p0 ? p0.x : null; }},
+      probe(3600, '정지: PB3을 누르면 실린더·컨베이어 출력 모두 OFF', M => [yb(M, 0x20, 0x21, 0x22, 0x23) === '0000' && M.Y[0x26] === 1, `Y20~23=${yb(M, 0x20, 0x21, 0x22, 0x23)} 정지램프=${M.Y[0x26]}`], '가상 설비'),
+      probe(3600, '정지: 자재는 그 자리, 진행 단계는 기억', M => { const p0 = PL.pieces.find(z => z.st === 'belt'); return [p0 && posAt != null && Math.abs(p0.x - posAt) < 0.5 && M.M[11] === 1, `자재 위치 ${p0 ? Math.round(p0.x) : '-'} · 이송 단계 M11=${M.M[11]}`]; }, '가상 설비'),
+      ...pulse(0, 4000, 100)], true);
+    add('가상 설비', '재시작: PB1로 이어서 분류 완료', PL.box.join() === 'metal' && PL.doneKinds.join() === 'white', `배출함: ${PL.box.map(k => KIND_KO[k]).join(', ') || '없음'} · 끝: ${PL.doneKinds.map(k => KIND_KO[k]).join(', ') || '없음'}`);
   } catch (e) { add('가상 설비', '실행 중 예외', false, e.message); }
   finally { Object.assign(PL, snap); for (const s of PLANT_IO) if (s.dir === 'in' && PL.ops[s.k] && s.k.indexOf('pb') !== 0) XIN[PL.ops[s.k].n] = 0; if (PL.on) plantStep(0); }
+  // 5) 화면: 변화 기록이 400개를 넘어도 새 기록이 보이는지
+  const evKeep = {list:EV.list, watch:EV.watch, prev:EV.prev, seq:EV.seq, shown:EV.shown}, memKeep = SIM.mem, tKeep = SIM.t;
+  try {
+    SIM.mem = memNew(); SIM.t = 0;
+    Object.assign(EV, {list:[], watch:[parseOperand('X0')], prev:[0], shown:-1});
+    for (let k = 1; k <= 450; k++) { SIM.mem.X[0] = k % 2; SIM.t = k * 10; recordEvents(); renderEvents(); }
+    const first = ($('#evList li') || {}).textContent || '';
+    add('화면', '변화 기록 450개째도 화면에 갱신됨', EV.list.length === 400 && first.indexOf('4.50s') === 0, `기록 ${EV.list.length}개 · 맨 위: ${first.slice(0, 12)}`);
+  } catch (e) { add('화면', '변화 기록 검사 중 예외', false, e.message); }
+  finally { Object.assign(EV, evKeep); EV.shown = -1; SIM.mem = memKeep; SIM.t = tKeep; renderEvents(); }
   const pass = R.filter(r => r.pass).length;
   const when = new Date().toLocaleString('ko-KR');
   const groups = [...new Set(R.map(r => r.g))];
@@ -3261,7 +3293,7 @@ setTimeout(() => scr.focus({preventScroll:true}), 0);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); render(); });
 requestAnimationFrame(uiLoop);
 initCapabilities();
-window.__ladder = {P, ED, SIM, XIN, PL, MS, EV, selfTest, missionStart, explainRow, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
+window.__ladder = {P, ED, SIM, XIN, PL, MS, EV, selfTest, missionStart, explainRow, headless, buildRows, EXAMPLES, plantStep, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
 })();
 </script>
 </body>
