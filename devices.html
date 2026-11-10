@@ -81,6 +81,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
     <nav class="top" aria-label="사이트 메뉴">
       <a href="index.html">홈</a>
       <a href="devices.html" aria-current="page">디바이스 설명</a>
+      <a href="io.html">입출력 할당표</a>
       <a class="cta" href="simulator.html">시뮬레이터 열기</a>
     </nav>
   </div>
@@ -211,6 +212,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
       </svg>
       <figcaption>예시 구성이에요. 모듈 점수(16·32·64점)와 꽂힌 순서에 따라 번호가 달라져요. 우리 장비 번호는 수업 자료나 GX Works2의 PLC 파라미터 → I/O 할당에서 확인하세요.</figcaption>
     </figure>
+    <div class="callout"><b>검정 장비(CT-4200M)는 입력 X00~X1F, 출력 Y20~Y3F</b><p>X19 START, X1A STOP, Y2E 컨베이어처럼 번호마다 붙은 센서·실린더를 <a href="io.html">입출력 할당표</a>에 정리했어요. 시뮬레이터에서도 툴바의 <b>할당표</b>를 누르면 오른쪽에서 바로 찾아볼 수 있어요.</p></div>
     <div class="callout warn"><b>그럼 이 장비에서 Y1을 쓰면?</b><p>프로그램 안에서는 Y1이 정상적으로 켜지지만, Y1 번호에 연결된 출력 단자가 없어서 바깥에서는 아무것도 안 켜져요. M처럼 메모리만 바뀌는 거예요. <b>실습 장비에서 램프가 안 켜지면 출력 번호부터 확인하세요.</b> 시뮬레이터에서는 오른쪽 출력 범위를 Y0~Y1F로 바꾸면 Y1 램프를 볼 수 있어요.</p></div>
   </div>
 </section>
@@ -322,7 +324,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
       <li><b>K30을 30초로 착각</b><p>타이머는 0.1초 단위라 <span class="o">OUT T0 K30</span>은 3초예요. 30초는 <span class="o">K300</span>.</p></li>
       <li><b>입력 X를 출력으로 씀</b><p><span class="x">OUT X0</span>은 안 돼요. X는 바깥에서 들어오는 신호라 프로그램이 켤 수 없어요.</p></li>
       <li><b>같은 출력을 두 번 OUT (이중 코일)</b><p><span class="x">OUT Y20</span>을 두 줄에 쓰면 아래쪽 줄 결과만 남아요. 조건을 OR로 묶어서 한 번만 쓰세요.</p></li>
-      <li><b>장비 출력 번호와 다르게 씀</b><p>출력 모듈이 Y20부터인데 <span class="x">Y0</span>을 쓰면 램프가 안 켜져요. <a href="#io">I/O 할당</a>을 확인하세요.</p></li>
+      <li><b>장비 출력 번호와 다르게 씀</b><p>출력 모듈이 Y20부터인데 <span class="x">Y0</span>을 쓰면 램프가 안 켜져요. <a href="io.html">검정 장비 입출력 할당표</a>를 확인하세요.</p></li>
       <li><b>카운터를 리셋 안 함</b><p>카운터는 설정값에 도달하면 그대로 멈춰 있어요. <span class="o">RST C0</span>을 넣어야 다시 세요.</p></li>
       <li><b>펄스가 필요한 곳에 일반 접점</b><p><span class="x">LD X0 → INC D0</span>은 누르고 있는 동안 매 스캔(약 10ms마다) 올라가요. 한 번만 올리려면 <span class="o">LDP X0</span>이나 <span class="o">INCP</span>를 쓰세요.</p></li>
     </ul>
@@ -332,7 +334,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
 <footer class="site">
   <div class="wrap">
     <div>Q03UDV 래더 시뮬레이터 · PLC 수업 연습용 프로젝트<br>미쓰비시전기의 공식 자료가 아니에요. 정확한 사양은 미쓰비시 Q 시리즈 매뉴얼을 확인하세요.</div>
-    <div><a href="index.html">홈</a> · <a href="simulator.html">시뮬레이터</a></div>
+    <div><a href="index.html">홈</a> · <a href="simulator.html">시뮬레이터</a> · <a href="io.html">입출력 할당표</a></div>
   </div>
 </footer>
 

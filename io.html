@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>검정 장비 입출력 할당표 · Q03UDV 래더 시뮬레이터</title>
+<meta name="description" content="생산자동화 실습 장치(CT-4200M) 검정 장비용 입력 X00~X1F, 출력 Y20~Y3F 할당표. 실린더별 센서·솔레노이드 짝과 싱글·더블 솔레노이드 차이까지 한 장에.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="검정 장비 입출력 할당표 (X00~X1F, Y20~Y3F)">
+<meta property="og:description" content="X19는 START, Y2E는 컨베이어 — 외우지 말고 찾아보세요">
+<meta property="og:image" content="https://ljh30581712-beep.github.io/plc-ladder-sim/assets/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f6ee0'/%3E%3Cpath d='M6 16h7M19 16h7M13 9v14M19 9v14' stroke='white' stroke-width='2.6' fill='none'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+.ihero{background:linear-gradient(180deg,#1c2a3e 0%,#22344d 100%);color:#e9f0f9;padding:40px 0 44px}
+.ihero h1{font-size:clamp(26px,3.4vw,38px);line-height:1.28;margin:10px 0 12px;color:#fff;text-wrap:balance}
+.ihero p{color:#c3d1e4;margin:0 0 20px;max-width:62ch}
+.find{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.find input{flex:1;min-width:220px;max-width:420px;font:600 16px var(--font-sans, inherit);border:2px solid var(--accent);border-radius:8px;padding:8px 12px}
+.find small{color:var(--muted)}
+.iotables{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.iotables h3{margin:0 0 8px;font-size:17px}
+table.io{border-collapse:collapse;width:100%;font-size:14.5px;background:#fff}
+table.io th{background:#eef2f7;text-align:left;font-weight:600;color:#3b4757;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.io td{padding:6px 10px;border-bottom:1px solid #edf0f4;vertical-align:middle}
+table.io td.a{font:700 15px var(--font-mono);color:#0b3f9c;white-space:nowrap;width:62px}
+table.io tr.empty td{color:#b3bcc8}
+table.io tr.empty td.a{color:#b3bcc8;font-weight:600}
+table.io tr.hit td{background:#fff6d6}
+table.io tr.dim{display:none}
+.kind{display:inline-block;font:600 11.5px var(--font-mono);border-radius:4px;padding:1px 6px;white-space:nowrap;margin-left:4px}
+.k-reed{background:#e6eeff;color:#1f4fbf}.k-fib{background:#ffe3df;color:#b8321f}.k-prox{background:#fff1d6;color:#8a5a00}.k-sw{background:#e3f1e7;color:#1d6b3a}.k-servo{background:#eceff3;color:#4c5a6b}
+.k-dbl{background:#e6eeff;color:#1f4fbf}.k-sgl{background:#fff1d6;color:#8a5a00}.k-mot{background:#e3f1e7;color:#1d6b3a}.k-lamp{background:#ffe3df;color:#b8321f}
+table.pairs td.p{font-weight:700;white-space:nowrap}
+table.pairs code{font-weight:700}
+.callout{background:#fff;border-left:4px solid var(--accent);border-radius:0 8px 8px 0;padding:14px 18px;margin:16px 0 0}
+.callout.warn{border-left-color:#e08a00}
+.callout b{display:block;margin-bottom:2px}
+.callout p{margin:0;color:#3b4757;font-size:14.5px}
+figure.plant{margin:0;background:#fff;border:1px solid var(--line);border-radius:9px;padding:12px;overflow:hidden}
+figure.plant img{display:block;width:100%;height:auto;border-radius:6px}
+figure.plant figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
+.printbtn{cursor:pointer;font-family:inherit;background:transparent}
+@media (max-width:900px){.iotables{grid-template-columns:minmax(0,1fr)}}
+@media print{
+  header.site,footer.site,.ihero .actions,.find,.noprint{display:none!important}
+  .ihero{background:#fff;color:#000;padding:0 0 8px}
+  .ihero h1{color:#000;font-size:22px;margin:0 0 4px}
+  .ihero p{color:#333;margin:0}
+  section{padding:10px 0!important}
+  table.io{font-size:11.5px}
+  table.io td,table.io th{padding:3px 6px}
+  table.io tr.dim{display:table-row}
+  .iotables{grid-template-columns:1fr 1fr;gap:10px}
+  .kind{border:1px solid #bbb}
+  figure.plant{break-inside:avoid}
+  #pairs,.plantsec{break-before:page}
+  h2{break-after:avoid}
+}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html"><span class="q">Q</span>Q03UDV 래더 시뮬레이터</a>
+    <nav class="top" aria-label="사이트 메뉴">
+      <a href="index.html">홈</a>
+      <a href="devices.html">디바이스 설명</a>
+      <a href="io.html" aria-current="page">입출력 할당표</a>
+      <a class="cta" href="simulator.html">시뮬레이터 열기</a>
+    </nav>
+  </div>
+</header>
+
+<div class="ihero">
+  <div class="wrap">
+    <div class="eyebrow">생산자동화 실습 장치 CT-4200M · 검정 장비용</div>
+    <h1>입출력 할당표 — X00~X1F 입력, Y20~Y3F 출력</h1>
+    <p>센서·스위치 27개, 솔레노이드·모터·램프 19개예요. 외우지 말고 여기서 찾아보세요. 시뮬레이터의 가상 설비도 이 번호 그대로 움직여요.</p>
+    <div class="actions">
+      <a class="btn primary" href="simulator.html#ex-10">가상 설비로 자동 운전 예제 열기</a>
+      <button class="btn ghost printbtn" type="button" onclick="window.print()">인쇄하기 (A4)</button>
+    </div>
+  </div>
+</div>
+
+<section style="padding-top:30px">
+  <div class="wrap">
+    <div class="find noprint">
+      <input id="q" type="search" placeholder="찾기: 스토퍼, X1A, 컨베이어, 흡착…" aria-label="할당표에서 찾기" autocomplete="off">
+      <small id="qn">번호(X0F, Y2E)나 이름(공급, 램프)으로 찾을 수 있어요</small>
+    </div>
+    <div class="iotables">
+      <div>
+        <h3>입력 할당표 (X)</h3>
+        <div class="tablewrap"><table class="io" id="tin"><thead><tr><th>주소</th><th>설명</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div>
+        <h3>출력 할당표 (Y)</h3>
+        <div class="tablewrap"><table class="io" id="tout"><thead><tr><th>주소</th><th>설명</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+    <div class="callout noprint">
+      <b>X00과 X0은 같은 입력이에요</b>
+      <p>표는 두 자리로 맞춰 적었을 뿐이에요. 래더에는 <code>X0</code>, <code>X0F</code>, <code>XF</code> 어느 쪽으로 써도 같은 신호예요. 번호가 16진수라서 X09 다음은 X0A, X0F 다음이 X10이에요.</p>
+    </div>
+  </div>
+</section>
+
+<section id="pairs" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <h2>실린더마다 출력과 센서는 짝으로 다녀요</h2>
+    <p class="lead">출력(Y)으로 실린더를 움직이고, 끝까지 갔는지는 그 실린더의 센서(X)로 확인해요. 짝으로 외우면 번호가 덜 헷갈려요.</p>
+    <div class="tablewrap">
+      <table class="t pairs">
+        <thead><tr><th>부분</th><th>출력 (움직이기)</th><th>입력 (확인하기)</th><th>밸브</th></tr></thead>
+        <tbody>
+          <tr><td class="p">공급</td><td><code>Y20</code> 전진 · <code>Y21</code> 후진</td><td><code>X00</code> 후진 · <code>X01</code> 전진 · <code>X0F</code> 매거진 자재</td><td><span class="kind k-dbl">더블</span></td></tr>
+          <tr><td class="p">가공 (드릴)</td><td><code>Y24</code> 하강 · <code>Y2D</code> 드릴 모터</td><td><code>X04</code> 하강 · <code>X05</code> 상승</td><td><span class="kind k-sgl">싱글</span></td></tr>
+          <tr><td class="p">분배</td><td><code>Y22</code> 전진 · <code>Y23</code> 후진</td><td><code>X02</code> 후진 · <code>X03</code> 전진 · <code>X10</code> 분배 위치 자재</td><td><span class="kind k-dbl">더블</span></td></tr>
+          <tr><td class="p">컨베이어</td><td><code>Y2E</code> 모터</td><td><code>X12</code> 금속감지 · <code>X11</code> 워크감지</td><td>—</td></tr>
+          <tr><td class="p">취출</td><td><code>Y25</code> 전진 · <code>Y26</code> 후진</td><td><code>X06</code> 후진 · <code>X07</code> 전진</td><td><span class="kind k-dbl">더블</span></td></tr>
+          <tr><td class="p">스토퍼</td><td><code>Y27</code> 하강</td><td><code>X08</code> 상승 · <code>X09</code> 하강 · <code>X13</code> 자재 도착</td><td><span class="kind k-sgl">싱글</span></td></tr>
+          <tr><td class="p">흡착</td><td><code>Y28</code> 전진 · <code>Y29</code> 후진 · <code>Y2A</code> 흡착컵</td><td><code>X0A</code> 후진 · <code>X0B</code> 전진 · <code>X0C</code> 흡착 확인</td><td><span class="kind k-dbl">더블</span> + <span class="kind k-sgl">싱글</span></td></tr>
+          <tr><td class="p">저장</td><td><code>Y2B</code> 전진 · <code>Y2C</code> 후진</td><td><code>X0D</code> 후진 · <code>X0E</code> 전진</td><td><span class="kind k-dbl">더블</span></td></tr>
+          <tr><td class="p">조작 · 램프</td><td><code>Y32</code> 적 · <code>Y33</code> 황 · <code>Y34</code> 녹 · <code>Y35</code> 청</td><td><code>X19</code> START · <code>X1A</code> STOP · <code>X1B</code> RESET · <code>X1C</code> 비상</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="callout"><b>더블 솔레노이드 (전진·후진 출력이 2개)</b><p>밸브가 마지막 방향을 기억해요. <code>Y20</code>을 잠깐만 켜도 끝까지 전진하고, <code>Y21</code>을 줄 때까지 그대로 있어요. 그래서 정지 버튼으로 출력을 끊어도 하던 행정은 끝까지 가요.</p></div>
+      <div class="callout warn"><b>싱글 솔레노이드 (출력이 1개)</b><p>켜 있는 동안만 움직이고, 끄면 스프링으로 돌아와요. <code>Y24</code>를 끄면 드릴이 올라가고, <code>Y27</code>을 끄면 스토퍼가 올라와서 자재를 막아요. <code>Y2A</code>를 끄면 흡착컵이 자재를 놓아요.</p></div>
+    </div>
+    <div class="callout" style="margin-top:12px"><b>센서 순서 주의</b><p>공급·분배·취출·흡착·저장은 <strong>후진 센서가 앞 번호</strong>(X00 후진, X01 전진)예요. 가공은 <strong>하강이 앞 번호</strong>(X04 하강, X05 상승), 스토퍼는 <strong>상승이 앞 번호</strong>(X08 상승, X09 하강)라서 헷갈리기 쉬워요.</p></div>
+  </div>
+</section>
+
+<section class="plantsec">
+  <div class="wrap">
+    <h2>가상 설비에서는 어디에 있나</h2>
+    <p class="lead">시뮬레이터의 가상 설비를 위에서 본 그림이에요. 아래쪽이 조작 패널 쪽이고, 그림에 X·Y 번호가 같이 적혀 있어요.</p>
+    <figure class="plant">
+      <img src="assets/plant.png" width="1500" height="576" alt="가상 설비 평면도: 왼쪽 위 매거진과 공급 실린더, 드릴 가공과 분배 실린더, 가운데 컨베이어 위 금속감지·워크감지와 취출 실린더, 오른쪽 스토퍼·흡착 실린더·저장 창고, 오른쪽 위 서보 축, 왼쪽 아래 스위치와 램프 패널">
+      <figcaption>흐름: 매거진 → 공급(X00·X01, Y20·Y21) → 드릴 가공(Y24·Y2D) → 분배로 컨베이어에 올림(Y22·Y23) → 금속은 취출함(Y25·Y26), 비금속은 스토퍼에서 흡착해 창고로(Y28·Y29·Y2A → Y2B·Y2C)</figcaption>
+    </figure>
+    <div class="callout warn">
+      <b>그림 배치와 동작 순서는 실습 장치 사진을 보고 옮긴 거예요</b>
+      <p>번호는 할당표 그대로지만, 센서가 붙은 정확한 위치나 실제 과제의 동작 순서는 수업 자료를 따르세요. 서보 축(상한 X1D · 하한 X1E · 원점 X1F)은 위치결정 모듈로 움직이는 부분이라 시뮬레이터에서는 원점에 고정돼 있어요.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <div>Q03UDV 래더 시뮬레이터 · PLC 수업 연습용 프로젝트<br>미쓰비시전기의 공식 자료가 아니에요. 장비 번호는 수업 자료와 함께 확인하세요.</div>
+    <div><a href="index.html">홈</a> · <a href="simulator.html">시뮬레이터</a> · <a href="devices.html">디바이스 설명</a></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const K = {reed:['리드 스위치','k-reed'], fib:['광화이버','k-fib'], cap:['용량형 근접','k-prox'], ind:['유도형 근접','k-prox'], sw:['스위치','k-sw'], vac:['압력 스위치','k-sw'], servo:['서보','k-servo'],
+    dbl:['더블 Sol','k-dbl'], sgl:['싱글 Sol','k-sgl'], mot:['모터','k-mot'], lamp:['램프','k-lamp']};
+  const IN = {'00':['공급실린더 후진센서','reed'], '01':['공급실린더 전진센서','reed'], '02':['분배실린더 후진센서','reed'], '03':['분배실린더 전진센서','reed'],
+    '04':['가공실린더 하강센서','reed'], '05':['가공실린더 상승센서','reed'], '06':['취출실린더 후진센서','reed'], '07':['취출실린더 전진센서','reed'],
+    '08':['스토퍼실린더 상승센서','reed'], '09':['스토퍼실린더 하강센서','reed'], '0A':['흡착실린더 후진센서','reed'], '0B':['흡착실린더 전진센서','reed'],
+    '0C':['흡착센서','vac'], '0D':['저장실린더 후진센서','reed'], '0E':['저장실린더 전진센서','reed'], '0F':['공급센서 (광화이버)','fib'],
+    '10':['분배센서 (광화이버)','fib'], '11':['워크감지 (용량형)','cap'], '12':['금속감지 (유도형)','ind'], '13':['스토퍼검출센서 (광화이버)','fib'],
+    '19':['스위치1 (START)','sw'], '1A':['스위치2 (STOP)','sw'], '1B':['스위치3 (RESET)','sw'], '1C':['비상스위치 (EMG)','sw'],
+    '1D':['상한리미트','servo'], '1E':['하한리미트','servo'], '1F':['원점','servo']};
+  const OUT = {'20':['공급전진 Sol','dbl'], '21':['공급후진 Sol','dbl'], '22':['분배전진 Sol','dbl'], '23':['분배후진 Sol','dbl'], '24':['가공하강 Sol','sgl'],
+    '25':['취출전진 Sol','dbl'], '26':['취출후진 Sol','dbl'], '27':['스토퍼하강 Sol','sgl'], '28':['흡착전진 Sol','dbl'], '29':['흡착후진 Sol','dbl'],
+    '2A':['흡착컵동작 Sol','sgl'], '2B':['저장전진 Sol','dbl'], '2C':['저장후진 Sol','dbl'], '2D':['드릴가공모터','mot'], '2E':['컨베이어모터','mot'],
+    '32':['적색등','lamp'], '33':['황색등','lamp'], '34':['녹색등','lamp'], '35':['청색등','lamp']};
+  const hex2 = n => n.toString(16).toUpperCase().padStart(2, '0');
+  const rows = (pre, from, map) => Array.from({length:32}, (_, i) => {
+    const h = hex2(from + i), e = map[h];
+    return e ? `<tr data-k="${pre}${h} ${pre}${h.replace(/^0(?=.)/, '')} ${e[0]} ${K[e[1]][0]}"><td class="a">${pre}${h}</td><td>${e[0]} <span class="kind ${K[e[1]][1]}">${K[e[1]][0]}</span></td></tr>`
+      : `<tr class="empty" data-k=""><td class="a">${pre}${h}</td><td>비어 있음</td></tr>`;
+  }).join('');
+  document.querySelector('#tin tbody').innerHTML = rows('X', 0, IN);
+  document.querySelector('#tout tbody').innerHTML = rows('Y', 0x20, OUT);
+  const q = document.getElementById('q'), qn = document.getElementById('qn');
+  const norm = s => s.toUpperCase().replace(/\s+/g, '');
+  q.addEventListener('input', () => {
+    const v = norm(q.value);
+    let n = 0;
+    document.querySelectorAll('table.io tbody tr').forEach(tr => {
+      const k = norm(tr.dataset.k || '');
+      const hit = !!v && !!k && k.indexOf(v) >= 0;
+      tr.classList.toggle('hit', hit);
+      tr.classList.toggle('dim', !!v && !hit);
+      if (hit) n++;
+    });
+    qn.textContent = v ? `${n}개 찾음` : '번호(X0F, Y2E)나 이름(공급, 램프)으로 찾을 수 있어요';
+  });
+})();
+</script>
+</body>
+</html>
