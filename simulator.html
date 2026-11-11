@@ -432,12 +432,13 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
         <div class="iohead">입력 X
           <select id="xBank" aria-label="입력 범위"></select>
           <span class="grow"></span>
-          <div class="seg sm" id="pushSeg"><button data-push="0">토글</button><button data-push="1" class="active">푸시</button></div>
+          <div class="seg sm" id="pushSeg"><button data-push="0">토글</button><button data-push="1" class="active">누름</button></div>
         </div>
         <div class="iogrid" id="xGrid"></div>
         <div class="iohead">출력 Y <select id="yBank" aria-label="출력 범위"></select></div>
         <div class="iogrid" id="yGrid"></div>
-        <p class="hintline">토글: 누를 때마다 ON/OFF · 푸시: 누르고 있는 동안만 ON (푸시버튼처럼)</p>
+        <p class="hintline" id="ioPeek">X·Y 위에 마우스를 올리면 할당표 이름이 여기 나와요</p>
+        <p class="hintline">토글: 누를 때마다 ON/OFF · 누름: 누르고 있는 동안만 ON</p>
       </div>
       <div class="card" id="ioCard">
         <h3>입출력 할당표 <span class="grow"></span><small>학교 검정 장비</small><button class="mini" id="ioEditBtn" title="X·Y 번호 바꾸기">번호 변경</button></h3>
@@ -480,8 +481,8 @@ const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-// 코멘트: 사용자가 쓴 코멘트가 먼저, 없으면 입출력 할당표 이름
-const cmOf = d => (P.cm[d] || (ED.ioCm && IOMAP[d] ? IOMAP[d].cm : ''));
+// 코멘트: 할당표에 있는 X·Y는 언제나 할당표 이름만 (예전 "PB" 같은 코멘트는 무시), 나머지는 사용자가 쓴 코멘트
+const cmOf = d => (IOMAP[d] ? (ED.ioCm ? IOMAP[d].name : '') : (P.cm[d] || ''));
 
 /* =====================================================================
    1. 디바이스 (Q03UDV 기본 디바이스 할당)
@@ -687,7 +688,7 @@ function cellDevice(cell) {
 }
 function describeRes(res) {
   if (res.err) return res.err;
-  const cmt = d => (P.cm[d] ? `  ·  코멘트: ${P.cm[d]}` : (IOMAP[d] ? `  ·  할당표: ${IOMAP[d].name}` : ''));
+  const cmt = d => (IOMAP[d] ? `  ·  할당표: ${IOMAP[d].name}` : (P.cm[d] ? `  ·  코멘트: ${P.cm[d]}` : ''));
   if (res.type === 'contact') {
     const mn = {NO:['LD','AND','OR'], NC:['LDI','ANI','ORI'], P:['LDP','ANDP','ORP'], F:['LDF','ANDF','ORF']}[res.kind];
     return `${KIND_NAME[res.kind]}${res.or ? ' OR (병렬)' : ''}  ${res.d}   (${res.or ? mn[2] : mn[0] + ' / ' + mn[1]} ${res.d})${cmt(res.d)}`;
@@ -1403,8 +1404,8 @@ function wrapLines(t, maxW, maxLines) {
   for (const ch of t) {
     if (ctx.measureText(line + ch).width > maxW && line) {
       // 띄어쓰기가 있으면 단어 단위로 줄바꿈 ("컨베이어 모터" → "컨베이어" / "모터")
-      const sp = line.lastIndexOf(' ');
-      if (ch.trim() && sp > 0) { out.push(line.slice(0, sp)); line = line.slice(sp + 1) + ch; }
+      const sp = Math.max(line.lastIndexOf(' '), line.lastIndexOf('('));
+      if (ch.trim() && ch !== '(' && sp > 0) { out.push(line.slice(0, sp)); line = line.slice(line[sp] === ' ' ? sp + 1 : sp) + ch; }
       else { out.push(line); line = ch.trim() ? ch : ''; }
       if (out.length === maxLines) { let l = out[maxLines - 1]; while (l && ctx.measureText(l + '…').width > maxW) l = l.slice(0, -1); out[maxLines - 1] = l + '…'; return out; }
     } else line += ch;
@@ -1417,7 +1418,7 @@ function drawComment(dev, cx, y, maxW) {
   const t = cmOf(dev);
   if (!t) return;
   const lines = wrapLines(t, maxW, 2);
-  lines.forEach((l, i) => text(l, cx, y + 36 + i * 12, F_CM, P.cm[dev] ? COL.cm : COL.cmIO, 'center'));
+  lines.forEach((l, i) => text(l, cx, y + 36 + i * 12, F_CM, IOMAP[dev] ? COL.cmIO : COL.cm, 'center'));
 }
 function drawContactSym(x, w, y, kind, closed, fL, fR) {
   const mid = x + w / 2, g = 6, h = 9;
@@ -1678,6 +1679,12 @@ function buildBanks() {
   xs.onchange = () => { IO.xBase = +xs.value; buildIO(); };
   ys.onchange = () => { IO.yBase = +ys.value; buildIO(); };
 }
+function ioPeek(d) {
+  const e = $('#ioPeek');
+  if (!e) return;
+  const a = IOMAP[d];
+  e.innerHTML = a ? `<b class="mono">${esc(sheetDev(d))}</b> = ${esc(a.name)}` : (P.cm[d] ? `<b class="mono">${esc(d)}</b> = ${esc(P.cm[d])}` : `<b class="mono">${esc(d)}</b> — 할당표에서 비어 있는 번호`);
+}
 function buildIO() {
   const xg = $('#xGrid'), yg = $('#yGrid');
   xg.innerHTML = ''; yg.innerHTML = '';
@@ -1687,7 +1694,10 @@ function buildIO() {
     b.className = 'xbtn'; b.dataset.n = n;
     b.innerHTML = `<i></i><span>${nm}</span>`;
     b.title = cmOf(nm) ? `${nm}: ${cmOf(nm)}` : nm;
+    b.addEventListener('pointerenter', () => ioPeek(nm));
+    b.addEventListener('focus', () => ioPeek(nm));
     b.addEventListener('pointerdown', ev => {
+      ioPeek(nm);
       ev.preventDefault();
       if (IO.push) { XIN[n] = 1; b.setPointerCapture && b.setPointerCapture(ev.pointerId); }
       else XIN[n] = XIN[n] ? 0 : 1;
@@ -1704,6 +1714,8 @@ function buildIO() {
     l.className = 'ylamp'; l.dataset.n = yn;
     l.innerHTML = `<i></i><span>${ynm}</span>`;
     l.title = cmOf(ynm) ? `${ynm}: ${cmOf(ynm)}` : ynm;
+    l.addEventListener('pointerenter', () => ioPeek(ynm));
+    l.addEventListener('pointerdown', () => ioPeek(ynm));
     yg.appendChild(l);
   }
   updateIOUsed(); updateIO(true);
@@ -2034,6 +2046,7 @@ function toast(msg, kind) {
 function setComment(dev, val) {
   const o = parseOperand(dev);
   if (o.err || o.t === 'K' || o.t === 'H') return toast(o.err || '상수에는 코멘트를 달 수 없습니다', 'err');
+  if (IOMAP[o.text]) { delete P.cm[o.text]; return toast(`${sheetDev(o.text)}은(는) 학교 할당표에서 "${IOMAP[o.text].name}"(으)로 정해진 번호라 코멘트를 바꿀 수 없어요`, 'err'); }
   const v = String(val || '').trim().slice(0, 32);
   if (v) P.cm[o.text] = v; else delete P.cm[o.text];
   P.pristine = false;
@@ -2045,6 +2058,7 @@ function setComment(dev, val) {
 function openCommentAt() {
   const cell = cellAt(ED.r, ED.c);
   const dev = cellDevice(cell) || '';
+  if (IOMAP[dev]) { toast(`${sheetDev(dev)} = ${IOMAP[dev].name} (학교 할당표 이름이라 바꿀 수 없어요)`); return; }
   showModal('디바이스 코멘트 입력', `
     <div class="field"><label for="cmDev">디바이스</label><input id="cmDev" value="${esc(dev)}" style="font-family:var(--font-mono);text-transform:uppercase"></div>
     <div class="field"><label for="cmText">코멘트 (최대 32자)</label><input id="cmText" maxlength="32" value="${esc(P.cm[dev] || '')}"></div>
@@ -2057,8 +2071,10 @@ function renderComments() {
   if (ED.prog) ED.prog.devs.forEach(d => { if (!/^K\d/.test(d)) devs.add(d); });
   const list = [...devs].sort(devCompare);
   const tb = $('#cmBody');
-  tb.innerHTML = list.map(d => `<tr><td class="ops">${esc(d)}</td><td><input data-cm="${esc(d)}" maxlength="32" value="${esc(P.cm[d] || '')}" placeholder="코멘트 입력" aria-label="${esc(d)} 코멘트"></td><td>${P.cm[d] ? `<button class="btn" data-cmdel="${esc(d)}">지우기</button>` : ''}</td></tr>`).join('') +
-    `<tr><td><input id="cmNewDev" placeholder="예: X3" style="font-family:var(--font-mono);text-transform:uppercase" aria-label="새 디바이스"></td><td><input id="cmNewText" placeholder="코멘트" maxlength="32" aria-label="새 코멘트"></td><td><button class="btn primary" id="cmNewAdd">추가</button></td></tr>`;
+  tb.innerHTML = list.map(d => IOMAP[d]
+    ? `<tr><td class="ops">${esc(d)}</td><td><span style="color:#7a5a12;font-weight:600">${esc(IOMAP[d].name)}</span> <span class="muted">· 학교 할당표 (바꿀 수 없음)</span></td><td></td></tr>`
+    : `<tr><td class="ops">${esc(d)}</td><td><input data-cm="${esc(d)}" maxlength="32" value="${esc(P.cm[d] || '')}" placeholder="코멘트 입력" aria-label="${esc(d)} 코멘트"></td><td>${P.cm[d] ? `<button class="btn" data-cmdel="${esc(d)}">지우기</button>` : ''}</td></tr>`).join('') +
+    `<tr><td><input id="cmNewDev" placeholder="예: M10" style="font-family:var(--font-mono);text-transform:uppercase" aria-label="새 디바이스"></td><td><input id="cmNewText" placeholder="코멘트" maxlength="32" aria-label="새 코멘트"></td><td><button class="btn primary" id="cmNewAdd">추가</button></td></tr>`;
 }
 $('#cmBody').addEventListener('change', ev => { const d = ev.target.dataset.cm; if (d) setComment(d, ev.target.value); });
 $('#cmBody').addEventListener('click', ev => {
@@ -2168,7 +2184,7 @@ function loadProject(obj, opts) {
     if (Array.isArray(r.v)) for (const b of r.v) if (b >= 1 && b <= OC) row.v[b] = true;
     P.rows.push(row);
   }
-  if (obj.cm && typeof obj.cm === 'object') for (const [k, v] of Object.entries(obj.cm)) { const o = parseOperand(k); if (!o.err && typeof v === 'string') P.cm[o.text] = v.slice(0, 32); }
+  if (obj.cm && typeof obj.cm === 'object') for (const [k, v] of Object.entries(obj.cm)) { const o = parseOperand(k); if (!o.err && typeof v === 'string' && !IOMAP[o.text]) P.cm[o.text] = v.slice(0, 32); }
   if (obj.plantIO && typeof obj.plantIO === 'object') applyPlantIO(obj.plantIO, true);
   if (typeof missionEnd === 'function') missionEnd(true);
   ED.prog = null; ED.undo = []; ED.redo = []; ED.r = 0; ED.c = 0; ED.anchor = null; ED.mode = 'write'; ED.cmEdit = false;
@@ -3464,7 +3480,7 @@ const MC = {
 };
 const MISSIONS = {
   0:{title:'자기유지 회로', goal:'START(X19)에서 손을 떼도 컨베이어 모터(Y2E)가 계속 켜져 있게 하기', steps:[
-    {t:'task', hl:['X19'], text:'▶ 시뮬레이션 시작을 누르고, 오른쪽 입력에서 노랗게 표시된 X19(START)를 눌렀다가 떼 보세요. (입력 방식은 "푸시"예요)', check:c => c.run() && c.seen('X19', 1) && !c.bit('X19') && c.bit('Y2E'), ok:'X19는 OFF인데 Y2E는 계속 ON이에요. 이게 자기유지예요.', hint:'X19 버튼을 마우스로 누르고 있다가 떼면 돼요.'},
+    {t:'task', hl:['X19'], text:'▶ 시뮬레이션 시작을 누르고, 오른쪽 입력에서 노랗게 표시된 X19(START)를 눌렀다가 떼 보세요. (입력 방식은 "누름"이에요)', check:c => c.run() && c.seen('X19', 1) && !c.bit('X19') && c.bit('Y2E'), ok:'X19는 OFF인데 Y2E는 계속 ON이에요. 이게 자기유지예요.', hint:'X19 버튼을 마우스로 누르고 있다가 떼면 돼요.'},
     {t:'predict', text:'아래 줄의 Y2E 접점(X19와 병렬로 붙은 a접점)을 지우면, X19에서 손을 뗐을 때 Y2E는 어떻게 될까요?', choices:['계속 켜져 있다', '꺼진다', '처음부터 안 켜진다'], answer:1, explain:'Y2E 접점이 X19 대신 전류 길을 만들어 주던 거라서, 지우면 X19를 떼는 순간 꺼져요.'},
     {t:'task', hl:['X19'], text:'직접 확인: F2(쓰기 모드) → 아래 줄 Y2E 접점에 커서를 두고 Del(또는 툴바의 삭제) → F4(변환) → F3(모니터) → X19를 눌렀다 떼 보세요.', check:c => c.fresh() && !c.hasContact('Y2E') && c.seen('X19', 1, ED.progAt) && !c.bit('X19') && !c.bit('Y2E'), ok:'예상대로 X19를 떼자마자 Y2E가 꺼졌어요.', hint:'시뮬레이션은 켜 둔 채로 F2 → 수정 → F4를 누르면 "RUN 중 쓰기"로 바로 반영돼요.'},
     {t:'task', hl:['X19'], text:'다시 자기유지로 고쳐 보세요: F2 → Ctrl+Z(되돌리기) 또는 아래 줄 첫 칸에서 Shift+F5 → Y2E → F4 → F3 → X19를 눌렀다 떼기', check:c => c.fresh() && c.hasContact('Y2E') && c.seen('X19', 1, ED.progAt) && !c.bit('X19') && c.bit('Y2E'), ok:'자기유지 회로를 다시 완성했어요.'},
@@ -3484,7 +3500,7 @@ const MISSIONS = {
   4:{title:'카운터', goal:'워크감지(X11)가 자재를 정해진 개수만큼 감지하면 녹색등(Y34) 켜기', steps:[
     {t:'task', hl:['X11'], text:'▶ 시뮬레이션 시작 → X11(워크감지)을 5번 눌렀다 떼 보세요. 자재 5개가 센서 앞을 지나간 것과 같아요. C0 코일 아래 숫자가 하나씩 올라가요.', check:c => c.run() && c.bit('Y34'), ok:'5번째에서 C0 접점이 켜지고 Y34(녹색등)가 ON 됐어요.'},
     {t:'predict', text:'X11이 꺼지지 않고 계속 켜져 있으면(자재가 센서 앞에 멈춰 있으면) 카운트는 어떻게 될까요?', choices:['켜져 있는 동안 계속 올라간다', '1만 올라간다', '0으로 돌아간다'], answer:1, explain:'카운터는 입력이 OFF→ON으로 바뀌는 순간(상승)만 세요. 자재가 센서 앞에 멈춰 있어도 1개로 세요.'},
-    {t:'task', hl:['X1B', 'X11'], text:'직접 확인: X1B(RESET)로 리셋 → X11을 2초 이상 꾹 누르고 있다가 떼기 → C0 현재값 보기', check:c => c.seen('X1B', 1) && c.held('X11') >= 1500 && c.word('C0') === 1, ok:'2초 넘게 켜져 있었는데도 1만 올라갔어요.', hint:'푸시 모드에서 X11 버튼을 마우스로 누른 채 2초 기다리세요.'},
+    {t:'task', hl:['X1B', 'X11'], text:'직접 확인: X1B(RESET)로 리셋 → X11을 2초 이상 꾹 누르고 있다가 떼기 → C0 현재값 보기', check:c => c.seen('X1B', 1) && c.held('X11') >= 1500 && c.word('C0') === 1, ok:'2초 넘게 켜져 있었는데도 1만 올라갔어요.', hint:'"누름" 방식에서 X11 버튼을 마우스로 누른 채 2초 기다리세요.'},
     {t:'task', hl:['X1B', 'X11'], text:'설정 바꾸기: F2 → C0 코일을 더블클릭(휴대폰은 두 번 탭)해서 C0 K3으로 → F4 → F3 → X1B로 리셋 → X11 3번', check:c => c.hasIns('OUT C0 K3') && c.word('C0') === 3 && c.bit('Y34'), ok:'3번 만에 켜졌어요.'},
     {t:'explain', text:'정리: OUT C0 K□는 입력이 켜질 때마다 1씩 세고 설정값이 되면 C0 접점이 ON 돼요. 코일이 꺼져도 숫자를 기억하기 때문에, 다시 세려면 RST C0으로 0을 만들어야 해요.'},
   ]},
@@ -3784,7 +3800,7 @@ setTimeout(() => scr.focus({preventScroll:true}), 0);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); render(); });
 requestAnimationFrame(uiLoop);
 initCapabilities();
-window.__ladder = {P, ED, SIM, XIN, PL, MS, EV, selfTest, missionStart, explainRow, headless, buildRows, EXAMPLES, MISSIONS, PLANT_IO, plantStep, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
+window.__ladder = {P, ED, SIM, XIN, PL, MS, EV, selfTest, missionStart, explainRow, headless, buildRows, EXAMPLES, MISSIONS, PLANT_IO, cmOf, plantStep, compile, convert, simStart, simStop, loadExample, parseInput, get prog() { return ED.prog; }, get proj() { return P; }};
 })();
 </script>
 </body>
