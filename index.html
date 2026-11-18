@@ -105,7 +105,7 @@
 <section id="plant">
   <div class="wrap">
     <h2>가상 설비: 학교 검정 장비가 래더대로 움직여요</h2>
-    <p class="lead">생산자동화 실습 장치(CT-4200M)처럼 매거진 → 공급 → 드릴 가공 → 분배 → 컨베이어 → 금속 취출 / 스토퍼 → 흡착 → 저장 창고 순서로 되어 있어요. 입출력 번호도 검정 장비 할당표(X00~X1F, Y20~Y3F) 그대로라서 수업에서 짠 래더를 그대로 넣어 볼 수 있어요.</p>
+    <p class="lead">생산자동화 실습 장치(CT-4200M)처럼 매거진 → 공급 → 드릴 가공 → 분배 → 컨베이어 → 금속 취출 / 스토퍼 → 흡착 → 저장 창고 순서로 되어 있어요. 입출력 번호도 검정 장비 할당표(X00~X1F, Y20~Y3F) 그대로라서 수업에서 짠 래더를 그대로 넣어 볼 수 있어요. 설비는 <b>3D 입체</b>로 앞·뒤·옆·대각선 어디서든 돌려 볼 수 있어요.</p>
     <div class="grid3">
       <div class="card"><h3>출력 Y → 설비가 움직임</h3><p><code>Y20</code>·<code>Y21</code> 공급 전진·후진, <code>Y24</code> 드릴 하강, <code>Y27</code> 스토퍼 하강, <code>Y2A</code> 흡착컵, <code>Y2E</code> 컨베이어, <code>Y32~Y35</code> 램프. 전진·후진 Sol은 실제처럼 밸브가 방향을 기억해요.</p></div>
       <div class="card"><h3>센서 → 입력 X로 들어옴</h3><p>실린더마다 전진·후진 센서, 광화이버(<code>X0F</code> 공급 · <code>X10</code> 분배 · <code>X13</code> 스토퍼), 용량형 <code>X11</code>·유도형 <code>X12</code>, 스위치 <code>X19</code> START ~ <code>X1C</code> 비상. 번호는 <a href="io.html">입출력 할당표</a>에서 찾아보세요.</p></div>
