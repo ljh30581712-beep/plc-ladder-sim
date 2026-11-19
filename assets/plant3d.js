@@ -543,7 +543,7 @@ function build() {
     g.fillStyle = '#f2c230'; g.fillRect(196, 26, 32, 10);
   });
   topTexBox(0.95, 0.5, 0.95, ampTex, M.black, 4.12, 0.77, 3.84);
-  // PLC: 베이스 + 전원 + CPU(Q03UDV) + I/O 3장 — 앞면이 위를 봄
+  // PLC: 베이스 + 전원 + CPU + 입출력 모듈 3장 — 앞면이 위를 봄
   box(2.55, 0.08, 0.66, M.red, -3.02, 0.56, 3.78);
   const modTop = (t, kind) => canvasTex(96, 128, (g, w, h) => {
     g.fillStyle = kind === 'pw' ? '#7f1d1d' : '#1f2329'; g.fillRect(0, 0, w, h);
@@ -552,7 +552,7 @@ function build() {
     if (kind === 'io') { g.fillStyle = '#f2f3f5'; g.fillRect(8, 26, 80, 18); g.fillStyle = '#4b5563'; g.font = '600 10px sans-serif'; g.fillText('X/Y', 12, 39); g.fillStyle = '#2f343b'; g.fillRect(14, 60, 68, 56); for (let i = 0; i < 6; i++) { g.fillStyle = '#c6ff3a'; g.fillRect(12 + i * 13, 50, 7, 5); } }
     if (kind === 'pw') { g.fillStyle = '#39ff7a'; g.fillRect(8, 30, 10, 6); }
   });
-  const plcMods = [['POWER', 'pw', -4.0, 0.5], ['Q03UDV', 'cpu', -3.47, 0.44], ['QX42', 'io', -2.97, 0.44], ['QY42P', 'io', -2.5, 0.44], ['QX41', 'io', -2.03, 0.44]];
+  const plcMods = [['POWER', 'pw', -4.0, 0.5], ['CPU', 'cpu', -3.47, 0.44], ['INPUT', 'io', -2.97, 0.44], ['OUTPUT', 'io', -2.5, 0.44], ['INPUT', 'io', -2.03, 0.44]];
   plcMods.forEach(([t, kind, x, w]) => topTexBox(w, 0.42, 0.6, modTop(t, kind), kind === 'pw' ? std({ color: 0x8e2222, roughness: 0.5 }) : M.black2, x, 0.81, 3.78));
   const cpuLed = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 0.04), std({ color: 0x1a3a22, emissive: 0x22ff66, emissiveIntensity: 0 }));
   cpuLed.position.set(-3.6, 1.03, 3.62); scene.add(cpuLed);
@@ -677,7 +677,7 @@ function build() {
     tag('서보 축', [['limU', `${D('limU')} 상한`], ['limL', `${D('limL')} 하한`], ['org', `${D('org')} 원점`]], { x: sv.x, y: 3.6, z: sv.z });
     tag('스위치', [['pbStart', `${D('pbStart')} START`], ['pbStop', `${D('pbStop')} STOP`], ['pbReset', `${D('pbReset')} RESET`], ['pbEmg', `${D('pbEmg')} 비상`]], { x: -4.2, y: 0.6, z: ZB });
     tag('램프', [['lR', `${D('lR')} 적색`], ['lY', `${D('lY')} 황색`], ['lG', `${D('lG')} 녹색`], ['lB', `${D('lB')} 청색`]], { x: 0.55, y: 0.6, z: ZB });
-    tag('PLC (Q03UDV)', [], { x: -3.0, y: 1.35, z: 3.78 });
+    tag('PLC', [], { x: -3.0, y: 1.35, z: 3.78 });
     tag('전자밸브', [], { x: (MVX(0) + MVX(VALVES.length - 1)) / 2, y: 0.7, z: MVZ });
     tag('취출함', [], { x: (ejBinBox.a.x + ejBinBox.b.x) / 2, y: 0.55, z: ejBinBox.b.z - 0.1 });
     tag('끝 상자', [], { x: (endBinBox.a.x + endBinBox.b.x) / 2, y: 0.55, z: endBinBox.b.z });
@@ -748,22 +748,22 @@ function build() {
   ui.querySelector('[data-act=photo]').addEventListener('click', savePhoto);
   // 조작 도움말: 처음에만 보이고, 한 번 돌려 보면 숨김 (? 버튼으로 다시 보기)
   let helpSeen = false;
-  try { helpSeen = localStorage.getItem('q03udv-ladder:p3help') === '1'; } catch (e) { /* 기본값 */ }
+  try { helpSeen = localStorage.getItem('ladderlab:p3help') === '1'; } catch (e) { /* 기본값 */ }
   const setHelp = on => { ui.classList.toggle('nohelp', !on); ui.querySelector('[data-act=help]').classList.toggle('active', on); uiDirty = true; };
   setHelp(!helpSeen);
   ui.querySelector('[data-act=help]').addEventListener('click', () => setHelp(ui.classList.contains('nohelp')));
   renderer.domElement.addEventListener('pointerdown', () => {
     if (helpSeen) return;
-    helpSeen = true; try { localStorage.setItem('q03udv-ladder:p3help', '1'); } catch (e) { /* 저장 안 됨 */ }
+    helpSeen = true; try { localStorage.setItem('ladderlab:p3help', '1'); } catch (e) { /* 저장 안 됨 */ }
     setTimeout(() => setHelp(false), 1200);
   });
   ui.querySelector('[data-act=views]').addEventListener('click', () => { uiDirty = true; });
   let tagMode = 'name';
-  try { tagMode = localStorage.getItem('q03udv-ladder:p3tags') || 'name'; } catch (e) { /* 기본값 */ }
+  try { tagMode = localStorage.getItem('ladderlab:p3tags') || 'name'; } catch (e) { /* 기본값 */ }
   function setTags(m) {
     tagMode = m;
     labels.forEach(l => { l.w = 0; });
-    try { localStorage.setItem('q03udv-ladder:p3tags', m); } catch (e) { /* 저장 안 됨 */ }
+    try { localStorage.setItem('ladderlab:p3tags', m); } catch (e) { /* 저장 안 됨 */ }
     labelR.domElement.style.display = m === 'off' ? 'none' : '';
     labelR.domElement.classList.toggle('nameonly', m === 'name');
     ui.querySelectorAll('[data-tg]').forEach(b => b.classList.toggle('active', b.dataset.tg === m));
@@ -828,7 +828,7 @@ function build() {
     }
     g.font = `600 ${Math.round(11 * pr)}px "IBM Plex Sans KR",sans-serif`; g.fillStyle = 'rgba(29,39,51,.7)'; g.textBaseline = 'alphabetic';
     const d = new Date(), pad = n => String(n).padStart(2, '0');
-    g.fillText(`CT-4200M 가상 설비 (Q03UDV 래더 시뮬레이터) · ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`, 10 * pr, c.height - 10 * pr);
+    g.fillText(`CT-4200M 가상 설비 · 래더랩 · ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`, 10 * pr, c.height - 10 * pr);
     const name = `CT4200M_3D_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.png`;
     c.toBlob(blob => {
       const a = document.createElement('a');

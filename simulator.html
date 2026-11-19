@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>시뮬레이터 · Q03UDV 래더 시뮬레이터</title>
-<meta name="description" content="GX Works2처럼 래더를 입력하고 브라우저에서 바로 실행해 보는 미쓰비시 Q03UDV PLC 연습용 시뮬레이터">
+<title>시뮬레이터 · 래더랩</title>
+<meta name="description" content="래더랩 — 래더를 입력하고 브라우저에서 바로 실행해 보는 PLC 래더 연습 시뮬레이터">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f6ee0'/%3E%3Cpath d='M6 16h7M19 16h7M13 9v14M19 9v14' stroke='white' stroke-width='2.6' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,6 +43,7 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
 #app{display:grid;grid-template-rows:auto auto auto auto minmax(0,1fr) auto;height:100%}
 #titlebar{background:var(--title);color:#e7eef8;display:flex;align-items:center;gap:10px;padding:6px 12px;font-size:13px;min-width:0}
 #titlebar .logo{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:4px;background:#2f6ee0;color:#fff;font:700 11px var(--font-mono)}
+#titlebar .logo svg{width:14px;height:14px}
 #titlebar b{font-weight:600;letter-spacing:.01em}
 #ttlInfo{color:#b9c7da;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #titlebar .grow{flex:1}
@@ -345,10 +346,10 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
 <body>
 <div id="app">
   <header id="titlebar">
-    <a class="home" href="index.html" title="메인 페이지로"><span class="logo">Q</span><b>Q03UDV 래더 시뮬레이터</b></a>
+    <a class="home" href="index.html" title="메인 페이지로"><span class="logo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 10h5M12.5 10h5M7.5 5v10M12.5 5v10" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></span><b>래더랩</b></a>
     <span id="ttlInfo">— 새 프로젝트</span>
     <span class="grow"></span>
-    <span class="note">학습용 · 미쓰비시 공식 소프트웨어 아님</span>
+    <span class="note">PLC 래더 연습실</span>
     <a class="tlink" href="devices.html" target="_blank" rel="noopener" title="새 탭에서 열기">디바이스 설명 ↗</a>
     <a class="tlink" href="index.html">홈</a>
   </header>
@@ -361,11 +362,11 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
     <button class="btn" data-cmd="undo" title="되돌리기 (Ctrl+Z)">↶ 되돌리기</button>
     <button class="btn" data-cmd="redo" title="다시 실행 (Ctrl+Y)">↷</button>
     <span class="sep"></span>
-    <button class="btn" data-cmd="convert" title="변환 (F4)"><b>변환</b><kbd>F4</kbd></button>
+    <button class="btn" data-cmd="convert" title="컴파일 (F4) — 회로를 검사하고 명령 리스트를 만들어요"><b>컴파일</b><kbd>F4</kbd></button>
     <span class="sep"></span>
     <div class="seg" id="modeSeg">
-      <button data-cmd="modeWrite" data-mode="write" title="쓰기 모드 (F2)">쓰기<kbd>F2</kbd></button>
-      <button data-cmd="modeRead" data-mode="read" title="읽기 모드 (Shift+F2)">읽기</button>
+      <button data-cmd="modeWrite" data-mode="write" title="편집 모드 (F2)">편집<kbd>F2</kbd></button>
+      <button data-cmd="modeRead" data-mode="read" title="읽기 전용 (Shift+F2) — 실수로 안 바뀌게 잠가요">읽기 전용</button>
       <button data-cmd="modeMonitor" data-mode="monitor" title="모니터 모드 (F3)">모니터<kbd>F3</kbd></button>
     </div>
     <span class="sep"></span>
@@ -381,15 +382,13 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
   <div class="tb" id="tb2"><span class="lbl">래더 심볼</span></div>
 
   <div id="main">
-    <aside id="nav" aria-label="프로젝트 트리">
-      <div class="head">프로젝트</div>
-      <button class="t l1" data-cmd="param"><span class="ic">⚙</span>파라미터 (Q03UDV)</button>
-      <button class="t l1" data-cmd="tabComments" data-nav="comments"><span class="ic">✎</span>글로벌 디바이스 코멘트</button>
-      <div class="t l1" style="cursor:default"><span class="ic">▾</span>프로그램 설정</div>
-      <div class="t l2" style="cursor:default"><span class="ic">▾</span>스캔 프로그램</div>
-      <button class="t l3 sel" data-cmd="tabLadder" data-nav="ladder"><span class="ic">▤</span>MAIN</button>
+    <aside id="nav" aria-label="내 작업">
+      <div class="head">내 작업</div>
+      <button class="t l1 sel" data-cmd="tabLadder" data-nav="ladder"><span class="ic">▤</span>래더 회로</button>
       <button class="t l1" data-cmd="tabList" data-nav="list"><span class="ic">≡</span>명령 리스트</button>
+      <button class="t l1" data-cmd="tabComments" data-nav="comments"><span class="ic">✎</span>디바이스 코멘트</button>
       <button class="t l1" data-cmd="openDialog"><span class="ic">▣</span>예제 · 내 프로젝트</button>
+      <button class="t l1" data-cmd="param"><span class="ic">⚙</span>PLC 설정 (디바이스 범위)</button>
       <div class="foot">
         <b>빠른 입력</b><br>
         래더 위에서 바로 타이핑:<br>
@@ -403,7 +402,7 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
 
     <section id="center">
       <div id="tabs" role="tablist">
-        <button class="tab active" data-tab="ladder" id="tabLadderBtn">MAIN · 쓰기</button>
+        <button class="tab active" data-tab="ladder" id="tabLadderBtn">래더 · 편집</button>
         <button class="tab" data-tab="list">명령 리스트</button>
         <button class="tab" data-tab="comments">디바이스 코멘트</button>
       </div>
@@ -424,11 +423,11 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
         </div>
         <div class="view" id="viewList">
           <h2>명령 리스트 (니모닉)</h2>
-          <p class="sub">변환(F4)할 때 래더가 이 명령어 순서로 바뀝니다. 줄을 누르면 래더의 해당 위치로 이동합니다. 스텝 수는 근사값입니다.</p>
+          <p class="sub">컴파일(F4)할 때 래더가 이 명령어 순서로 바뀝니다. 줄을 누르면 래더의 해당 위치로 이동합니다. 스텝 수는 근사값입니다.</p>
           <table class="dtable"><thead><tr><th>스텝</th><th>명령</th><th>디바이스 / 피연산자</th><th>코멘트</th></tr></thead><tbody id="ilBody"></tbody></table>
         </div>
         <div class="view" id="viewComments">
-          <h2>글로벌 디바이스 코멘트</h2>
+          <h2>디바이스 코멘트</h2>
           <p class="sub">코멘트는 래더의 접점·코일 아래에 표시됩니다. 검정 장비 입출력 할당표 46개(X00~X1F, Y20~Y35)는 처음부터 코멘트로 들어가 있고, M·T·C·D 같은 나머지는 직접 써 넣으면 돼요.</p>
           <table class="dtable"><thead><tr><th style="width:110px">디바이스</th><th style="width:320px">코멘트</th><th></th></tr></thead><tbody id="cmBody"></tbody></table>
         </div>
@@ -461,8 +460,8 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
         <div id="msBody"></div>
       </div>
       <div class="card">
-        <h3>시뮬레이터 <span class="cpu">Q03UDV</span><span class="grow"></span><small id="simState">꺼짐</small></h3>
-        <div class="leds"><span class="led g" id="ledPow"><i></i>POWER</span><span class="led g" id="ledRun"><i></i>RUN</span><span class="led r" id="ledErr"><i></i>ERR</span><span class="led y" id="ledUsr"><i></i>SM412</span></div>
+        <h3>시뮬레이터 <span class="cpu">가상 PLC</span><span class="grow"></span><small id="simState">꺼짐</small></h3>
+        <div class="leds"><span class="led g" id="ledPow"><i></i>POWER</span><span class="led g" id="ledRun"><i></i>RUN</span><span class="led r" id="ledErr"><i></i>ERR</span><span class="led y" id="ledUsr" title="1초마다 깜빡이는 특수 릴레이 SM412"><i></i>1초</span></div>
         <div class="swrow">
           <button class="btn" id="swRun" title="RUN">RUN</button>
           <button class="btn" id="swStop" title="STOP">STOP</button>
@@ -472,7 +471,7 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
           <button class="btn" id="swPause" title="시간을 멈추고 한 스캔씩 실행해 보기">일시정지</button>
           <button class="btn" id="swStep" title="일시정지 중 한 스캔(10ms)만 실행">한 스캔 ▸</button>
         </div>
-        <div id="simInfo">시뮬레이션을 시작하면 변환된 프로그램이 가상 CPU에 쓰여 실행됩니다.</div>
+        <div id="simInfo">시뮬레이션을 시작하면 컴파일된 프로그램이 가상 PLC에 올라가 실행됩니다.</div>
         <button class="btn" id="simBig" data-cmd="toggleSim">▶ 시뮬레이션 시작</button>
       </div>
       <div class="card">
@@ -506,11 +505,9 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
   </div>
 
   <footer id="statusbar">
-    <span id="stMode">쓰기 모드</span>
-    <span>Q03UDV</span>
-    <span>호스트 스테이션</span>
+    <span id="stMode">편집 모드</span>
     <span id="stSteps">0스텝</span>
-    <span id="stConv">미변환</span>
+    <span id="stConv">컴파일 전</span>
     <span id="stPos">행 1 · 열 1</span>
     <span class="grow" id="stSave"></span>
   </footer>
@@ -525,6 +522,15 @@ kbd{font:600 10px/1 var(--font-mono);color:var(--muted);background:#e8edf3;borde
 (() => {
 'use strict';
 const $ = s => document.querySelector(s);
+// 프로젝트 파일 형식 이름 (예전 버전 파일도 열 수 있게 옛 이름도 받음)
+const FMT = 'ladderlab', FMT_OLD = 'q03udv-ladder';
+// 예전 버전이 브라우저에 저장한 작업을 새 저장 이름으로 옮김
+try {
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const k = localStorage.key(i);
+    if (k && k.indexOf(FMT_OLD + ':') === 0) { const nk = FMT + ':' + k.slice(FMT_OLD.length + 1); if (localStorage.getItem(nk) === null) localStorage.setItem(nk, localStorage.getItem(k)); localStorage.removeItem(k); }
+  }
+} catch (e) { /* 저장소를 못 쓰는 브라우저 */ }
 const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -532,7 +538,7 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const cmOf = d => (IOMAP[d] ? (ED.ioCm ? IOMAP[d].name : '') : (P.cm[d] || ''));
 
 /* =====================================================================
-   1. 디바이스 (Q03UDV 기본 디바이스 할당)
+   1. 디바이스 (기본 디바이스 범위)
    ===================================================================== */
 let IOMAP = {};         // 디바이스 → 학교 장비 입출력 할당 (14장에서 채움)
 let IOCARD_ON = false;
@@ -704,7 +710,7 @@ function parseInput(text, symId) {
   const cm = /^(LD|AND|OR)?(=|<>|>=|<=|>|<)$/.exec(h);
   if (cm) return mkCmp(cm[2], cm[1] ? cm[1] === 'OR' : !!sym.or, toks.slice(1));
   if (h === 'END') return {err:'END는 프로그램 끝에 자동으로 들어갑니다'};
-  if (['ANB','ORB','MPS','MRD','MPP'].includes(h)) return {err:`${h}는 래더 모양을 보고 변환할 때 자동으로 만들어집니다`};
+  if (['ANB','ORB','MPS','MRD','MPP'].includes(h)) return {err:`${h}는 래더 모양을 보고 컴파일할 때 자동으로 만들어집니다`};
   if (h === 'OUT' || appInfo(h)) return parseOutput(toks);
   if (sym.out) {
     if (symId === 'COIL') return parseOutput(['OUT', ...toks]);
@@ -759,7 +765,7 @@ function describeRes(res) {
    ===================================================================== */
 const newRow = () => ({c:new Array(NCOL).fill(null), v:new Array(NCOL).fill(false), d:true});
 let P = {name:'새 프로젝트', id:null, rows:[], cm:{}, changed:true};
-const ED = {r:0, c:0, anchor:null, mode:'write', tab:'ladder', showCm:true, flow:true, cmEdit:false, ioCm:(() => { try { return localStorage.getItem('q03udv-ladder:iocm') !== '0'; } catch (e) { return true; } })(),
+const ED = {r:0, c:0, anchor:null, mode:'write', tab:'ladder', showCm:true, flow:true, cmEdit:false, ioCm:(() => { try { return localStorage.getItem('ladderlab:iocm') !== '0'; } catch (e) { return true; } })(),
   clip:null, undo:[], redo:[], prog:null};
 
 const rowBlank = row => row.c.every(x => !x);
@@ -774,7 +780,7 @@ function restore(s) {
   P.rows = o.rows; P.cm = o.cm; ED.r = o.r; ED.c = o.c; ED.anchor = null; P.changed = true;
 }
 function edit(fn) {
-  if (ED.mode !== 'write') { toast(ED.mode === 'monitor' ? '모니터 중에는 편집할 수 없습니다. F2(쓰기 모드)로 바꾸세요' : '읽기 모드입니다. F2(쓰기 모드)로 바꾸세요', 'err'); return false; }
+  if (ED.mode !== 'write') { toast(ED.mode === 'monitor' ? '모니터 중에는 편집할 수 없습니다. F2(편집 모드)로 바꾸세요' : '읽기 전용 상태입니다. F2(편집 모드)로 바꾸세요', 'err'); return false; }
   const snap = snapshot();
   if (fn() === false) return false;
   ED.undo.push(snap); if (ED.undo.length > 120) ED.undo.shift();
@@ -784,7 +790,7 @@ function edit(fn) {
   return true;
 }
 function afterChange() { layout(); render(); updateStatus(); scheduleLocalSave(); }
-function undo() { if (ED.mode !== 'write') return toast('쓰기 모드에서만 되돌릴 수 있습니다', 'err'); if (!ED.undo.length) return toast('되돌릴 내용이 없습니다'); ED.redo.push(snapshot()); restore(ED.undo.pop()); afterChange(); ensureVisible(); }
+function undo() { if (ED.mode !== 'write') return toast('편집 모드에서만 되돌릴 수 있습니다', 'err'); if (!ED.undo.length) return toast('되돌릴 내용이 없습니다'); ED.redo.push(snapshot()); restore(ED.undo.pop()); afterChange(); ensureVisible(); }
 function redo() { if (ED.mode !== 'write') return; if (!ED.redo.length) return toast('다시 실행할 내용이 없습니다'); ED.undo.push(snapshot()); restore(ED.redo.pop()); afterChange(); ensureVisible(); }
 
 function setCursor(r, c, keepSel) {
@@ -925,7 +931,7 @@ function normalizeRows() {
 }
 
 /* =====================================================================
-   4. 변환 (래더 → 명령 리스트)
+   4. 컴파일 (래더 → 명령 리스트)
    ===================================================================== */
 const TRUE = {k:'T'};
 function AND(a, b) {
@@ -1092,7 +1098,7 @@ function compileBlock(rows, s, e, errors) {
   }
   const indeg = new Map();
   for (const x of E) indeg.set(x.v, (indeg.get(x.v) || 0) + 1);
-  if ([...indeg.values()].some(d => d > 1)) { err(s, 0, '변환할 수 없는 회로 구조입니다 (브리지 회로). 접점 배치를 바꿔 보세요'); blk.bad = true; return blk; }
+  if ([...indeg.values()].some(d => d > 1)) { err(s, 0, '컴파일할 수 없는 회로 구조입니다 (브리지 회로). 접점 배치를 바꿔 보세요'); blk.bad = true; return blk; }
   if (E.some(x => hasShort(x.x))) { err(s, 0, '접점 없이 선만으로 병렬 연결된 부분이 있습니다 (단락 회로)'); blk.bad = true; return blk; }
 
   // 명령 리스트 생성
@@ -1191,7 +1197,7 @@ function offOp(o, k, ins) {
   const step = o.t === 'KN' ? o.k * 4 : 1;
   const n = o.n + k * step;
   const max = o.t === 'KN' ? DEV[o.bt].max - o.k * 4 + 1 : DEV[o.t] ? DEV[o.t].max : 0;
-  if (n > max || n < 0) throw plcErr('4101', `디바이스 범위를 넘었습니다 (${o.text}+${k})`, ins);
+  if (n > max || n < 0) throw plcErr('E2', `디바이스 범위를 넘었습니다 (${o.text}+${k})`, ins);
   return Object.assign({}, o, {n});
 }
 function rst(M, o) {
@@ -1254,7 +1260,7 @@ function execOut(ins, acc, M, dt) {
     } break;
     case '/': if (run) {
       const d = s16(rdWord(M, a[1]));
-      if (d === 0) throw plcErr('4100', '0으로 나누었습니다 (OPERATION ERROR)', ins);
+      if (d === 0) throw plcErr('E1', '0으로 나누었습니다 (계산 오류)', ins);
       const n = s16(rdWord(M, a[0]));
       wrWord(M, a[2], Math.trunc(n / d));
       if (['D','W'].includes(a[2].t)) wrWord(M, offOp(a[2], 1, ins), n % d);
@@ -1263,25 +1269,25 @@ function execOut(ins, acc, M, dt) {
     case 'DEC': if (run) wrWord(M, a[0], rdWord(M, a[0]) - 1); break;
     case 'BCD': if (run) {
       const v = s16(rdWord(M, a[0]));
-      if (v < 0 || v > 9999) throw plcErr('4100', `BCD 변환 범위(0~9999)를 벗어났습니다: ${v}`, ins);
+      if (v < 0 || v > 9999) throw plcErr('E1', `BCD 변환 범위(0~9999)를 벗어났습니다: ${v}`, ins);
       wrWord(M, a[1], toBCD(v));
     } break;
     case 'BIN': if (run) {
       const v = rdWord(M, a[0]) & 0xFFFF;
       let r = 0, mul = 1;
-      for (let i = 0; i < 4; i++) { const dg = (v >> (i * 4)) & 15; if (dg > 9) throw plcErr('4100', 'BCD가 아닌 값입니다 (각 자리 0~9)', ins); r += dg * mul; mul *= 10; }
+      for (let i = 0; i < 4; i++) { const dg = (v >> (i * 4)) & 15; if (dg > 9) throw plcErr('E1', 'BCD가 아닌 값입니다 (각 자리 0~9)', ins); r += dg * mul; mul *= 10; }
       wrWord(M, a[1], r);
     } break;
     case 'BMOV': if (run) {
       const cnt = rdWord(M, a[2]);
-      if (cnt < 0 || cnt > 4096) throw plcErr('4100', 'BMOV 개수(n)가 잘못되었습니다', ins);
+      if (cnt < 0 || cnt > 4096) throw plcErr('E1', 'BMOV 개수(n)가 잘못되었습니다', ins);
       const tmp = [];
       for (let i = 0; i < cnt; i++) tmp.push(rdWord(M, offOp(a[0], i, ins)));
       for (let i = 0; i < cnt; i++) wrWord(M, offOp(a[1], i, ins), tmp[i]);
     } break;
     case 'FMOV': if (run) {
       const cnt = rdWord(M, a[2]), v = rdWord(M, a[0]);
-      if (cnt < 0 || cnt > 4096) throw plcErr('4100', 'FMOV 개수(n)가 잘못되었습니다', ins);
+      if (cnt < 0 || cnt > 4096) throw plcErr('E1', 'FMOV 개수(n)가 잘못되었습니다', ins);
       for (let i = 0; i < cnt; i++) wrWord(M, offOp(a[1], i, ins), v);
     } break;
     case 'ZRST': if (run) for (let i = a[0].n; i <= a[1].n; i++) rst(M, {t:a[0].t, n:i}); break;
@@ -1342,7 +1348,7 @@ function tick() {
 function resetSlots(prog) { for (const ins of prog.il) { ins.pv = false; ins.lv = false; ins.li = false; } }
 function simStart() {
   if (SIM.on) return;
-  if (P.changed || !ED.prog) { if (!convert(true)) { toast('변환 오류를 먼저 고치세요 (출력 창 참고)', 'err'); return; } }
+  if (P.changed || !ED.prog) { if (!convert(true)) { toast('컴파일 오류를 먼저 고치세요 (출력 창 참고)', 'err'); return; } }
   if (!ED.prog.il.length) { toast('프로그램이 비어 있습니다. 래더를 먼저 작성하세요', 'err'); return; }
   SIM.prog = ED.prog; resetSlots(SIM.prog);
   SIM.mem = memNew(); if (SIM.latchL) SIM.mem.L.set(SIM.latchL);
@@ -1352,7 +1358,7 @@ function simStart() {
   SIM.iv = setInterval(tick, 10);
   autoBanks();
   ED.mode = 'monitor';
-  log('ok', `시뮬레이션 시작 — PLC 쓰기 완료 (${SIM.prog.endStep + 1}스텝), RUN`);
+  log('ok', `시뮬레이션 시작 — 가상 PLC에 올림 (${SIM.prog.endStep + 1}스텝), RUN`);
   updateModeUI(); updateSimUI(); render();
 }
 function simStop() {
@@ -1664,7 +1670,7 @@ function hitCell(clientX, clientY) {
 }
 
 /* =====================================================================
-   7. 변환 실행 / 출력 창
+   7. 컴파일 실행 / 출력 창
    ===================================================================== */
 function convert(quiet) {
   if (SIM.on && ED.mode === 'monitor' && !P.changed) { if (!quiet) toast('변경된 내용이 없습니다'); return true; }
@@ -1672,11 +1678,11 @@ function convert(quiet) {
   const prog = compile(P.rows);
   layout();
   if (prog.errors.length) {
-    log('err', `변환 오류 ${prog.errors.length}건 — 아래 항목을 누르면 위치로 이동합니다`);
+    log('err', `컴파일 오류 ${prog.errors.length}건 — 아래 항목을 누르면 위치로 이동합니다`);
     prog.errors.slice(0, 30).forEach(e => log('err', `  행 ${e.r + 1} · 열 ${e.c + 1}: ${e.msg}`, e.r, e.c));
     const e0 = prog.errors[0];
     setCursor(e0.r, e0.c);
-    if (!quiet) toast('변환 오류가 있습니다. 출력 창을 확인하세요', 'err');
+    if (!quiet) toast('컴파일 오류가 있습니다. 출력 창을 확인하세요', 'err');
     expandOut();
     updateStatus();
     return false;
@@ -1685,9 +1691,9 @@ function convert(quiet) {
   P.rows.forEach(r => { r.d = false; });
   P.changed = false;
   const wasRunning = SIM.on;
-  if (wasRunning) { SIM.prog = prog; resetSlots(prog); log('ok', `변환 완료 + RUN 중 쓰기 (${prog.endStep + 1}스텝)`); }
-  else log('ok', `변환 완료 — ${prog.endStep + 1}스텝, 래더 블록 ${prog.blocks.length}개`);
-  if (!quiet && !wasRunning) toast(`변환 완료 (${prog.endStep + 1}스텝)`);
+  if (wasRunning) { SIM.prog = prog; resetSlots(prog); log('ok', `컴파일 완료 + 실행 중 반영 (${prog.endStep + 1}스텝)`); }
+  else log('ok', `컴파일 완료 — ${prog.endStep + 1}스텝, 래더 블록 ${prog.blocks.length}개`);
+  if (!quiet && !wasRunning) toast(`컴파일 완료 (${prog.endStep + 1}스텝)`);
   rebuildWatch(); renderList(); renderComments(); updateIOUsed();
   if (SIM.on) evReset(true);
   render(); updateStatus(); scheduleLocalSave();
@@ -1800,7 +1806,7 @@ function rebuildWatch() {
 }
 function renderWatch() {
   const tb = $('#watchBody');
-  if (!watchList.length) { tb.innerHTML = '<tr><td colspan="4" class="muted" style="padding:8px 4px">변환하면 프로그램에서 쓰는 디바이스가 여기에 나옵니다.</td></tr>'; return; }
+  if (!watchList.length) { tb.innerHTML = '<tr><td colspan="4" class="muted" style="padding:8px 4px">컴파일하면 프로그램에서 쓰는 디바이스가 여기에 나옵니다.</td></tr>'; return; }
   tb.innerHTML = watchList.map(d => `<tr data-dev="${esc(d)}"><td class="dv">${esc(d)}</td><td><button class="val" data-dev="${esc(d)}">-</button></td><td class="cm" title="${esc(cmOf(d))}">${esc(cmOf(d))}</td><td>${watchUser.includes(d) ? `<button class="rm" data-rm="${esc(d)}" title="목록에서 빼기">✕</button>` : ''}</td></tr>`).join('');
   updateWatch(true);
 }
@@ -1844,13 +1850,12 @@ function monitorAt(r, c) {
    9. UI: 메뉴 / 툴바 / 탭 / 상태
    ===================================================================== */
 const MENU = [
-  {t:'프로젝트', items:[['새 프로젝트','newProject'],['열기 · 예제…','openDialog','Ctrl+O'],null,['저장','save','Ctrl+S'],['다른 이름으로 저장…','saveAs'],null,['파일로 내보내기 (.json)','exportFile'],['파일에서 불러오기…','importFile']]},
+  {t:'파일', items:[['새 프로젝트','newProject'],['열기 · 예제…','openDialog','Ctrl+O'],null,['저장','save','Ctrl+S'],['다른 이름으로 저장…','saveAs'],null,['파일로 내보내기 (.json)','exportFile'],['파일에서 불러오기…','importFile']]},
   {t:'편집', items:[['되돌리기','undo','Ctrl+Z'],['다시 실행','redo','Ctrl+Y'],null,['잘라내기','cut','Ctrl+X'],['복사','copy','Ctrl+C'],['붙여넣기','paste','Ctrl+V'],['삭제','del','Del'],null,['행 삽입','insRow','Shift+Ins'],['행 삭제','delRow','Shift+Del'],null,['디바이스 코멘트 편집 모드','commentMode']]},
   {t:'보기', items:[['코멘트 표시','toggleCm'],['할당표 이름을 코멘트로 표시','toggleIoCm'],['전류 흐름 표시 (모니터)','toggleFlow'],['가상 설비 (학교 검정 장비)','togglePlant'],['입출력 할당표','ioTable'],null,['래더','tabLadder'],['명령 리스트','tabList','Alt+F1'],['디바이스 코멘트','tabComments']]},
-  {t:'변환', items:[['변환','convert','F4']]},
-  {t:'디버그', items:[['시뮬레이션 시작 / 정지','toggleSim'],null,['쓰기 모드','modeWrite','F2'],['읽기 모드','modeRead','Shift+F2'],['모니터 모드','modeMonitor','F3'],null,['현재값 변경…','modify']]},
+  {t:'실행', items:[['컴파일','convert','F4'],null,['시뮬레이션 시작 / 정지','toggleSim'],null,['편집 모드','modeWrite','F2'],['읽기 전용','modeRead','Shift+F2'],['모니터 모드','modeMonitor','F3'],null,['현재값 변경…','modify']]},
   {t:'학습', items:[['미션 1: 자기유지 회로','mission0'],['미션 2: ON 딜레이 타이머','mission2'],['미션 3: 카운터','mission4'],['미션 4: 설비 자동 운전 (스텝 제어)','mission9'],null,['동작 원인 설명 (모니터 중 "왜?")','toggleWhy'],['시뮬레이터 지원 범위','scope'],['동작 자가 검사','selfTest']]},
-  {t:'도움말', items:[['단축키 · 입력 방법','helpKeys','F1'],['지원 명령어','helpIns'],['PLC 파라미터 (디바이스 범위)','param'],null,['디바이스 설명 페이지 (X·Y·M·T…)','devGuide','새 탭'],['메인 페이지','goHome']]},
+  {t:'도움말', items:[['단축키 · 입력 방법','helpKeys','F1'],['지원 명령어','helpIns'],['PLC 설정 (디바이스 범위)','param'],null,['디바이스 설명 페이지 (X·Y·M·T…)','devGuide','새 탭'],['메인 페이지','goHome']]},
 ];
 const CHECKS = {toggleCm:() => ED.showCm, toggleIoCm:() => ED.ioCm, toggleFlow:() => ED.flow, commentMode:() => ED.cmEdit, togglePlant:() => PL.on, toggleWhy:() => whyOn,
   mission0:() => !!missionsDone()[0], mission2:() => !!missionsDone()[2], mission4:() => !!missionsDone()[4], mission9:() => !!missionsDone()[9]};
@@ -1946,11 +1951,11 @@ function switchTab(t) {
   if (t === 'list') renderList();
   if (t === 'comments') renderComments();
 }
-const MODE_NAME = {write:'쓰기', read:'읽기', monitor:'모니터 실행 중'};
+const MODE_NAME = {write:'편집', read:'읽기 전용', monitor:'모니터 중'};
 function setMode(m) {
   if (m === 'monitor') {
     if (!SIM.on) { simStart(); return; }
-    if (P.changed) { if (!convert(true)) { toast('변환 오류가 있어 모니터로 바꿀 수 없습니다', 'err'); return; } }
+    if (P.changed) { if (!convert(true)) { toast('컴파일 오류가 있어 모니터로 바꿀 수 없습니다', 'err'); return; } }
   }
   ED.mode = m;
   closeInput();
@@ -1962,13 +1967,13 @@ function updateModeUI() {
 }
 function updateStatus() {
   const steps = ED.prog && !P.changed ? ED.prog.endStep + 1 : null;
-  $('#tabLadderBtn').textContent = `MAIN · ${MODE_NAME[ED.mode]}${steps ? ' · ' + steps + '스텝' : ''}`;
+  $('#tabLadderBtn').textContent = `래더 · ${MODE_NAME[ED.mode]}${steps ? ' · ' + steps + '스텝' : ''}`;
   const st = $('#stMode');
-  st.textContent = `${MODE_NAME[ED.mode]} 모드${ED.cmEdit ? ' · 코멘트 편집' : ''}`;
+  st.textContent = `${{write:'편집 모드', read:'읽기 전용', monitor:'모니터 중'}[ED.mode]}${ED.cmEdit ? ' · 코멘트 편집' : ''}`;
   st.classList.toggle('mon', ED.mode === 'monitor');
-  $('#stSteps').textContent = steps ? `${steps} / 30720 스텝` : '— 스텝';
+  $('#stSteps').textContent = steps ? `${steps} 스텝` : '— 스텝';
   const cv2 = $('#stConv');
-  cv2.textContent = P.changed ? '미변환 (F4)' : '변환됨';
+  cv2.textContent = P.changed ? '컴파일 전 (F4)' : '컴파일됨';
   cv2.classList.toggle('dirty', P.changed);
   $('#stPos').textContent = ED.r >= P.rows.length ? `END 행 · 열 ${ED.c + 1}` : `행 ${ED.r + 1} · 열 ${ED.c + 1}`;
   $('#ttlInfo').textContent = `— ${P.name}${P.changed ? ' *' : ''}`;
@@ -1987,7 +1992,7 @@ function updateSimUI() {
   $('#swPause').classList.toggle('active', on && SIM.state === 'PAUSE');
   $('#swPause').textContent = on && SIM.state === 'PAUSE' ? '계속 실행' : '일시정지';
   if (!on) { const wb = $('#whyBar'); if (wb) wb.hidden = true; }
-  if (!on) $('#simInfo').textContent = '시뮬레이션을 시작하면 변환된 프로그램이 가상 CPU에 쓰여 실행됩니다.';
+  if (!on) $('#simInfo').textContent = '시뮬레이션을 시작하면 컴파일된 프로그램이 가상 PLC에 올라가 실행됩니다.';
 }
 function updateSimInfo() {
   if (!SIM.on) return;
@@ -2003,7 +2008,7 @@ function buildSymSelect() { Object.entries(SYM).forEach(([k, v]) => inSym.add(ne
 function openInput(symId, prefill) {
   if (ED.tab !== 'ladder') switchTab('ladder');
   if (ED.cmEdit) return openCommentAt();
-  if (ED.mode !== 'write') return toast(ED.mode === 'monitor' ? '모니터 모드입니다. F2(쓰기 모드)로 바꾸고 입력하세요' : '읽기 모드입니다. F2(쓰기 모드)로 바꾸세요', 'err');
+  if (ED.mode !== 'write') return toast(ED.mode === 'monitor' ? '모니터 모드입니다. F2(편집 모드)로 바꾸고 입력하세요' : '읽기 전용 상태입니다. F2(편집 모드)로 바꾸세요', 'err');
   const cell = cellAt(ED.r, ED.c);
   const ci = cellToInput(cell);
   let sym = symId, txt = '';
@@ -2135,7 +2140,7 @@ $('#cmBody').addEventListener('keydown', ev => { if (ev.key === 'Enter' && (ev.t
 function renderList() {
   const tb = $('#ilBody');
   if (!ED.prog || P.changed) {
-    tb.innerHTML = `<tr><td colspan="4" class="empty">${ED.prog ? '래더가 바뀌었습니다. 변환(F4)하면 최신 명령 리스트가 나옵니다.' : '변환(F4)하면 명령 리스트가 나타납니다.'}</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="4" class="empty">${ED.prog ? '래더가 바뀌었습니다. 컴파일(F4)하면 최신 명령 리스트가 나옵니다.' : '컴파일(F4)하면 명령 리스트가 나타납니다.'}</td></tr>`;
     if (!ED.prog) return;
   }
   const rows = ED.prog.il.map(ins => {
@@ -2185,15 +2190,15 @@ function modifyDialog(dev) {
 /* =====================================================================
    10. 저장 / 불러오기 / 예제
    ===================================================================== */
-const LS_KEY = 'q03udv-ladder:current';
+const LS_KEY = 'ladderlab:current';
 const EX_VER = 2;   // 예제를 학교 장비 할당표 기준으로 바꾼 버전
-const BKS_KEY = 'q03udv-ladder:backups';
+const BKS_KEY = 'ladderlab:backups';
 function readBackups() {
   let list = [];
   try { const a = JSON.parse(localStorage.getItem(BKS_KEY) || '[]'); if (Array.isArray(a)) list = a.filter(b => b && b.data && Array.isArray(b.data.rows)); } catch (e) { list = []; }
   try {
-    const old = JSON.parse(localStorage.getItem('q03udv-ladder:backup') || 'null');
-    if (old && Array.isArray(old.rows)) { list.unshift({at:Date.now(), name:old.name, reason:'예전 백업', data:old}); localStorage.removeItem('q03udv-ladder:backup'); localStorage.setItem(BKS_KEY, JSON.stringify(list.slice(0, 5))); }
+    const old = JSON.parse(localStorage.getItem('ladderlab:backup') || 'null');
+    if (old && Array.isArray(old.rows)) { list.unshift({at:Date.now(), name:old.name, reason:'예전 백업', data:old}); localStorage.removeItem('ladderlab:backup'); localStorage.setItem(BKS_KEY, JSON.stringify(list.slice(0, 5))); }
   } catch (e) { /* 예전 백업 없음 */ }
   return list;
 }
@@ -2208,7 +2213,7 @@ function backupCurrent(reason) {
   } catch (e) { return false; }
 }
 function serialize() {
-  return {format:'q03udv-ladder', version:2, name:P.name, rows:P.rows.map(r => ({c:r.c, v:r.v.map((b, i) => (b ? i : -1)).filter(i => i > 0)})), cm:Object.assign(Object.fromEntries(Object.entries(IOMAP).map(([d, a]) => [d, a.name])), P.cm), plantIO:Object.assign({model:PIO_MODEL}, PL.dev)};
+  return {format:FMT, version:2, name:P.name, rows:P.rows.map(r => ({c:r.c, v:r.v.map((b, i) => (b ? i : -1)).filter(i => i > 0)})), cm:Object.assign(Object.fromEntries(Object.entries(IOMAP).map(([d, a]) => [d, a.name])), P.cm), plantIO:Object.assign({model:PIO_MODEL}, PL.dev)};
 }
 function sanitizeCell(x) {
   if (!x || typeof x !== 'object') return null;
@@ -2220,7 +2225,7 @@ function sanitizeCell(x) {
 }
 function loadProject(obj, opts) {
   opts = opts || {};
-  if (!obj || obj.format !== 'q03udv-ladder' || !Array.isArray(obj.rows)) throw new Error('이 프로그램의 프로젝트 파일이 아닙니다');
+  if (!obj || !(obj.format === FMT || obj.format === FMT_OLD) || !Array.isArray(obj.rows)) throw new Error('이 프로그램의 프로젝트 파일이 아닙니다');
   const backedUp = opts.noBackup ? false : backupCurrent(opts.reason || '다른 프로젝트를 열기 전');
   if (SIM.on) simStop();
   SIM.latchL = null;
@@ -2242,13 +2247,13 @@ function loadProject(obj, opts) {
   scr.scrollTop = 0; scr.scrollLeft = 0;
   updateModeUI(); updateIOUsed(); render(); renderComments();
   if (!opts.keepSave) scheduleLocalSave();
-  if (backedUp) log('info', '하던 작업은 백업해 두었어요 — 프로젝트 → 열기 → 백업에서 복구할 수 있어요.');
+  if (backedUp) log('info', '하던 작업은 백업해 두었어요 — 파일 → 열기 → 백업에서 복구할 수 있어요.');
 }
 let lsT = 0;
 function scheduleLocalSave() {
   clearTimeout(lsT);
   lsT = setTimeout(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(Object.assign(serialize(), {id:P.id, pristine:!!P.pristine, exIdx:P.exIdx, exVer:EX_VER}))); setSaveState(P.changed ? '이 브라우저에 자동 저장됨 (미변환)' : '이 브라우저에 자동 저장됨'); }
+    try { localStorage.setItem(LS_KEY, JSON.stringify(Object.assign(serialize(), {id:P.id, pristine:!!P.pristine, exIdx:P.exIdx, exVer:EX_VER}))); setSaveState(P.changed ? '이 브라우저에 자동 저장됨 (컴파일 전)' : '이 브라우저에 자동 저장됨'); }
     catch (e) { setSaveState('자동 저장을 쓸 수 없는 환경입니다 — 파일로 내보내기를 쓰세요'); }
   }, 400);
 }
@@ -2288,8 +2293,8 @@ function saveAs() {
     body => body.addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#mFoot .primary').click(); }));
 }
 function newProject() {
-  showModal('새 프로젝트', `<div class="field"><label for="npName">프로젝트 이름</label><input id="npName" maxlength="60" value="새 프로젝트"></div><p class="muted">CPU: Q03UDV · 프로그램: MAIN. 지금 작업은 자동으로 백업돼요 (프로젝트 → 열기 → 백업).</p>`,
-    [{label:'취소'}, {label:'만들기', primary:true, onClick:() => { const v = $('#npName').value.trim() || '새 프로젝트'; loadProject({format:'q03udv-ladder', name:v, rows:[], cm:{}}, {reason:'새 프로젝트를 만들기 전'}); P.changed = true; updateStatus(); log('info', `새 프로젝트 "${v}"`); }}],
+  showModal('새 프로젝트', `<div class="field"><label for="npName">프로젝트 이름</label><input id="npName" maxlength="60" value="새 프로젝트"></div><p class="muted">지금 작업은 자동으로 백업돼요 (파일 → 열기 → 백업).</p>`,
+    [{label:'취소'}, {label:'만들기', primary:true, onClick:() => { const v = $('#npName').value.trim() || '새 프로젝트'; loadProject({format:FMT, name:v, rows:[], cm:{}}, {reason:'새 프로젝트를 만들기 전'}); P.changed = true; updateStatus(); log('info', `새 프로젝트 "${v}"`); }}],
     body => body.addEventListener('keydown', ev => { if (ev.key === 'Enter') $('#mFoot .primary').click(); }));
 }
 async function openDialog() {
@@ -2301,7 +2306,7 @@ async function openDialog() {
     ${bkHtml}
     <h4>예제 회로</h4><div class="plist">${exHtml}</div>
     <h4>파일</h4><button class="btn" id="odFile">파일에서 불러오기 (.json)</button>
-    ${CLOUD.db ? '' : '<p class="muted" style="margin-top:10px">작업은 이 브라우저에 자동 저장됩니다. 다른 컴퓨터로 옮기려면 프로젝트 → 파일로 내보내기(.json)를 쓰세요.</p>'}`,
+    ${CLOUD.db ? '' : '<p class="muted" style="margin-top:10px">작업은 이 브라우저에 자동 저장됩니다. 다른 컴퓨터로 옮기려면 파일 → 파일로 내보내기(.json)를 쓰세요.</p>'}`,
     [{label:'닫기'}], body => {
       body.addEventListener('click', async ev => {
         const ex = ev.target.dataset.ex, op = ev.target.dataset.open, del = ev.target.dataset.delp;
@@ -2499,7 +2504,7 @@ function buildRows(spec) {
 function loadExample(i) {
   const ex = EXAMPLES[i];
   const rows = buildRows(ex.rows);
-  loadProject({format:'q03udv-ladder', name:ex.name, rows:rows.map(r => ({c:r.c, v:r.v.map((b, k) => (b ? k : -1)).filter(k => k > 0)})), cm:ex.cm}, {reason:`예제 "${ex.name}"을(를) 열기 전`});
+  loadProject({format:FMT, name:ex.name, rows:rows.map(r => ({c:r.c, v:r.v.map((b, k) => (b ? k : -1)).filter(k => k > 0)})), cm:ex.cm}, {reason:`예제 "${ex.name}"을(를) 열기 전`});
   P.pristine = true; P.exIdx = i; scheduleLocalSave();
   log('info', `예제 "${ex.name}" 열기 — ${ex.desc}`);
   setPush(true);
@@ -2524,7 +2529,7 @@ function checkExampleIO() {
    11. 도움말
    ===================================================================== */
 function helpKeys() {
-  showModal('단축키 · 입력 방법 (GX Works2 방식)', `
+  showModal('단축키 · 입력 방법', `
     <h4>래더 입력</h4>
     <table>
       <tr><th style="width:150px">키</th><th>동작</th></tr>
@@ -2540,13 +2545,13 @@ function helpKeys() {
       <tr><td><code>Shift+Ins</code> / <code>Shift+Del</code></td><td>행 삽입 / 행 삭제</td></tr>
       <tr><td><code>Shift+방향키</code>, 드래그</td><td>범위 선택 → <code>Ctrl+C / X / V</code></td></tr>
     </table>
-    <h4>변환 · 모드 · 시뮬레이션</h4>
+    <h4>컴파일 · 모드 · 시뮬레이션</h4>
     <table>
-      <tr><td style="width:150px"><code>F4</code></td><td>변환 — 회색(미변환) 영역을 검사해 명령 리스트로 바꿈</td></tr>
-      <tr><td><code>F2</code> / <code>Shift+F2</code> / <code>F3</code></td><td>쓰기 / 읽기 / 모니터 모드</td></tr>
-      <tr><td>시뮬레이션 시작</td><td>변환 → 가상 CPU에 쓰기 → RUN → 모니터 모드. 접점이 켜지면 파랗게 칠해집니다</td></tr>
+      <tr><td style="width:150px"><code>F4</code></td><td>컴파일 — 회색(컴파일 전) 영역을 검사해 명령 리스트로 바꿈</td></tr>
+      <tr><td><code>F2</code> / <code>Shift+F2</code> / <code>F3</code></td><td>편집 / 읽기 전용 / 모니터 모드</td></tr>
+      <tr><td>시뮬레이션 시작</td><td>컴파일 → 가상 PLC에 올리기 → RUN → 모니터 모드. 접점이 켜지면 파랗게 칠해집니다</td></tr>
       <tr><td>모니터 중 더블클릭</td><td>디바이스 강제 ON/OFF (Shift+Enter도 가능), 워드는 현재값 변경</td></tr>
-      <tr><td>시뮬레이션 중 수정</td><td>F2 → 수정 → F4 변환하면 RUN 중 쓰기로 바로 반영 → F3 모니터</td></tr>
+      <tr><td>시뮬레이션 중 수정</td><td>F2 → 수정 → F4 컴파일하면 실행 중에 바로 반영 → F3 모니터</td></tr>
     </table>
     <h4>팁</h4>
     <p>• 병렬(OR) 회로: 아래 행 첫 칸에서 <code>Shift+F5</code>(또는 <code>OR Y2E</code> 입력)하면 오른쪽 세로선이 자동으로 그려집니다.<br>
@@ -2561,14 +2566,14 @@ function helpIns() {
     ['OUT', 'Y2E / T0 K30 / C0 K5', '코일, 타이머(100ms 단위), 카운터'],
     ...Object.entries(APP).map(([k, v]) => [k + (v.p ? ` / ${k}P` : ''), v.ex.split(' ').slice(1).join(' '), v.desc]),
   ];
-  showModal('지원 명령어', `<p>Q 시리즈 명령 중 수업에서 많이 쓰는 것들을 지원합니다. ANB · ORB · MPS · MRD · MPP는 변환할 때 자동으로 만들어집니다.</p>
+  showModal('지원 명령어', `<p>수업에서 많이 쓰는 PLC 명령을 지원합니다. ANB · ORB · MPS · MRD · MPP는 컴파일할 때 자동으로 만들어집니다.</p>
     <table><tr><th>명령</th><th>예</th><th>설명</th></tr>${rows.map(r => `<tr><td class="mono">${esc(r[0])}</td><td><code>${esc(r[1])}</code></td><td>${esc(r[2])}</td></tr>`).join('')}</table>
     <h4>특수 릴레이</h4><p><code>SM400</code> 항상 ON · <code>SM401</code> 항상 OFF · <code>SM402</code> RUN 후 첫 스캔만 ON · <code>SM410</code> 0.1초 클럭 · <code>SM411</code> 0.2초 · <code>SM412</code> 1초 클럭 · <code>SM413</code> 2초</p>
     <h4>비트 지정</h4><p><code>K1Y32</code> = Y32~Y35 4비트 (램프 4개), <code>K4X0</code> = X0~XF 16비트. MOV, BCD, BIN 등에 씁니다.</p>`, [{label:'닫기', primary:true}]);
 }
 function paramDialog() {
   const rows = Object.entries(DEV).map(([t, d]) => `<tr><td class="mono">${t}</td><td>${esc(d.name)}</td><td class="mono">${fmtDev(t, 0)} ~ ${fmtDev(t, d.max)}</td><td>${d.hex ? '16진수' : '10진수'}</td></tr>`).join('');
-  showModal('PLC 파라미터 — Q03UDV', `<p>CPU: <b>Q03UDV</b> (프로그램 용량 30K 스텝) · 타이머: 100ms 저속 타이머 · 스캔 주기: 목표 10ms (브라우저 타이머라 실제 간격은 조금씩 달라요. 탭을 가리면 시뮬레이션 시간도 멈춰요)</p>
+  showModal('PLC 설정 — 디바이스 범위', `<p>가상 PLC · 타이머: 100ms 저속 타이머 · 스캔 주기: 목표 10ms (브라우저 타이머라 실제 간격은 조금씩 달라요. 탭을 가리면 시뮬레이션 시간도 멈춰요)</p>
     <table><tr><th>디바이스</th><th>이름</th><th>범위</th><th>번호</th></tr>${rows}</table>
     <p class="muted" style="margin-top:10px">학교 검정 장비는 입력 X0~X1F, 출력 Y20~Y3F예요 (번호별 뜻은 툴바의 할당표). 다른 장비라면 오른쪽 I/O 패널에서 범위를 바꿔 보세요.</p>`, [{label:'닫기', primary:true}]);
 }
@@ -2606,7 +2611,7 @@ $('#chkCm').addEventListener('change', () => { ED.showCm = $('#chkCm').checked; 
 $('#chkIoCm').addEventListener('change', () => { setIoCm($('#chkIoCm').checked); scr.focus({preventScroll:true}); });
 function setIoCm(on) {
   ED.ioCm = !!on;
-  try { localStorage.setItem('q03udv-ladder:iocm', on ? '1' : '0'); } catch (e) { /* 저장 안 됨 */ }
+  try { localStorage.setItem('ladderlab:iocm', on ? '1' : '0'); } catch (e) { /* 저장 안 됨 */ }
   if (on && !ED.showCm) ED.showCm = true;
   layout(); render(); updateStatus(); renderWatch(); renderEvents(); updateIOUsed();
   toast(on ? '코멘트가 없는 X·Y 아래에 할당표 이름을 보여줘요' : '할당표 이름을 숨겼어요 (직접 쓴 코멘트만 보여요)');
@@ -2803,7 +2808,7 @@ const PLANT_IO = [
   {k:'lG', dir:'out', def:'Y34', name:'녹색등', cm:'녹색등', g:'램프'},
   {k:'lB', dir:'out', def:'Y35', name:'청색등', cm:'청색등', g:'램프'},
 ];
-const PIO_KEY = 'q03udv-ladder:plantio-ct4200m';
+const PIO_KEY = 'ladderlab:plantio-ct4200m';
 const PIO_MODEL = 'ct4200m';
 // 위에서 내려다본 배치 (아래쪽이 조작하는 사람 쪽). 좌표 단위는 그림 기준 px
 const PG = {W:1000, H:384, R:17, v:110,
@@ -3301,7 +3306,7 @@ $('#plReset').addEventListener('click', () => { plantReset(); renderPlant(); });
 $('#plSize').addEventListener('click', () => { PL.big = !PL.big; $('#plantPane').classList.toggle('big', PL.big); $('#plSize').textContent = PL.big ? '작게' : '크게'; requestAnimationFrame(() => { layout(); render(); renderPlant(); }); });
 $('#plIO').addEventListener('click', () => showIOCard(true));
 /* ---- 3D 입체 / 2D 평면도 ---- */
-PL.view = (() => { try { return localStorage.getItem('q03udv-ladder:plantview') || '3d'; } catch (e) { return '3d'; } })();
+PL.view = (() => { try { return localStorage.getItem('ladderlab:plantview') || '3d'; } catch (e) { return '3d'; } })();
 function plant3dOn() { return PL.view === '3d' && !!(window.__plant3d && window.__plant3d.ok); }
 function applyPlantView() {
   const p3 = window.__plant3d, ok = !!(p3 && p3.ok), use3 = PL.view === '3d' && ok;
@@ -3313,7 +3318,7 @@ function applyPlantView() {
 }
 function setPlantView(v) {
   PL.view = v;
-  try { localStorage.setItem('q03udv-ladder:plantview', v); } catch (e) { /* 저장 안 됨 */ }
+  try { localStorage.setItem('ladderlab:plantview', v); } catch (e) { /* 저장 안 됨 */ }
   applyPlantView();
 }
 $$('#plViewSeg button').forEach(b => b.addEventListener('click', () => setPlantView(b.dataset.pv)));
@@ -3405,7 +3410,7 @@ function insertDevice(d) {
     return;
   }
   if (ED.mode === 'write' && ED.tab === 'ladder' && !ED.cmEdit) { openInput(null, d); return; }
-  toast(`${sheetDev(d)} — 쓰기 모드(F2)에서 누르면 래더 입력칸에 바로 들어가요`);
+  toast(`${sheetDev(d)} — 편집 모드(F2)에서 누르면 래더 입력칸에 바로 들어가요`);
 }
 function showIOCard(focusFind) {
   const card = $('#ioCard');
@@ -3558,15 +3563,15 @@ const MISSIONS = {
   0:{title:'자기유지 회로', goal:'START(X19)에서 손을 떼도 컨베이어 모터(Y2E)가 계속 켜져 있게 하기', steps:[
     {t:'task', hl:['X19'], text:'▶ 시뮬레이션 시작을 누르고, 오른쪽 입력에서 노랗게 표시된 X19(START)를 눌렀다가 떼 보세요. (입력 방식은 "누름"이에요)', check:c => c.run() && c.seen('X19', 1) && !c.bit('X19') && c.bit('Y2E'), ok:'X19는 OFF인데 Y2E는 계속 ON이에요. 이게 자기유지예요.', hint:'X19 버튼을 마우스로 누르고 있다가 떼면 돼요.'},
     {t:'predict', text:'아래 줄의 Y2E 접점(X19와 병렬로 붙은 a접점)을 지우면, X19에서 손을 뗐을 때 Y2E는 어떻게 될까요?', choices:['계속 켜져 있다', '꺼진다', '처음부터 안 켜진다'], answer:1, explain:'Y2E 접점이 X19 대신 전류 길을 만들어 주던 거라서, 지우면 X19를 떼는 순간 꺼져요.'},
-    {t:'task', hl:['X19'], text:'직접 확인: F2(쓰기 모드) → 아래 줄 Y2E 접점에 커서를 두고 Del(또는 툴바의 삭제) → F4(변환) → F3(모니터) → X19를 눌렀다 떼 보세요.', check:c => c.fresh() && !c.hasContact('Y2E') && c.seen('X19', 1, ED.progAt) && !c.bit('X19') && !c.bit('Y2E'), ok:'예상대로 X19를 떼자마자 Y2E가 꺼졌어요.', hint:'시뮬레이션은 켜 둔 채로 F2 → 수정 → F4를 누르면 "RUN 중 쓰기"로 바로 반영돼요.'},
+    {t:'task', hl:['X19'], text:'직접 확인: F2(편집 모드) → 아래 줄 Y2E 접점에 커서를 두고 Del(또는 툴바의 삭제) → F4(컴파일) → F3(모니터) → X19를 눌렀다 떼 보세요.', check:c => c.fresh() && !c.hasContact('Y2E') && c.seen('X19', 1, ED.progAt) && !c.bit('X19') && !c.bit('Y2E'), ok:'예상대로 X19를 떼자마자 Y2E가 꺼졌어요.', hint:'시뮬레이션은 켜 둔 채로 F2 → 수정 → F4를 누르면 실행 중에도 바로 반영돼요.'},
     {t:'task', hl:['X19'], text:'다시 자기유지로 고쳐 보세요: F2 → Ctrl+Z(되돌리기) 또는 아래 줄 첫 칸에서 Shift+F5 → Y2E → F4 → F3 → X19를 눌렀다 떼기', check:c => c.fresh() && c.hasContact('Y2E') && c.seen('X19', 1, ED.progAt) && !c.bit('X19') && c.bit('Y2E'), ok:'자기유지 회로를 다시 완성했어요.'},
     {t:'task', hl:['X1A'], text:'마지막으로 X1A(STOP)를 눌러 Y2E를 꺼 보세요.', check:c => c.seen('X1A', 1) && !c.bit('Y2E'), ok:'X1A b접점이 열리면서 전류 길이 끊겼어요.'},
     {t:'explain', text:'정리: Y2E가 켜지면 Y2E a접점이 닫혀서 X19와 나란한(병렬) 길이 하나 더 생겨요. 그래서 X19를 떼도 전류가 Y2E 접점으로 계속 흘러요. X1A b접점을 누르면 그 길이 끊겨서 꺼져요. 실습 장비에서 START·STOP으로 컨베이어를 돌리고 세우는 회로가 이 모양이에요.'},
   ]},
   2:{title:'ON 딜레이 타이머', goal:'START(X19)를 누르고 정해진 시간 뒤에 녹색등(Y34) 켜기', steps:[
     {t:'task', hl:['X19'], text:'▶ 시뮬레이션 시작 → X19(START)를 눌렀다 떼고, T0 코일 아래 파란 현재값이 30까지 올라가는 걸 보세요.', check:c => c.run() && c.bit('Y34'), ok:'현재값이 30(=3.0초)이 되자 T0 접점이 켜지고 Y34(녹색등)가 ON 됐어요.'},
-    {t:'predict', text:'OUT T0 K30을 K50으로 바꾸면 몇 초 뒤에 Y34가 켜질까요?', choices:['3초', '5초', '50초'], answer:1, explain:'Q 시리즈 기본 타이머는 0.1초 단위라 K50 = 5.0초예요.'},
-    {t:'task', hl:['X1A', 'X19'], text:'직접 바꿔 보기: X1A(STOP)로 정지 → F2 → 3번째 줄 T0 코일을 더블클릭(휴대폰은 두 번 탭)해서 T0 K50으로 바꾸기 → F4 → F3 → X19로 다시 시작', check:c => c.hasIns('OUT T0 K50') && c.word('T0') === 50 && c.bit('Y34'), ok:'현재값 50에서 켜졌어요. 5초 걸렸죠?', hint:'코일 입력칸에 "T0 K50"이라고 쓰면 돼요. 바꾼 뒤에는 F4(변환)를 꼭 눌러야 반영돼요.',
+    {t:'predict', text:'OUT T0 K30을 K50으로 바꾸면 몇 초 뒤에 Y34가 켜질까요?', choices:['3초', '5초', '50초'], answer:1, explain:'기본 타이머는 0.1초 단위라 K50 = 5.0초예요.'},
+    {t:'task', hl:['X1A', 'X19'], text:'직접 바꿔 보기: X1A(STOP)로 정지 → F2 → 3번째 줄 T0 코일을 더블클릭(휴대폰은 두 번 탭)해서 T0 K50으로 바꾸기 → F4 → F3 → X19로 다시 시작', check:c => c.hasIns('OUT T0 K50') && c.word('T0') === 50 && c.bit('Y34'), ok:'현재값 50에서 켜졌어요. 5초 걸렸죠?', hint:'코일 입력칸에 "T0 K50"이라고 쓰면 돼요. 바꾼 뒤에는 F4(컴파일)를 꼭 눌러야 반영돼요.',
       live:c => (c.hasIns('OUT T0 K50') ? `반영됨 · T0 현재값 ${c.word('T0')} / 50` : '아직 OUT T0 K30이에요 — 바꾸고 F4를 누르세요')},
     {t:'predict', text:'타이머가 도는 중(현재값 20쯤)에 X1A(STOP)를 누르면 T0 현재값은 어떻게 될까요?', choices:['20에서 멈춰 있다', '0으로 돌아간다', '계속 올라간다'], answer:1, explain:'OUT T 코일 입력이 꺼지면 현재값이 바로 0으로 리셋돼요.'},
     {t:'task', hl:['X1A', 'X19'], text:'직접 확인: ① X1A로 정지해서 현재값을 0으로 → ② X19로 다시 시작 → ③ 2초쯤 뒤(현재값 20쯤), 다 차기 전에 X1A → T0 현재값 보기', track:'T0', check:c => c.seen('X1A', 1) && c.word('T0') === 0 && MS.lastPeak >= 5 && MS.lastPeak < 50, ok:'중간에 멈추니 현재값이 0으로 돌아갔어요.', hint:'이미 50까지 다 찬 상태에서 X1A를 누르면 "중간에 멈춘 것"이 아니라서 다시 해야 해요. X19로 다시 시작하고 50이 되기 전에 X1A를 누르세요.',
@@ -3591,7 +3596,7 @@ const MISSIONS = {
   ]},
 };
 const MISSION_ORDER = [0, 2, 4, 9];
-const MDONE_KEY = 'q03udv-ladder:missions';
+const MDONE_KEY = 'ladderlab:missions';
 function missionsDone() { try { return JSON.parse(localStorage.getItem(MDONE_KEY) || '{}') || {}; } catch (e) { return {}; } }
 function markMissionDone(i) { try { const d = missionsDone(); d[i] = Date.now(); localStorage.setItem(MDONE_KEY, JSON.stringify(d)); } catch (e) { /* 기록 못 함 */ } }
 function refreshHighlights() { updateIO(true); if (PL.on) renderPlant(); }
@@ -3681,8 +3686,8 @@ function openMission(i) { if (P.pristine && P.exIdx === i) { missionStart(i); re
 
 /* ---- 지원 범위 ---- */
 function scopeDialog() {
-  showModal('시뮬레이터 지원 범위', `<p>실제 Q03UDV와 똑같이 동작하는 게 목표지만, 브라우저에서 돌아가는 학습용이라 다른 점이 있어요.</p>
-    <h4>지원</h4><p>a·b접점, 상승·하강 펄스, 비교 접점(= &lt;&gt; &gt; &lt; &gt;= &lt;=), OUT, SET, RST, PLS, PLF, ALT(P), MOV(P), + − × ÷, INC/DEC, BCD/BIN, BMOV, FMOV, ZRST, 100ms 타이머, 카운터, 특수 릴레이 SM400~SM413, 비트 지정(K1Y32 등), 모니터, 강제 ON/OFF, 현재값 변경, RUN 중 쓰기, 연산 오류(4100) 정지</p>
+  showModal('시뮬레이터 지원 범위', `<p>실제 PLC와 최대한 비슷하게 동작하도록 만들었지만, 브라우저에서 돌아가는 학습용이라 다른 점이 있어요.</p>
+    <h4>지원</h4><p>a·b접점, 상승·하강 펄스, 비교 접점(= &lt;&gt; &gt; &lt; &gt;= &lt;=), OUT, SET, RST, PLS, PLF, ALT(P), MOV(P), + − × ÷, INC/DEC, BCD/BIN, BMOV, FMOV, ZRST, 100ms 타이머, 카운터, 특수 릴레이 SM400~SM413, 비트 지정(K1Y32 등), 모니터, 강제 ON/OFF, 현재값 변경, 실행 중 수정 반영, 계산 오류(E1) 정지</p>
     <h4>단순화한 부분</h4><p>• 스캔 주기는 목표 10ms예요. 브라우저 타이머라 실제 간격은 조금씩 달라요. PLC와 가상 설비는 같은 시뮬레이션 시간으로 움직이고, 탭을 가리면 둘 다 멈춰요.<br>
     • 타이머는 코일이 실행될 때 경과 시간을 더해요 (실제 CPU는 END 처리에서 갱신).<br>
     • 스텝 수는 근사값이에요.<br>
@@ -3694,7 +3699,7 @@ function scopeDialog() {
 /* ---- 동작 자가 검사 ---- */
 function headless(rows, totalMs, actions, usePlant) {
   const prog = compile(rows);
-  if (prog.errors.length) throw new Error('변환 오류: ' + prog.errors[0].msg);
+  if (prog.errors.length) throw new Error('컴파일 오류: ' + prog.errors[0].msg);
   const keep = {mem:SIM.mem, prog:SIM.prog, t:SIM.t, first:SIM.first, scans:SIM.scans, state:SIM.state, on:SIM.on, xin:XIN.slice()};
   try {
     XIN.fill(0);
@@ -3721,9 +3726,9 @@ function selfTest() {
   const OKS = ['X0','LDI X1','OR Y20','ANI T0','LDP X0','ORF X3','OUT Y20','OUT T0 K30','OUT C0 K5','OUT T1 K5','SET M0','RST C0','SET L0','PLS M1','PLF M2','ALTP Y20','MOV K10 D0','MOVP K0 D0','MOV D0 K1Y24','MOV SD520 D0','MOV W0 D0','+ D0 K5 D2','- D0 K1 D2','* D0 K2 D10','/ D0 K3 D10','INC D0','INCP D0','DECP D0','BCD D0 K4Y20','BIN K4X0 D0','BMOV D0 D100 K5','FMOV K0 D0 K10','ZRST M0 M15','= D0 K10','LD>= D0 K5','LD >= D0 K5','AND<> D1 K0','OR= D1 K2','LD SM400'];
   for (const t of OKS) { const r = parseInput(t, 'NO'); add('입력 문법', t, !r.err, r.err || (r.type === 'out' ? '명령/코일' : r.type === 'cmp' ? '비교 접점' : '접점')); }
   for (const t of ['MA','OUT X0','T0 K30','LD >= D0','XG']) { const r = parseInput(t, 'NO'); add('입력 문법', `${t} → 오류 안내`, !!r.err, r.err || '오류를 못 잡음'); }
-  // 2) 변환
+  // 2) 컴파일
   const il = rows => { const p = compile(rows); return p.errors.length ? 'ERR' : p.il.map(x => `${x.name}${(x.ops || []).length ? ' ' + x.ops.map(o => o.text).join(' ') : ''}`).join(' | '); };
-  EXAMPLES.forEach((ex, i) => { const p = compile(buildRows(ex.rows)); add('래더 변환', `예제 ${i + 1} ${ex.name}`, !p.errors.length, p.errors.length ? p.errors[0].msg : `${p.endStep + 1}스텝`); });
+  EXAMPLES.forEach((ex, i) => { const p = compile(buildRows(ex.rows)); add('래더 컴파일', `예제 ${i + 1} ${ex.name}`, !p.errors.length, p.errors.length ? p.errors[0].msg : `${p.endStep + 1}스텝`); });
   const CASES = [
     ['자기유지 → OR', EXAMPLES[0].rows, 'LD X19 | OR Y2E | ANI X1A | OUT Y2E'],
     ['분기 출력 → MPS/MPP', [{c:{0:'X0', 1:'X1'}, o:'OUT Y0', v:[1]}, {c:{1:'X2'}, o:'OUT Y1'}], 'LD X0 | MPS | AND X1 | OUT Y0 | MPP | AND X2 | OUT Y1'],
@@ -3731,7 +3736,7 @@ function selfTest() {
     ['직렬 블록 병렬 → ORB', [{c:{0:'X0', 1:'X1'}, o:'OUT Y0', v:[2]}, {c:{0:'X2', 1:'X3'}}], 'LD X0 | AND X1 | LD X2 | AND X3 | ORB | OUT Y0'],
     ['출력 없는 회로 → 오류', [{c:{0:'X0', 1:'X1'}}], 'ERR'],
   ];
-  for (const [n, rows, want] of CASES) { const got = il(buildRows(rows)); add('래더 변환', n, got === want, got); }
+  for (const [n, rows, want] of CASES) { const got = il(buildRows(rows)); add('래더 컴파일', n, got === want, got); }
   // 3) 동작 (10ms 스캔으로 빠르게 돌려 보기)
   const B = i => buildRows(EXAMPLES[i].rows);
   const x = (n, v) => () => { XIN[n] = v; };
@@ -3758,8 +3763,8 @@ function selfTest() {
       probe(5000, '타이머: 30에서 멈춰 있던 0.2초는 빼고 셈', M => [M.Y[0x20] === 0 && M.TN[0] < 50, `T0=${M.TN[0]}`]),
       probe(5350, '타이머: 50에서 다시 ON', M => [M.Y[0x20] === 1 && M.TN[0] === 50, `T0=${M.TN[0]}`])]);
   } catch (e) { add('동작', '실행 중 예외', false, e.message); }
-  try { headless(buildRows([{c:{0:'LD SM400'}, o:'/ D0 D1 D2'}]), 50, []); add('동작', '0으로 나누면 CPU 오류 4100', false, '오류가 안 남'); }
-  catch (e) { add('동작', '0으로 나누면 CPU 오류 4100', e.code === '4100', e.message); }
+  try { headless(buildRows([{c:{0:'LD SM400'}, o:'/ D0 D1 D2'}]), 50, []); add('동작', '0으로 나누면 CPU 오류 E1', false, '오류가 안 남'); }
+  catch (e) { add('동작', '0으로 나누면 CPU 오류 E1', e.code === 'E1', e.message); }
   // 4) 가상 설비 (학교 검정 장비 · 할당표 기본값)
   const snap = {cyl:{...PL.cyl}, valve:{...PL.valve}, belt:PL.belt, stack:PL.stack.slice(), pieces:PL.pieces.map(p => ({...p})), ejBin:PL.ejBin.slice(), endBin:PL.endBin.slice(), rack:PL.rack.slice(),
     dropped:PL.dropped, ops:PL.ops, dev:PL.dev, uid:PL.uid, sens:PL.sens, emg:PL.emg, vacT:PL.vacT, warn:PL.warn, warnAt:PL.warnAt, iomap:IOMAP};
@@ -3814,7 +3819,7 @@ function selfTest() {
   const groups = [...new Set(R.map(r => r.g))];
   const text = `동작 자가 검사 ${when}\n통과 ${pass} / ${R.length}\n` + R.map(r => `[${r.pass ? '통과' : '실패'}] ${r.g} · ${r.name} ${r.detail}`).join('\n');
   showModal('동작 자가 검사', `<p><b style="font-size:16px;color:${pass === R.length ? '#137a3b' : '#b3261e'}">${pass === R.length ? '모두 통과' : '실패 있음'} — ${pass} / ${R.length}</b> <span class="muted">${esc(when)}</span></p>
-    <p class="muted">예제 회로와 입력 문법, 래더 변환, 타이머·카운터 동작, 가상 설비(학교 검정 장비) 동작을 정해진 입력으로 자동 실행해서 결과를 확인했어요.</p>
+    <p class="muted">예제 회로와 입력 문법, 래더 컴파일, 타이머·카운터 동작, 가상 설비(학교 검정 장비) 동작을 정해진 입력으로 자동 실행해서 결과를 확인했어요.</p>
     ${groups.map(g => `<h4>${esc(g)} (${R.filter(r => r.g === g && r.pass).length}/${R.filter(r => r.g === g).length})</h4><table>${R.filter(r => r.g === g).map(r => `<tr><td style="width:46px;color:${r.pass ? '#137a3b' : '#b3261e'};font-weight:700">${r.pass ? '통과' : '실패'}</td><td>${esc(r.name)}</td><td class="muted">${esc(r.detail)}</td></tr>`).join('')}</table>`).join('')}`,
     [{label:'결과 복사', onClick:() => { (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('결과를 복사했어요')).catch(() => toast('복사할 수 없는 환경이에요', 'err')); return false; }}, {label:'닫기', primary:true}]);
   log(pass === R.length ? 'ok' : 'err', `동작 자가 검사: ${pass} / ${R.length} 통과`);
@@ -3831,7 +3836,7 @@ function hashExample() {
 }
 function openHashExample() {
   if (location.hash === '#new') {
-    loadProject({format:'q03udv-ladder', name:'새 프로젝트', rows:[], cm:{}}, {reason:'새 프로젝트를 열기 전'});
+    loadProject({format:FMT, name:'새 프로젝트', rows:[], cm:{}}, {reason:'새 프로젝트를 열기 전'});
     P.changed = true; updateStatus();
     log('info', '빈 프로젝트예요. 래더 위에서 X19(START)를 치고 Enter를 눌러 시작해 보세요. X·Y 번호는 툴바의 할당표에서 찾을 수 있어요. (막히면 위쪽 메뉴 학습 → 미션 1)');
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* 해시 유지 */ }

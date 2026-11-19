@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Q03UDV 래더 시뮬레이터</title>
-<meta name="description" content="GX Works2처럼 래더를 짜고 브라우저에서 바로 돌려보는 미쓰비시 Q03UDV PLC 연습 사이트. 설치 없이 변환·시뮬레이션·모니터까지.">
+<title>래더랩 — PLC 래더 연습 사이트</title>
+<meta name="description" content="래더랩 — 래더를 짜고 브라우저에서 바로 돌려보는 PLC 연습 사이트. 설치 없이 컴파일·시뮬레이션·모니터, 학교 장비를 3D로 만든 가상 설비까지.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Q03UDV 래더 시뮬레이터">
-<meta property="og:description" content="GX Works2처럼 래더를 짜고, 브라우저에서 바로 돌려보는 PLC 연습 사이트">
+<meta property="og:title" content="래더랩 — PLC 래더 연습 사이트">
+<meta property="og:description" content="래더를 짜고, 브라우저에서 바로 돌려보는 PLC 연습 사이트">
 <meta property="og:image" content="https://ljh30581712-beep.github.io/plc-ladder-sim/assets/og.png">
 <meta property="og:url" content="https://ljh30581712-beep.github.io/plc-ladder-sim/">
 <meta name="twitter:card" content="summary_large_image">
@@ -36,7 +36,7 @@
 <body>
 <header class="site">
   <div class="wrap">
-    <a class="brand" href="index.html"><span class="q">Q</span>Q03UDV 래더 시뮬레이터</a>
+    <a class="brand" href="index.html"><span class="q"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 10h5M12.5 10h5M7.5 5v10M12.5 5v10" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></span>래더랩</a>
     <nav class="top" aria-label="사이트 메뉴">
       <a href="index.html" aria-current="page">홈</a>
       <a href="devices.html">디바이스 설명</a>
@@ -49,9 +49,9 @@
 <div class="hero">
   <div class="wrap">
     <div>
-      <div class="eyebrow">PLC 래더 연습 · Q03UDV</div>
-      <h1>GX Works2처럼 래더를 짜고, 브라우저에서 바로 돌려보기</h1>
-      <p>설치 없이 F5·F6·F7 단축키로 래더를 입력하고, F4로 변환한 다음 가상 Q03UDV CPU에서 실행해요. 공급 실린더·컨베이어·센서가 달린 가상 실습 장비가 내가 짠 래더대로 움직여요.</p>
+      <div class="eyebrow">래더랩 · PLC 래더 연습</div>
+      <h1>래더를 짜고, 브라우저에서 바로 돌려보기</h1>
+      <p>설치 없이 F5·F6·F7 단축키로 래더를 입력하고, F4로 컴파일한 다음 가상 PLC에서 실행해요. 공급 실린더·컨베이어·센서가 달린 가상 실습 장비가 내가 짠 래더대로 움직여요.</p>
       <div class="actions">
         <a class="btn primary" href="simulator.html">시뮬레이터 열기 →</a>
         <a class="btn ghost" href="devices.html">Y1이 뭐예요? 디바이스 설명</a>
@@ -72,18 +72,18 @@
 <section class="alt" id="features">
   <div class="wrap">
     <h2>할 수 있는 것</h2>
-    <p class="lead">학교에서 쓰는 GX Works2와 같은 순서로 연습할 수 있게 만들었어요. 래더 작성 → 변환 → PLC 쓰기 → 모니터.</p>
+    <p class="lead">실제 PLC 실습과 같은 흐름으로 연습해요. 래더 작성 → 컴파일 → 실행 → 모니터.</p>
     <div class="grid4">
       <div class="card">
         <svg class="sym" viewBox="0 0 120 30" aria-hidden="true"><path d="M2 15H24M36 15H58M24 5V25M36 5V25M70 15H90M102 15H118M90 5V25M102 5V25M86 27L106 3" stroke="currentColor" stroke-width="2" fill="none"/></svg>
         <h3>래더 입력</h3>
-        <p>GX Works2와 같은 단축키예요. 래더 위에서 <code>X19</code>, <code>LDI X1A</code>, <code>OUT T0 K30</code>처럼 바로 타이핑해도 들어가요.</p>
+        <p>F키 단축키로 빠르게 넣어요. 래더 위에서 <code>X19</code>, <code>LDI X1A</code>, <code>OUT T0 K30</code>처럼 바로 타이핑해도 들어가요.</p>
         <div class="keys"><kbd>F5</kbd><kbd>F6</kbd><kbd>F7</kbd><kbd>F8</kbd><kbd>F9</kbd><kbd>Shift+F9</kbd></div>
       </div>
       <div class="card">
         <svg class="sym" viewBox="0 0 120 30" aria-hidden="true"><text x="0" y="12" font-family="monospace" font-size="11" fill="#0b3f9c" font-weight="700">LD  X19</text><text x="0" y="27" font-family="monospace" font-size="11" fill="#0b3f9c" font-weight="700">OR  Y2E</text><text x="64" y="12" font-family="monospace" font-size="11" fill="#0b3f9c" font-weight="700">ANI X1A</text><text x="64" y="27" font-family="monospace" font-size="11" fill="#0b3f9c" font-weight="700">OUT Y2E</text></svg>
-        <h3>변환 · 명령 리스트</h3>
-        <p>F4로 변환하면 끊긴 선이나 출력 없는 회로를 찾아주고, 래더를 LD·AND·OR·ANB·ORB·MPS 니모닉으로 바꿔 보여줘요.</p>
+        <h3>컴파일 · 명령 리스트</h3>
+        <p>F4로 컴파일하면 끊긴 선이나 출력 없는 회로를 찾아주고, 래더를 LD·AND·OR·ANB·ORB·MPS 니모닉으로 바꿔 보여줘요.</p>
         <div class="keys"><kbd>F4</kbd><kbd>Alt+F1</kbd></div>
       </div>
       <div class="card">
@@ -138,7 +138,7 @@
     <p class="lead">직접 짜 보고 싶다면 자기유지 회로부터 만들어 보세요. 따라 하기가 편하면 위의 학습 미션부터 해도 돼요. START 버튼(X19)을 한 번 누르면 컨베이어 모터(Y2E)가 계속 돌고, STOP 버튼(X1A)을 누르면 멈추는 회로예요. 번호는 학교 검정 장비 <a href="io.html">입출력 할당표</a> 그대로예요.</p>
     <ol class="steps">
       <li><h3>래더 그리기</h3><p><a href="simulator.html#new">빈 프로젝트</a>를 열고 <code>X19</code> Enter → <code>LDI X1A</code> Enter → <code>OUT Y2E</code> Enter. 아래 줄 첫 칸에서 <kbd>Shift+F5</kbd> 누르고 <code>Y2E</code> Enter.</p></li>
-      <li><h3>변환하기</h3><p><kbd>F4</kbd>를 눌러요. 회색이던 부분이 흰색으로 바뀌고 왼쪽에 스텝 번호가 붙으면 성공이에요. 오류는 아래 출력 창에 나와요.</p></li>
+      <li><h3>컴파일하기</h3><p><kbd>F4</kbd>를 눌러요. 회색이던 부분이 흰색으로 바뀌고 왼쪽에 스텝 번호가 붙으면 성공이에요. 오류는 아래 출력 창에 나와요.</p></li>
       <li><h3>실행하기</h3><p><b>▶ 시뮬레이션 시작</b>을 누르고 오른쪽 <b>X19</b> 버튼을 눌렀다 떼 보세요. Y2E 램프가 켜지고 래더 접점이 파랗게 바뀌어요.</p></li>
     </ol>
     <div class="ilbox">
@@ -166,7 +166,7 @@
         </svg>
       </figure>
       <figure>
-        <figcaption>F4 변환 후 명령 리스트</figcaption>
+        <figcaption>F4 컴파일 후 명령 리스트</figcaption>
 <pre class="il"><span>0</span><b>LD</b>X19
 <span>1</span><b>OR</b>Y2E
 <span>2</span><b>ANI</b>X1A
@@ -180,7 +180,7 @@
 <section id="examples" class="alt">
   <div class="wrap">
     <h2>예제 회로로 바로 시작</h2>
-    <p class="lead">누르면 시뮬레이터에 바로 열려요. 하던 작업이 있으면 자동으로 백업해 둬서, 프로젝트 → 열기에서 다시 복구할 수 있어요.</p>
+    <p class="lead">누르면 시뮬레이터에 바로 열려요. 하던 작업이 있으면 자동으로 백업해 둬서, 파일 → 열기에서 다시 복구할 수 있어요.</p>
     <div class="exlist">
       <a class="ex" href="simulator.html#ex-1"><span class="n">1</span><div><b>자기유지 회로 (기동·정지)</b><span>START(X19)를 누르면 컨베이어(Y2E)가 켜진 채 유지, STOP(X1A)을 누르면 꺼짐</span><div class="devs"><i>X19 START</i><i>X1A STOP</i><i>Y2E 컨베이어</i></div></div><span class="go">열기 →</span></a>
       <a class="ex" href="simulator.html#ex-2"><span class="n">2</span><div><b>인터록 (전진·후진 동시 ON 금지)</b><span>공급 전진 Sol과 후진 Sol이 동시에 켜지지 않게 서로 막는 회로</span><div class="devs"><i>X19·X1A·X1B</i><i>Y20 공급 전진</i><i>Y21 공급 후진</i></div></div><span class="go">열기 →</span></a>
@@ -199,7 +199,7 @@
 <section id="keys">
   <div class="wrap">
     <h2>자주 쓰는 단축키</h2>
-    <p class="lead">GX Works2와 같은 키예요. 이 사이트에서는 F5(새로고침) 같은 브라우저 키가 래더 입력용으로 바뀌어요.</p>
+    <p class="lead">시뮬레이터 안에서는 F5(새로고침) 같은 브라우저 키가 래더 입력용으로 바뀌어요.</p>
     <div class="keys2">
       <div class="tablewrap"><table class="t" style="min-width:0">
         <tr><th>키</th><th>입력</th></tr>
@@ -211,8 +211,8 @@
       </table></div>
       <div class="tablewrap"><table class="t" style="min-width:0">
         <tr><th>키</th><th>동작</th></tr>
-        <tr><td><kbd>F4</kbd></td><td>변환</td></tr>
-        <tr><td><kbd>F2</kbd> / <kbd>F3</kbd></td><td>쓰기 모드 / 모니터 모드</td></tr>
+        <tr><td><kbd>F4</kbd></td><td>컴파일</td></tr>
+        <tr><td><kbd>F2</kbd> / <kbd>F3</kbd></td><td>편집 모드 / 모니터 모드</td></tr>
         <tr><td><kbd>Enter</kbd> / <kbd>Del</kbd></td><td>요소 수정 / 삭제</td></tr>
         <tr><td><kbd>Shift+Ins</kbd> / <kbd>Shift+Del</kbd></td><td>행 삽입 / 행 삭제</td></tr>
         <tr><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+S</kbd></td><td>되돌리기 / 저장</td></tr>
@@ -225,14 +225,14 @@
   <div class="wrap">
     <div class="final">
       <a href="devices.html"><b>X, Y, M, T가 헷갈린다면</b><span>Y1이 왜 "출력 1번"인지, X10이 왜 10번째가 아닌지, 학교 장비는 왜 Y20부터인지 그림으로 정리했어요.</span><br><em>디바이스 설명 보기 →</em></a>
-      <a href="simulator.html"><b>바로 짜 보기</b><span>PC에서 크롬이나 엣지로 여는 걸 추천해요. 키보드 단축키를 써야 GX Works2랑 똑같이 연습할 수 있어요.</span><br><em>시뮬레이터 열기 →</em></a>
+      <a href="simulator.html"><b>바로 짜 보기</b><span>PC에서 크롬이나 엣지로 여는 걸 추천해요. 키보드 단축키를 쓰면 훨씬 빨리 짤 수 있어요.</span><br><em>시뮬레이터 열기 →</em></a>
     </div>
   </div>
 </section>
 
 <footer class="site">
   <div class="wrap">
-    <div>Q03UDV 래더 시뮬레이터 · PLC 수업 연습용 프로젝트<br>미쓰비시전기의 공식 소프트웨어가 아니에요. GX Works2, MELSEC은 미쓰비시전기의 상표입니다.</div>
+    <div>래더랩 · PLC 수업 연습용 프로젝트<br>코드와 그림을 직접 만든 학습용 사이트예요.</div>
     <div><a href="simulator.html">시뮬레이터</a> · <a href="devices.html">디바이스 설명</a> · <a href="io.html">입출력 할당표</a></div>
   </div>
 </footer>

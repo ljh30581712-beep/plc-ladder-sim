@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>디바이스 설명 · Q03UDV 래더 시뮬레이터</title>
-<meta name="description" content="Y1, X10, M0, T0 K30, D0, SM400, K1Y32는 무슨 뜻일까? 미쓰비시 Q03UDV PLC 디바이스를 그림과 예시로 정리했어요.">
+<title>디바이스 설명 · 래더랩</title>
+<meta name="description" content="Y1, X10, M0, T0 K30, D0, SM400, K1Y32는 무슨 뜻일까? PLC 디바이스를 그림과 예시로 정리했어요.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Y1은 뭘까? PLC 디바이스 읽는 법">
-<meta property="og:description" content="X, Y, M, T, C, D, SM, K, H를 그림과 예시로 정리 — Q03UDV 기준">
+<meta property="og:description" content="X, Y, M, T, C, D, SM, K, H를 그림과 예시로 정리">
 <meta property="og:image" content="https://ljh30581712-beep.github.io/plc-ladder-sim/assets/og.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232f6ee0'/%3E%3Cpath d='M6 16h7M19 16h7M13 9v14M19 9v14' stroke='white' stroke-width='2.6' fill='none'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -77,7 +77,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
 <body>
 <header class="site">
   <div class="wrap">
-    <a class="brand" href="index.html"><span class="q">Q</span>Q03UDV 래더 시뮬레이터</a>
+    <a class="brand" href="index.html"><span class="q"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2.5 10h5M12.5 10h5M7.5 5v10M12.5 5v10" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></span>래더랩</a>
     <nav class="top" aria-label="사이트 메뉴">
       <a href="index.html">홈</a>
       <a href="devices.html" aria-current="page">디바이스 설명</a>
@@ -90,7 +90,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
 <div class="dhero">
   <div class="wrap">
     <div>
-      <div class="eyebrow">디바이스 설명 · Q03UDV 기준</div>
+      <div class="eyebrow">디바이스 설명 · 래더랩</div>
       <h1>Y1은 뭘까? PLC 디바이스 읽는 법</h1>
       <p>디바이스는 PLC 안에 있는 <b>이름표 붙은 칸</b>이에요. 앞 글자는 칸의 종류, 뒤 숫자는 몇 번 칸인지를 뜻해요. 이 규칙만 알면 X0, M100, T0, D10이 전부 읽혀요.</p>
     </div>
@@ -126,7 +126,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
           <text x="75" y="102" text-anchor="middle" font-size="12.5" fill="#5b6878">바깥 장치</text>
           <path d="M140 85H200" stroke="#1f4fbf" stroke-width="2.5" marker-end="url(#ar)"/>
           <rect x="205" y="20" width="450" height="130" rx="12" fill="#f6f8fb" stroke="#c3cbd6"/>
-          <text x="430" y="44" text-anchor="middle" font-weight="600">PLC (Q03UDV)</text>
+          <text x="430" y="44" text-anchor="middle" font-weight="600">PLC</text>
           <rect x="222" y="60" width="90" height="56" rx="8" fill="#fff" stroke="#9db7ee"/>
           <text x="267" y="86" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" fill="#1f4fbf">X19</text>
           <text x="267" y="106" text-anchor="middle" font-size="12" fill="#5b6878">입력 단자</text>
@@ -158,10 +158,10 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
 <section class="alt" id="table">
   <div class="wrap">
     <h2>전체 디바이스 표</h2>
-    <p class="lead"><span class="tag bit">비트</span>는 ON/OFF 하나, <span class="tag word">워드</span>는 숫자 하나(16비트)를 담아요. 번호가 <span class="tag hex">16진수</span>인지 <span class="tag dec">10진수</span>인지 꼭 구분하세요. 범위는 Q03UDV 기본 설정 기준이에요.</p>
+    <p class="lead"><span class="tag bit">비트</span>는 ON/OFF 하나, <span class="tag word">워드</span>는 숫자 하나(16비트)를 담아요. 번호가 <span class="tag hex">16진수</span>인지 <span class="tag dec">10진수</span>인지 꼭 구분하세요. 범위는 이 사이트의 기본 설정 기준이에요.</p>
     <div class="tablewrap">
       <table class="t">
-        <thead><tr><th>디바이스</th><th>이름</th><th>쉽게 말하면</th><th>번호</th><th>종류</th><th>Q03UDV 범위</th><th>래더에서</th></tr></thead>
+        <thead><tr><th>디바이스</th><th>이름</th><th>쉽게 말하면</th><th>번호</th><th>종류</th><th>기본 범위</th><th>래더에서</th></tr></thead>
         <tbody>
           <tr><td class="dv">X</td><td>입력</td><td>버튼·센서 신호가 들어오는 단자. 읽기만 가능</td><td><span class="tag hex">16진수</span></td><td><span class="tag bit">비트</span></td><td class="rng">X0 ~ X1FFF</td><td><code>X19</code> 접점</td></tr>
           <tr><td class="dv">Y</td><td>출력</td><td>램프·릴레이·모터로 내보내는 단자</td><td><span class="tag hex">16진수</span></td><td><span class="tag bit">비트</span></td><td class="rng">Y0 ~ Y1FFF</td><td><code>OUT Y2E</code></td></tr>
@@ -196,21 +196,21 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
 <section class="alt" id="io">
   <div class="wrap">
     <h2>학교 장비는 왜 출력이 Y20부터일까?</h2>
-    <p class="lead">Q 시리즈는 베이스에 꽂힌 순서대로 모듈에 번호를 이어서 붙여요. 0번 슬롯 입력 모듈이 32점(X0~X1F)을 쓰면, 1번 슬롯 출력 모듈은 그다음 번호인 Y20부터 시작해요.</p>
+    <p class="lead">모듈형 PLC는 베이스에 꽂힌 순서대로 모듈에 번호를 이어서 붙여요. 0번 슬롯 입력 모듈이 32점(X0~X1F)을 쓰면, 1번 슬롯 출력 모듈은 그다음 번호인 Y20부터 시작해요.</p>
     <figure class="dia">
-      <svg viewBox="0 0 860 210" width="860" role="img" aria-label="베이스 유닛: 전원, CPU Q03UDV, 0번 슬롯 입력 32점 X0~X1F, 1번 슬롯 출력 32점 Y20~Y3F, 2번 슬롯 입력 16점 X40~X4F">
+      <svg viewBox="0 0 860 210" width="860" role="img" aria-label="베이스 유닛: 전원, CPU, 0번 슬롯 입력 32점 X0~X1F, 1번 슬롯 출력 32점 Y20~Y3F, 2번 슬롯 입력 16점 X40~X4F">
         <g font-family="IBM Plex Sans KR, sans-serif" fill="#18202b">
           <rect x="6" y="20" width="848" height="150" rx="10" fill="#eef2f7" stroke="#c3cbd6"/>
           <text x="20" y="40" font-size="12.5" fill="#5b6878">베이스 유닛</text>
           <rect x="20" y="50" width="96" height="108" rx="6" fill="#fff" stroke="#c3cbd6"/><text x="68" y="100" text-anchor="middle" font-weight="600" font-size="14">전원</text><text x="68" y="120" text-anchor="middle" font-size="12" fill="#5b6878">Q61P</text>
-          <rect x="124" y="50" width="130" height="108" rx="6" fill="#22324a"/><text x="189" y="96" text-anchor="middle" font-weight="600" font-size="14" fill="#fff">CPU</text><text x="189" y="118" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="14" fill="#9fc0ff">Q03UDV</text>
+          <rect x="124" y="50" width="130" height="108" rx="6" fill="#22324a"/><text x="189" y="108" text-anchor="middle" font-weight="600" font-size="15" fill="#fff">CPU</text>
           <rect x="262" y="50" width="190" height="108" rx="6" fill="#e6eeff" stroke="#9db7ee"/><text x="357" y="76" text-anchor="middle" font-size="12.5" fill="#5b6878">0번 슬롯 · 입력 32점</text><text x="357" y="110" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="20" fill="#1f4fbf">X0 ~ X1F</text><text x="357" y="138" text-anchor="middle" font-size="12" fill="#5b6878">번호 0~1F 사용</text>
           <rect x="460" y="50" width="190" height="108" rx="6" fill="#ffe3df" stroke="#efa79c"/><text x="555" y="76" text-anchor="middle" font-size="12.5" fill="#5b6878">1번 슬롯 · 출력 32점</text><text x="555" y="110" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="20" fill="#b8321f">Y20 ~ Y3F</text><text x="555" y="138" text-anchor="middle" font-size="12" fill="#5b6878">번호 20~3F 사용</text>
           <rect x="658" y="50" width="184" height="108" rx="6" fill="#fff" stroke="#c3cbd6" stroke-dasharray="5 4"/><text x="750" y="76" text-anchor="middle" font-size="12.5" fill="#5b6878">2번 슬롯 · 예: 입력 16점</text><text x="750" y="110" text-anchor="middle" font-family="JetBrains Mono, monospace" font-weight="700" font-size="20" fill="#1f4fbf">X40 ~ X4F</text><text x="750" y="138" text-anchor="middle" font-size="12" fill="#5b6878">그다음 번호 40부터</text>
           <text x="430" y="196" text-anchor="middle" font-size="13" fill="#3b4757">번호는 X·Y 구분 없이 슬롯 순서대로 이어져요 → 0번 슬롯이 0~1F를 쓰면 1번 슬롯은 20부터</text>
         </g>
       </svg>
-      <figcaption>예시 구성이에요. 모듈 점수(16·32·64점)와 꽂힌 순서에 따라 번호가 달라져요. 우리 장비 번호는 수업 자료나 GX Works2의 PLC 파라미터 → I/O 할당에서 확인하세요.</figcaption>
+      <figcaption>예시 구성이에요. 모듈 점수(16·32·64점)와 꽂힌 순서에 따라 번호가 달라져요. 우리 장비 번호는 수업 자료나 이 사이트의 <a href="io.html">입출력 할당표</a>에서 확인하세요.</figcaption>
     </figure>
     <div class="callout"><b>검정 장비(CT-4200M)는 입력 X00~X1F, 출력 Y20~Y3F</b><p>X19 START, X1A STOP, Y2E 컨베이어처럼 번호마다 붙은 센서·실린더를 <a href="io.html">입출력 할당표</a>에 정리했어요. 시뮬레이터에서도 툴바의 <b>할당표</b>를 누르면 오른쪽에서 바로 찾아볼 수 있어요.</p></div>
     <div class="callout warn"><b>그럼 이 장비에서 Y1을 쓰면?</b><p>프로그램 안에서는 Y1이 정상적으로 켜지지만, Y1 번호에 연결된 출력 단자가 없어서 바깥에서는 아무것도 안 켜져요. M처럼 메모리만 바뀌는 거예요. <b>실습 장비에서 램프가 안 켜지면 출력 번호부터 확인하세요.</b> 시뮬레이터에서는 오른쪽 출력 범위를 Y0~Y1F로 바꾸면 Y1 램프를 볼 수 있어요.</p></div>
@@ -242,7 +242,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
       <div>
         <div class="tablewrap"><table class="t" style="min-width:0">
           <tr><th>써 놓은 것</th><th>뜻</th></tr>
-          <tr><td><code>OUT T0 K30</code></td><td>T0 타이머 코일, 설정 3.0초 (Q 시리즈 기본 0.1초 단위)</td></tr>
+          <tr><td><code>OUT T0 K30</code></td><td>T0 타이머 코일, 설정 3.0초 (기본 0.1초 단위)</td></tr>
           <tr><td><code>T0</code> 접점</td><td>시간이 다 되면 ON</td></tr>
           <tr><td><code>OUT T1 K5</code></td><td>0.5초 — 플리커(깜빡이)에 많이 써요</td></tr>
           <tr><td><code>OUT C0 K5</code></td><td>C0 코일이 꺼짐→켜짐 될 때마다 1 증가, 5가 되면 C0 접점 ON</td></tr>
@@ -333,7 +333,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
 
 <footer class="site">
   <div class="wrap">
-    <div>Q03UDV 래더 시뮬레이터 · PLC 수업 연습용 프로젝트<br>미쓰비시전기의 공식 자료가 아니에요. 정확한 사양은 미쓰비시 Q 시리즈 매뉴얼을 확인하세요.</div>
+    <div>래더랩 · PLC 수업 연습용 프로젝트<br>정확한 사양은 학교 장비의 PLC 매뉴얼을 확인하세요.</div>
     <div><a href="index.html">홈</a> · <a href="simulator.html">시뮬레이터</a> · <a href="io.html">입출력 할당표</a></div>
   </div>
 </footer>
@@ -406,7 +406,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
       if (d.hex && /[G-Z]/.test(num)) return `<p class="err">${t} 번호는 16진수라 0~9와 A~F만 써요. "${esc(num)}"에는 다른 글자가 있어요.</p>`;
       if (!d.hex && /[A-Z]/.test(num)) return `<p class="err">${t}(${d.name})은(는) 10진수 번호라 A~F를 쓸 수 없어요. 예: ${t}10, ${t}31</p>`;
       const n = parseInt(num, d.hex ? 16 : 10);
-      if (n > d.max) return `<p class="err">${fmt(t, n)}은(는) Q03UDV 기본 범위(${fmt(t, 0)} ~ ${fmt(t, d.max)})를 넘어요.</p>`;
+      if (n > d.max) return `<p class="err">${fmt(t, n)}은(는) 기본 범위(${fmt(t, 0)} ~ ${fmt(t, d.max)})를 넘어요.</p>`;
       const name = fmt(t, n);
       const isBit = ['X','Y','M','L','B','SM'].includes(t);
       const tags = (d.hex ? tag('hex', '16진수 번호') : tag('dec', '10진수 번호')) + ' ' + (isBit ? tag('bit', '비트') : t === 'T' || t === 'C' ? tag('bit', '비트') + ' ' + tag('word', '현재값') : tag('word', '워드'));
@@ -431,7 +431,7 @@ figure.dia figcaption{font-size:13.5px;color:var(--muted);margin-top:8px}
       }
       return out(name, tags, rows);
     }
-    return '<p class="err">Q03UDV에서 쓰는 디바이스 형식이 아니에요. X Y M L B T C D W SM SD 뒤에 번호, 또는 K·H 상수를 써 보세요.</p>';
+    return '<p class="err">지원하는 디바이스 형식이 아니에요. X Y M L B T C D W SM SD 뒤에 번호, 또는 K·H 상수를 써 보세요.</p>';
   }
   // 검정 장비 입출력 할당표 (io.html과 같은 내용)
   const ALLOC = {X0:'공급실린더 후진센서', X1:'공급실린더 전진센서', X2:'분배실린더 후진센서', X3:'분배실린더 전진센서', X4:'가공실린더 하강센서', X5:'가공실린더 상승센서',
