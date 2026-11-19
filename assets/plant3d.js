@@ -32,6 +32,11 @@ function build() {
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.domElement.className = 'p3canvas';
+  renderer.domElement.addEventListener('webglcontextlost', (e) => {   // 그래픽 드라이버가 3D를 끊으면 2D로
+    e.preventDefault(); stop();
+    window.__plant3d.ok = false; window.__plant3d.err = '그래픽 연결이 끊김';
+    window.dispatchEvent(new Event('plant3d-ready'));
+  });
   host.appendChild(renderer.domElement);
   const labelR = new CSS2DRenderer();
   labelR.domElement.className = 'p3labels';
@@ -46,7 +51,7 @@ function build() {
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.dampingFactor = 0.12;
-  controls.minDistance = 2.2; controls.maxDistance = 24;
+  controls.minDistance = 1.6; controls.maxDistance = 30;
   controls.maxPolarAngle = Math.PI * 0.495;
   controls.screenSpacePanning = true;
 
@@ -234,6 +239,7 @@ function build() {
       box(o.len - 0.1, 0.06, 0.2, M.aluD, o.len / 2, -o.y + 0.03, 0, body);   // 받침
       box(0.1, o.y - 0.12, 0.16, M.aluD, o.len / 2, -o.y / 2 + 0.03, 0, body);
       body.position.set(o.from.x, o.y, o.from.z);
+      u.fits = [new THREE.Vector3(o.from.x + 0.12, o.y + 0.2, o.from.z), new THREE.Vector3(o.from.x + o.len - 0.12, o.y + 0.2, o.from.z)];
       reed(o.from.x + 0.18, o.y + r + 0.02, o.from.z, o.back, 'x');
       reed(o.from.x + o.len - 0.18, o.y + r + 0.02, o.from.z, o.front, 'x');
     } else {
@@ -243,6 +249,7 @@ function build() {
       box(0.2, 0.06, o.len - 0.1, M.aluD, 0, -o.y + 0.03, o.len / 2, body);
       box(0.16, o.y - 0.12, 0.1, M.aluD, 0, -o.y / 2 + 0.03, o.len / 2, body);
       body.position.set(o.from.x, o.y, o.from.z);
+      u.fits = [new THREE.Vector3(o.from.x, o.y + 0.2, o.from.z + 0.12), new THREE.Vector3(o.from.x, o.y + 0.2, o.from.z + o.len - 0.12)];
       reed(o.from.x + r + 0.02, o.y + 0.02, o.from.z + 0.18, o.back, 'z');
       reed(o.from.x + r + 0.02, o.y + 0.02, o.from.z + o.len - 0.18, o.front, 'z');
     }
@@ -313,6 +320,7 @@ function build() {
   // ── 스토퍼 (벨트 뒤 세로 실린더 + 벨트 위로 가로지르는 막대) + 스토퍼검출 광화이버
   const sp = P(G.pinX, G.bt - 22);
   cyl(0.08, 0.42, M.alu, 'y', sp.x, H0 - 0.25, sp.z);
+  cyl(0.026, 0.07, M.blueFit, 'x', sp.x + 0.1, 0.25, sp.z);
   reed(sp.x - 0.1, H0 - 0.12, sp.z, 'stpU', 'z'); reed(sp.x - 0.1, H0 - 0.36, sp.z, 'stpD', 'z');
   const stopper = new THREE.Group();
   box(0.06, 0.08, beltW + 0.3, M.redD, 0, 0, P(0, G.cy).z - sp.z, stopper);
@@ -338,6 +346,7 @@ function build() {
   const suc = { len: 64 * S };
   cyl(0.1, suc.len, M.alu, 'z', sc.x, SUC_Y, sc.z + suc.len / 2);
   box(0.24, 0.24, 0.08, M.aluD, sc.x, SUC_Y, sc.z + 0.04); box(0.24, 0.24, 0.08, M.aluD, sc.x, SUC_Y, sc.z + suc.len - 0.04);
+  cyl(0.026, 0.07, M.blueFit, 'y', sc.x, SUC_Y + 0.13, sc.z + 0.12); cyl(0.026, 0.07, M.blueFit, 'y', sc.x, SUC_Y + 0.13, sc.z + suc.len - 0.12);
   reed(sc.x + 0.12, SUC_Y + 0.02, sc.z + 0.16, 'sucB', 'z'); reed(sc.x + 0.12, SUC_Y + 0.02, sc.z + suc.len - 0.16, 'sucF', 'z');
   const sucRod = rodMesh(0.035, M.rod, 'z');
   const cupG = new THREE.Group();
@@ -376,95 +385,278 @@ function build() {
   box(0.4, 0.3, 0.1, M.aluD, sv.x, 2.3, sv.z + 0.29);                 // 캐리지 (원점)
   reed(sv.x + 0.25, 2.75, sv.z, 'limU', 'x'); reed(sv.x + 0.25, 2.35, sv.z, 'org', 'x'); reed(sv.x + 0.25, 0.5, sv.z, 'limL', 'x');
 
-  // ── FRL (공압 조절기) · 밸브 매니폴드
-  const fr = P(40, 40);
-  box(0.22, 0.42, 0.2, M.gray, fr.x, 0.45, fr.z); cyl(0.09, 0.14, M.black, 'y', fr.x, 0.73, fr.z);
-  cyl(0.07, 0.04, std({ color: 0xffffff }), 'z', fr.x, 0.5, fr.z + 0.12); cyl(0.04, 0.12, M.blueFit, 'x', fr.x + 0.16, 0.3, fr.z);
-  box(0.06, 0.25, 0.06, M.alu, fr.x, 0.12, fr.z);
-  const VALVES = [['ySupF', 'ySupB'], ['yDisF', 'yDisB'], ['yDrl'], ['yEjF', 'yEjB'], ['yStp'], ['ySucF', 'ySucB'], ['yVac'], ['yStoF', 'yStoB']];
-  const mv0 = P(70, 318);
-  box(VALVES.length * 0.28 + 0.12, 0.1, 0.36, M.alu, mv0.x + VALVES.length * 0.14, 0.05, mv0.z);
-  const solLeds = [];
-  VALVES.forEach((ks, i) => {
-    const x = mv0.x + 0.2 + i * 0.28;
-    box(0.2, 0.22, 0.32, M.black, x, 0.21, mv0.z);
+  // ── FRL (공압 조절기): 매거진 앞쪽 빨간 판 / 밸브 매니폴드: 덕트 뒤 벽, 매거진 쪽 (사진 위치)
+  const fr = { x: -3.55, z: 1.42 };
+  box(0.4, 0.62, 0.05, M.red, fr.x, 0.31, fr.z + 0.14);
+  box(0.22, 0.4, 0.2, M.gray, fr.x, 0.42, fr.z); cyl(0.1, 0.16, M.black, 'y', fr.x, 0.7, fr.z);
+  cyl(0.075, 0.04, std({ color: 0xffffff, roughness: 0.3 }), 'z', fr.x, 0.46, fr.z - 0.12); cyl(0.04, 0.1, M.blueFit, 'x', fr.x + 0.15, 0.3, fr.z);
+  box(0.12, 0.2, 0.12, M.acrylic, fr.x, 0.13, fr.z);
+  const VALVES = [['ySupF', 'ySupB', 'sup'], ['yDisF', 'yDisB', 'dis'], ['yDrl', null, 'drl'], ['yEjF', 'yEjB', 'ej'], ['yStp', null, 'stp'], ['ySucF', 'ySucB', 'suc'], ['yVac', null, 'vac'], ['yStoF', 'yStoB', 'sto']];
+  const MVZ = -1.7, MVX = i => -4.72 + i * 0.25;
+  box(VALVES.length * 0.25 + 0.1, 0.1, 0.38, M.alu, (MVX(0) + MVX(VALVES.length - 1)) / 2, 0.05, MVZ);
+  const solLeds = [], valvePorts = [];
+  VALVES.forEach(([kF, kB, name], i) => {
+    const x = MVX(i), ks = kB ? [kF, kB] : [kF];
+    box(0.19, 0.2, 0.32, M.black, x, 0.2, MVZ);
     ks.forEach((k, j) => {
+      const z = MVZ + (ks.length === 1 ? 0 : (j ? 0.1 : -0.1));
+      box(0.17, 0.08, 0.1, M.black2, x, 0.34, z);   // 솔레노이드
       const l = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.03, 0.05), std({ color: 0x1a3a22, emissive: 0x22ff66, emissiveIntensity: 0 }));
-      l.position.set(x, 0.33, mv0.z + (ks.length === 1 ? 0 : (j ? 0.08 : -0.08))); scene.add(l);
+      l.position.set(x, 0.39, z); scene.add(l);
       solLeds.push({ mesh: l, k });
+    });
+    ks.forEach((k, j) => {
+      const px = x + (ks.length === 1 ? 0 : (j ? 0.05 : -0.05));
+      cyl(0.022, 0.07, j ? M.white : M.blueFit, 'z', px, 0.16, MVZ + 0.19, null, 10);
+      valvePorts.push({ name, j, at: new THREE.Vector3(px, 0.16, MVZ + 0.23), i });
     });
   });
 
-  // ── 앞쪽: 스위치 보드 · 램프 보드 · 빨간 트레이너 박스 (CT-4200M)
-  const ZB = 2.62;
-  box(4.0, 0.04, 0.72, M.pcb, -2.95, 0.02, ZB); box(4.0, 0.04, 0.72, M.pcb, 2.0, 0.02, ZB);
-  box(2.9, 0.03, 0.42, M.white, -2.95, 0.055, ZB); box(2.9, 0.03, 0.42, M.white, 2.0, 0.055, ZB);
-  for (let i = 0; i < 12; i++) { cyl(0.025, 0.04, M.pcb, 'y', -4.3 + i * 0.24, 0.08, ZB + 0.27); cyl(0.025, 0.04, M.blueFit, 'y', 0.6 + i * 0.24, 0.08, ZB + 0.27); }
+  // ── 앞쪽: 초록 기판 2장 (스위치·입력 단자 / 램프·출력 단자) + 빨간 트레이너 박스 (CT-4200M)
+  // 사진(트레이너 쪽에서 봄) 그대로: 왼쪽이 매거진·PLC 쪽, 오른쪽이 서보 쪽
+  const ZB = 2.625;
+  const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
+  const jackPos = {};      // 단자 이름 → 위치 (패치 코드 연결용)
+  const jackList = [];     // {x, y, z, col}
+  const JC = { g: 0x35b85a, b: 0x2f62d6, r: 0xc8283a, y: 0xe8c22c, k: 0x2a2e34 };
+  function jack(name, x, y, z, col) { jackList.push({ x, y, z, col }); if (name) jackPos[name] = V3(x, y + 0.02, z); }
+  const hx = n => n.toString(16).toUpperCase().padStart(2, '0');
+  const FONT = '"IBM Plex Sans KR","Malgun Gothic",sans-serif';
+  function plateTex(w, h, draw) { return canvasTex(w, h, (g, W, H) => { g.fillStyle = '#f7f8fa'; g.fillRect(0, 0, W, H); draw(g, W, H); }); }
+  function topTexBox(w, h, d, map, side, x, y, z, parent) {   // 윗면에만 그림
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), [side, side, std({ map, roughness: 0.55 }), side, side, side]);
+    m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; (parent || scene).add(m); return m;
+  }
   const buttons = [];   // 누를 수 있는 버튼
-  function pushBtn(k, color, x, mush) {
+  function pushBtn(k, color, x, z, mush) {
     const g = new THREE.Group();
-    if (mush) { cyl(0.2, 0.04, M.yellow, 'y', 0, 0.02, 0, g); }
-    cyl(mush ? 0.1 : 0.12, 0.08, M.black, 'y', 0, mush ? 0.07 : 0.04, 0, g);
-    const capMat = std({ color, roughness: 0.35, emissive: color, emissiveIntensity: 0 });
-    const cap = mush ? new THREE.Mesh(new THREE.SphereGeometry(0.17, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), capMat) : new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.07, 24), capMat);
-    cap.position.y = mush ? 0.11 : 0.115; cap.castShadow = true; g.add(cap);
+    if (mush) cyl(0.2, 0.03, M.yellow, 'y', 0, 0.015, 0, g);
+    cyl(mush ? 0.1 : 0.13, 0.07, M.black, 'y', 0, mush ? 0.06 : 0.035, 0, g);
+    const capMat = std({ color, roughness: 0.32, emissive: color, emissiveIntensity: 0 });
+    const cap = mush ? new THREE.Mesh(new THREE.SphereGeometry(0.17, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), capMat) : new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.11, 0.07, 24), capMat);
+    cap.position.y = mush ? 0.1 : 0.1; cap.castShadow = true; g.add(cap);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(mush ? 0.24 : 0.17, 0.02, 8, 32), new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0 }));
-    ring.rotation.x = Math.PI / 2; ring.position.y = 0.09; g.add(ring);
-    g.position.set(x, 0.07, ZB); scene.add(g);
+    ring.rotation.x = Math.PI / 2; ring.position.y = 0.08; g.add(ring);
+    g.position.set(x, 0.07, z); scene.add(g);
     cap.userData.btn = k; g.children.forEach(m => { m.userData.btn = k; });
     buttons.push({ k, g, cap, ring, y0: cap.position.y, mush });
   }
-  pushBtn('pbStart', 0x22b357, -4.2); pushBtn('pbStop', 0xe5483b, -3.55); pushBtn('pbReset', 0xf0c02c, -2.9); pushBtn('pbEmg', 0xd42020, -2.1, true);
   const lamps = [];
-  [['lR', 0xef4444, 0.9], ['lY', 0xf2b705, 1.55], ['lG', 0x22c55e, 2.2], ['lB', 0x3b82f6, 2.85]].forEach(([k, col, x]) => {
-    cyl(0.13, 0.08, M.black, 'y', x, 0.11, ZB);
-    const mat = std({ color: col, emissive: col, emissiveIntensity: 0, transparent: true, opacity: 0.92, roughness: 0.25 });
-    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.11, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat);
-    dome.position.set(x, 0.15, ZB); scene.add(dome);
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 10), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false }));
-    glow.position.set(x, 0.18, ZB); scene.add(glow);
+  function lamp(k, col, x, z) {
+    cyl(0.13, 0.07, M.black, 'y', x, 0.105, z);
+    const mat = std({ color: col, emissive: col, emissiveIntensity: 0, transparent: true, opacity: 0.94, roughness: 0.22 });
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.115, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), mat);
+    dome.position.set(x, 0.14, z); dome.castShadow = true; scene.add(dome);
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(0.22, 16, 10), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false }));
+    glow.position.set(x, 0.17, z); scene.add(glow);
     lamps.push({ k, mat, glow });
-  });
-  // 트레이너 박스
-  const TZ0 = 3.2, TZ1 = 4.45;
-  box(9.8, 0.5, TZ1 - TZ0, M.red, 0, 0.25, (TZ0 + TZ1) / 2);
-  const panelTex = canvasTex(1024, 128, (g, w, h) => {
-    g.fillStyle = '#f5f6f8'; g.fillRect(0, 0, w, h);
-    const X = v => (v + 4.75) / 9.5 * w;   // 3D x → 그림 x
-    g.fillStyle = '#c62828'; g.font = '700 26px "Malgun Gothic", sans-serif'; g.fillText('CT-4200M', X(-2.2), 30);
-    const tw = g.measureText('CT-4200M').width;
-    g.fillStyle = '#1d2733'; g.font = '600 22px "Malgun Gothic", sans-serif'; g.fillText('생산자동화 PLC 실습장치', X(-2.2) + tw + 16, 30);
-    g.fillStyle = '#4c5a6b'; g.font = '600 16px "Malgun Gothic", sans-serif'; g.textAlign = 'center';
-    g.fillText('SERVO', X(-4.35), 62); g.fillText('INTERFACE', X(-3.3), 62); g.fillText('OUTPUT  Y20~Y3F', X(-1.75), 62); g.fillText('INPUT  X00~X1F', X(0.45), 62); g.fillText('PLC  Q03UDV', X(2.85), 62);
-  });
-  const top = new THREE.Mesh(new THREE.BoxGeometry(9.5, 0.02, TZ1 - TZ0 - 0.2), [M.white, M.white, std({ map: panelTex, roughness: 0.6 }), M.white, M.white, M.white]);
-  top.position.set(0, 0.51, (TZ0 + TZ1) / 2); top.receiveShadow = true; scene.add(top);
-  // 서보 앰프 · 인터페이스 커넥터
-  box(0.45, 0.85, 0.62, M.black, -4.35, 0.94, 3.98); box(0.3, 0.3, 0.05, M.black2, -4.35, 1.15, 3.65);
-  box(0.6, 0.12, 0.22, M.black, -3.3, 0.58, 3.98); box(0.6, 0.12, 0.22, M.black, -3.3, 0.58, 4.25);
-  // 출력(파랑)·입력(초록) 단자
-  const jackG = std({ color: 0x35b85a });
-  for (let r = 0; r < 4; r++) for (let c = 0; c < 8; c++) {
-    cyl(0.034, 0.04, M.blueFit, 'y', -2.45 + c * 0.2, 0.54, 3.98 + r * 0.11, null, 10);
-    cyl(0.034, 0.04, jackG, 'y', -0.25 + c * 0.2, 0.54, 3.98 + r * 0.11, null, 10);
   }
-  // PLC (Q03UDV 베이스 + 전원 + CPU + I/O 모듈)
-  box(2.5, 0.06, 0.6, M.black2, 2.85, 0.55, 4.02);
-  const modTex = (t) => canvasTex(64, 128, (g, w, h) => { g.fillStyle = '#1f2329'; g.fillRect(0, 0, w, h); g.fillStyle = '#e8edf2'; g.font = '700 13px sans-serif'; g.fillText(t, 6, 22); g.fillStyle = '#22c55e'; g.fillRect(8, 34, 10, 6); g.fillRect(24, 34, 10, 6); });
-  [['POWER', 0xb33030], ['Q03UDV', 0x1f2329], ['QX42', 0x1f2329], ['QY42P', 0x1f2329], ['QX41', 0x1f2329]].forEach(([t, col], i) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.7, 0.62), [std({ color: col }), std({ color: col }), std({ color: col }), std({ color: col }), std({ map: modTex(t) }), std({ color: col })]);
-    m.position.set(1.85 + i * 0.47, 0.93, 4.02); m.castShadow = true; scene.add(m);
+  const boardLeds = [];    // {x, z, kind, n}
+  function ioBoard(x0, kind) {
+    const W = 4.4, cx = x0 + W / 2, isIn = kind === 'in';
+    box(W, 0.04, 0.85, M.pcb, cx, 0.02, ZB);
+    // 먼 쪽: 센서·밸브 배선이 꽂히는 흰 커넥터 줄, 가까운 쪽: 회색 나사 단자대
+    box(3.2, 0.06, 0.08, M.white, x0 + 2.6, 0.07, ZB - 0.35);
+    for (let i = 0; i < 16; i++) box(0.04, 0.025, 0.05, i % 2 ? M.redD : M.black2, x0 + 1.1 + i * 0.19, 0.11, ZB - 0.35);
+    const tb = canvasTex(256, 16, (g, w, h) => { g.fillStyle = '#5d6670'; g.fillRect(0, 0, w, h); g.fillStyle = '#3b424b'; for (let x = 2; x < w; x += 8) g.fillRect(x, 3, 5, h - 6); });
+    topTexBox(3.2, 0.07, 0.09, tb, M.gray, x0 + 2.6, 0.075, ZB + 0.35);
+    // 2×2 버튼(램프) 판 + 이름
+    const names = isIn ? ['START', 'STOP', 'RESET', 'EMG'] : ['RED', 'YEL', 'GRE', 'BLUE'];
+    const cl = plateTex(256, 222, (g, w, h) => {
+      g.fillStyle = '#4b5563'; g.font = `700 19px ${FONT}`; g.textAlign = 'center';
+      names.forEach((t, i) => g.fillText(t, w / 2 + (i % 2 ? 57 : -57), i < 2 ? 98 : 212));
+      g.strokeStyle = '#c5ccd5'; g.lineWidth = 3; g.strokeRect(2, 2, w - 4, h - 4);
+    });
+    topTexBox(0.9, 0.03, 0.78, cl, M.white, x0 + 0.55, 0.055, ZB);
+    // 단자 띠: 2줄 × 16 (X00~X1F / Y20~Y3F), 단자마다 상태 LED
+    const n0 = isIn ? 0 : 0x20, L = isIn ? 'X' : 'Y';
+    const st = plateTex(1024, 160, (g, w, h) => {
+      g.fillStyle = '#4b5563'; g.font = `600 17px ${FONT}`; g.textAlign = 'center';
+      for (let r = 0; r < 2; r++) for (let c = 0; c < 16; c++) g.fillText(L + hx(n0 + r * 16 + c), (0.2 + c * 0.19) * 315, r ? 150 : 80);
+    });
+    topTexBox(3.25, 0.03, 0.5, st, M.white, x0 + 1.0 + 3.25 / 2, 0.055, ZB);
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 16; c++) {
+      const x = x0 + 1.2 + c * 0.19, z = ZB - 0.135 + r * 0.22, n = n0 + r * 16 + c;
+      jack('b' + L + hx(n), x, 0.075, z, isIn ? 'g' : 'b');
+      boardLeds.push({ x: x + 0.07, z: z - 0.07, kind, n });
+    }
+    return { x0, cx };
+  }
+  const bdIn = ioBoard(-4.75, 'in'), bdOut = ioBoard(0, 'out');
+  pushBtn('pbStart', 0x22b357, -4.4, ZB - 0.2); pushBtn('pbStop', 0xe5483b, -4.0, ZB - 0.2);
+  pushBtn('pbReset', 0xf0c02c, -4.4, ZB + 0.2); pushBtn('pbEmg', 0xd42020, -4.0, ZB + 0.2, true);
+  lamp('lR', 0xef4444, 0.35, ZB - 0.2); lamp('lY', 0xf2b705, 0.75, ZB - 0.2);
+  lamp('lG', 0x22c55e, 0.35, ZB + 0.2); lamp('lB', 0x3b82f6, 0.75, ZB + 0.2);
+
+  // 트레이너 박스: 빨간 상자 + 흰 패널
+  const TZ0 = 3.2, TZ1 = 4.45, PW = 9.5, PD = TZ1 - TZ0 - 0.2, PZ0 = TZ0 + 0.1;
+  box(9.8, 0.5, TZ1 - TZ0, M.red, 0, 0.25, (TZ0 + TZ1) / 2);
+  const IN_X = c => -0.85 + c * 0.37, OUT_X = c => 0.77 + c * 0.37, IO_Z = r => 3.56 + r * 0.112;
+  const TW = 2048, TH = Math.round(TW * PD / PW);
+  const tx = v => (v + PW / 2) / PW * TW, tz = v => (v - PZ0) / PD * TH;
+  const panelTex = canvasTex(TW, TH, (g) => {
+    g.fillStyle = '#f5f6f8'; g.fillRect(0, 0, TW, TH);
+    // 제목 (로고 + CT-4200M + 장치 이름)
+    g.fillStyle = '#1d4ed8'; g.beginPath(); g.arc(tx(-4.55), tz(3.37), 9, 0, Math.PI * 2); g.fill();
+    g.fillStyle = '#c62828'; g.font = `800 24px ${FONT}`; g.fillText('CT-4200M', tx(-4.45), tz(3.37) + 9);
+    const tw = g.measureText('CT-4200M').width;
+    g.fillStyle = '#1d2733'; g.font = `700 21px ${FONT}`; g.fillText('생산자동화 PLC 실습장치', tx(-4.45) + tw + 14, tz(3.37) + 8);
+    // 구역 테두리
+    const frame = (x0, x1, z0, z1, t) => {
+      g.strokeStyle = '#9aa4b0'; g.lineWidth = 2; g.strokeRect(tx(x0), tz(z0), tx(x1) - tx(x0), tz(z1) - tz(z0));
+      if (t) { g.font = `700 14px ${FONT}`; const m = g.measureText(t).width, cx = (tx(x0) + tx(x1)) / 2; g.fillStyle = '#f5f6f8'; g.fillRect(cx - m / 2 - 5, tz(z0) - 9, m + 10, 16); g.fillStyle = '#4c5a6b'; g.textAlign = 'center'; g.fillText(t, cx, tz(z0) + 5); g.textAlign = 'left'; }
+    };
+    g.font = `700 14px ${FONT}`;
+    frame(-1.0, 0.56, 3.45, 4.4, 'INPUT'); frame(0.62, 2.18, 3.45, 4.4, 'OUTPUT');
+    frame(2.24, 2.86, 3.45, 4.4, 'INTERFACE'); frame(2.92, 3.52, 3.45, 4.4, 'SIGNAL');
+    frame(-3.98, -1.98, 4.17, 4.4, '');
+    // 단자 번호
+    g.fillStyle = '#3d4856'; g.font = `600 12px ${FONT}`;
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 8; r++) {
+      g.fillText('X' + hx(c * 8 + 7 - r), tx(IN_X(c) + 0.06), tz(IO_Z(r)) + 4);
+      g.fillText('Y' + hx(0x20 + c * 8 + 7 - r), tx(OUT_X(c) + 0.06), tz(IO_Z(r)) + 4);
+    }
+    g.font = `700 12px ${FONT}`; g.fillStyle = '#b42323'; g.fillText('+24V', tx(-3.93), tz(4.24) + 4);
+    g.fillStyle = '#1d4ed8'; g.fillText('COM', tx(-2.85), tz(4.24) + 4);
+    g.fillStyle = '#4c5a6b'; g.fillText('IN', tx(2.3), tz(3.66)); g.fillText('OUT', tx(2.3), tz(4.06));
+    g.fillText('POWER', tx(-4.7), tz(4.15)); g.fillText('ON', tx(3.31), tz(4.22)); g.fillText('OFF', tx(3.31), tz(4.36));
   });
-  box(0.16, 0.1, 0.1, M.red, 4.5, 0.57, 3.5);   // 전원 스위치
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(PW, 0.02, PD), [M.white, M.white, std({ map: panelTex, roughness: 0.55 }), M.white, M.white, M.white]);
+  panel.position.set(0, 0.51, (TZ0 + TZ1) / 2); panel.receiveShadow = true; scene.add(panel);
+  for (let c = 0; c < 4; c++) for (let r = 0; r < 8; r++) {
+    jack('X' + hx(c * 8 + 7 - r), IN_X(c), 0.54, IO_Z(r), 'g');
+    jack('Y' + hx(0x20 + c * 8 + 7 - r), OUT_X(c), 0.54, IO_Z(r), 'b');
+  }
+  for (let i = 0; i < 6; i++) jack((i < 3 ? '24V' : 'COM') + (i % 3), -3.72 + i * 0.3 + (i >= 3 ? 0.12 : 0), 0.54, 4.32, i < 3 ? 'r' : 'b');
+  ['r', 'r', 'y', 'y', 'g', 'g', 'k', 'k'].forEach((col, i) => jack(null, 3.07 + (i % 2) * 0.28, 0.54, 3.58 + Math.floor(i / 2) * 0.12, col));
+  // 전원 스위치 · 서보 ON 스위치
+  box(0.16, 0.06, 0.22, std({ color: 0xd32f2f, emissive: 0xff3b2f, emissiveIntensity: 0.35, roughness: 0.4 }), -4.55, 0.55, 4.3);
+  box(0.16, 0.06, 0.22, std({ color: 0x2fae4f, emissive: 0x22c55e, emissiveIntensity: 0.25, roughness: 0.4 }), 3.2, 0.55, 4.27);
+  // 인터페이스 커넥터 (T자 플러그)
+  for (const z of [3.72, 4.12]) { box(0.34, 0.06, 0.2, M.black, 2.58, 0.55, z); box(0.18, 0.16, 0.12, M.black2, 2.58, 0.66, z); cyl(0.04, 0.34, M.black2, 'z', 2.58, 0.7, z + 0.2); }
+  // 서보 앰프 (검정, 윗면에 표시창·커넥터)
+  const ampTex = canvasTex(256, 240, (g, w, h) => {
+    g.fillStyle = '#1b1e23'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#0d1a12'; g.fillRect(28, 26, 120, 46); g.fillStyle = '#39ff7a'; g.font = '700 34px monospace'; g.fillText(' 0.0', 30, 62);
+    g.fillStyle = '#9aa4b0'; g.font = `700 16px ${FONT}`; g.fillText('SERVO AMP', 28, 102);
+    g.fillStyle = '#3b424b'; for (let i = 0; i < 3; i++) g.fillRect(28, 120 + i * 36, 200, 24);
+    g.fillStyle = '#f2c230'; g.fillRect(196, 26, 32, 10);
+  });
+  topTexBox(0.95, 0.5, 0.95, ampTex, M.black, 4.12, 0.77, 3.84);
+  // PLC: 베이스 + 전원 + CPU(Q03UDV) + I/O 3장 — 앞면이 위를 봄
+  box(2.55, 0.08, 0.66, M.red, -3.02, 0.56, 3.78);
+  const modTop = (t, kind) => canvasTex(96, 128, (g, w, h) => {
+    g.fillStyle = kind === 'pw' ? '#7f1d1d' : '#1f2329'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#e8edf2'; g.font = '700 12px sans-serif'; g.fillText(t, 7, 18);
+    if (kind === 'cpu') { g.fillStyle = '#0f1216'; g.fillRect(8, 64, 34, 22); g.fillStyle = '#9aa4b0'; g.fillRect(52, 94, 30, 12); }
+    if (kind === 'io') { g.fillStyle = '#f2f3f5'; g.fillRect(8, 26, 80, 18); g.fillStyle = '#4b5563'; g.font = '600 10px sans-serif'; g.fillText('X/Y', 12, 39); g.fillStyle = '#2f343b'; g.fillRect(14, 60, 68, 56); for (let i = 0; i < 6; i++) { g.fillStyle = '#c6ff3a'; g.fillRect(12 + i * 13, 50, 7, 5); } }
+    if (kind === 'pw') { g.fillStyle = '#39ff7a'; g.fillRect(8, 30, 10, 6); }
+  });
+  const plcMods = [['POWER', 'pw', -4.0, 0.5], ['Q03UDV', 'cpu', -3.47, 0.44], ['QX42', 'io', -2.97, 0.44], ['QY42P', 'io', -2.5, 0.44], ['QX41', 'io', -2.03, 0.44]];
+  plcMods.forEach(([t, kind, x, w]) => topTexBox(w, 0.42, 0.6, modTop(t, kind), kind === 'pw' ? std({ color: 0x8e2222, roughness: 0.5 }) : M.black2, x, 0.81, 3.78));
+  const cpuLed = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 0.04), std({ color: 0x1a3a22, emissive: 0x22ff66, emissiveIntensity: 0 }));
+  cpuLed.position.set(-3.6, 1.03, 3.62); scene.add(cpuLed);
+  const cpuErr = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 0.04), std({ color: 0x3a1a1a, emissive: 0xff3b2f, emissiveIntensity: 0 }));
+  cpuErr.position.set(-3.48, 1.03, 3.62); scene.add(cpuErr);
+
+  // 단자 (인스턴스로 한 번에 그림)
+  { const mtx = new THREE.Matrix4(), c = new THREE.Color();
+    const body = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.042, 0.046, 0.04, 14), std({ color: 0xffffff, roughness: 0.45 }), jackList.length);
+    const hole = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.017, 0.017, 0.044, 8), std({ color: 0x14161a, roughness: 0.85 }), jackList.length);
+    jackList.forEach((j, i) => { mtx.makeTranslation(j.x, j.y, j.z); body.setMatrixAt(i, mtx); hole.setMatrixAt(i, mtx); body.setColorAt(i, c.setHex(JC[j.col])); });
+    body.receiveShadow = true; scene.add(body, hole); }
+  const ledIM = new THREE.InstancedMesh(new THREE.BoxGeometry(0.036, 0.02, 0.036), new THREE.MeshBasicMaterial({ color: 0xffffff }), boardLeds.length);
+  const LED_C = { in: [new THREE.Color(0x3d4a2e), new THREE.Color(0xd8ff3a)], out: [new THREE.Color(0x4a2e28), new THREE.Color(0xff5a2a)] };
+  { const mtx = new THREE.Matrix4(); boardLeds.forEach((l, i) => { mtx.makeTranslation(l.x, 0.085, l.z); ledIM.setMatrixAt(i, mtx); ledIM.setColorAt(i, LED_C[l.kind][0]); l.on = false; }); scene.add(ledIM); }
+
+  // 패치 코드 (바나나 플러그) · 회색 케이블
+  const cordMat = { r: std({ color: 0x8f1f33, roughness: 0.5 }), b: std({ color: 0x2752c4, roughness: 0.5 }), gr: std({ color: 0xa3a9b0, roughness: 0.65 }), w: std({ color: 0xe9edf1, roughness: 0.4 }), bl: std({ color: 0x2b6fe0, roughness: 0.4 }) };
+  function tube(pts, r, mat, seg) {
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+    const m = new THREE.Mesh(new THREE.TubeGeometry(curve, seg || 48, r, 7, false), mat);
+    m.castShadow = true; scene.add(m); return m;
+  }
+  function cord(a, b, col, via) {
+    const A = jackPos[a], B = jackPos[b]; if (!A || !B) return;
+    const mat = cordMat[col], up = V3(0, 0.09, 0);
+    for (const p of [A, B]) { cyl(0.027, 0.09, mat, 'y', p.x, p.y + 0.045, p.z, null, 10); cyl(0.018, 0.02, M.rod, 'y', p.x, p.y + 0.1, p.z, null, 8); }
+    const A1 = A.clone().add(up), B1 = B.clone().add(up);
+    const pts = via ? [A1, ...via, B1] : [A1, A1.clone().add(V3(0, 0.16, 0)), V3((A.x + B.x) / 2, Math.max(A.y, B.y) + 0.42, (A.z + B.z) / 2), B1.clone().add(V3(0, 0.2, 0)), B1];
+    tube(pts, 0.016, mat);
+  }
+  // 입력: 스위치·센서 단자 → PLC 입력 / 출력: PLC 출력 → 램프·밸브 단자
+  for (const n of ['0F', '19', '1A', '1B', '1C']) cord('X' + n, 'bX' + n, 'r');
+  for (const n of ['20', '21', '2E', '32', '34']) cord('Y' + n, 'bY' + n, 'b');
+  // 앞으로 늘어진 전원 코드
+  const hang = (a, b, col, drop) => { const A = jackPos[a], B = jackPos[b]; cord(a, b, col, [V3(A.x, 0.75, A.z + 0.05), V3(A.x + 0.05, 0.6, 4.55), V3((A.x + B.x) / 2, drop, 4.72), V3(B.x - 0.05, 0.6, 4.55), V3(B.x, 0.75, B.z + 0.05)]); };
+  hang('24V0', '24V2', 'r', -0.75); hang('COM0', 'COM2', 'b', -0.55); hang('24V1', 'COM1', 'r', -0.95);
+  // PLC I/O 모듈 → 기판 단자대 (회색 케이블)
+  [[-2.97, -2.7], [-2.5, 1.5], [-2.03, -1.6]].forEach(([mx, bx]) => tube([V3(mx, 1.03, 3.78), V3(mx, 1.25, 3.6), V3((mx + bx) / 2, 0.95, 3.12), V3(bx, 0.42, 3.0), V3(bx, 0.12, ZB + 0.35)], 0.032, cordMat.gr));
+  // 기판 → 설비 (덕트 넘어 들어가는 회색 케이블)
+  for (const x of [-3.3, -1.9, 1.4, 2.9]) tube([V3(x, 0.1, ZB - 0.35), V3(x, 0.45, 2.2), V3(x + 0.08, 0.58, 2.06), V3(x + 0.16, 0.3, 1.94), V3(x + 0.3, 0.04, 1.86)], 0.03, cordMat.gr, 32);
+  // 인터페이스 → 서보 쪽 케이블 (앞으로 늘어짐)
+  for (const z of [3.92, 4.32]) tube([V3(2.58, 0.7, z), V3(2.62, 0.72, 4.5), V3(2.7, 0.3, 4.62), V3(2.85, -0.6, 4.66)], 0.035, cordMat.gr, 24);
+
+  // 공압 배관: 밸브 → 각 실린더 (파랑 = 전진/동작 쪽, 흰색 = 후진 쪽)
+  const fitOf = {
+    sup: sup.fits, dis: dis.fits, ej: ej.fits, sto: sto.fits,
+    drl: [V3(dcol.x + 0.11, 1.95, dcol.z + 0.17)], stp: [V3(sp.x + 0.14, 0.25, sp.z)],
+    suc: [V3(sc.x, SUC_Y + 0.17, sc.z + 0.12), V3(sc.x, SUC_Y + 0.17, sc.z + suc.len - 0.12)], vac: [V3(vacBox.x - 0.11, 0.06, vacBox.z)],
+  };
+  for (const vp of valvePorts) {
+    const b = fitOf[vp.name][vp.j]; if (!b) continue;
+    const a = vp.at, lerp = (u, v, t) => u + (v - u) * t, k = vp.i * 0.035 + vp.j * 0.018;
+    const dx = b.x - a.x, dz = b.z - a.z, L = Math.hypot(dx, dz) || 1;
+    tube([a, V3(a.x, 0.1, a.z + 0.18 + k), V3(lerp(a.x, b.x, 0.3), 0.03, lerp(a.z, b.z, 0.3) + k), V3(lerp(a.x, b.x, 0.8), 0.03, lerp(a.z, b.z, 0.8) + k),
+      V3(b.x - dx / L * 0.18, Math.max(0.1, b.y * 0.55), b.z - dz / L * 0.18), b], 0.013, vp.j ? cordMat.w : cordMat.bl, 56);
+  }
+  tube([V3(fr.x + 0.2, 0.3, fr.z), V3(-4.75, 0.04, 1.1), V3(-4.85, 0.04, -0.6), V3(-4.95, 0.06, MVZ), V3(MVX(0) - 0.12, 0.07, MVZ)], 0.016, cordMat.bl, 40);
+  tube([V3(vacBox.x + 0.11, 0.06, vacBox.z), V3(vacBox.x + 0.4, 0.05, vacBox.z - 0.6), V3(sc.x + 0.32, 0.3, sc.z + 0.12), V3(sc.x + 0.3, SUC_Y - 0.1, sc.z + 0.1), V3(sc.x + 0.1, SUC_Y + 0.25, sc.z + suc.len)], 0.012, cordMat.w, 48);
 
   // ── 이름표 (CSS2D)
   const labels = [];
   function tag(title, devs, pos) {
     const el = document.createElement('div');
-    el.className = 'p3tag';
-    el.innerHTML = `<b>${title}</b>` + devs.map(([k, txt]) => `<span class="c ${k.startsWith('y') || k.startsWith('l') ? 'out' : 'in'}" data-k="${k}"><i></i>${txt}</span>`).join('');
+    el.className = 'p3anchor';
+    const bx = document.createElement('div');
+    bx.className = 'p3tag'; bx.title = `${title} — 누르면 가까이 보기`;
+    bx.innerHTML = `<b>${title}</b>` + devs.map(([k, txt]) => `<span class="c ${k.startsWith('y') || k.startsWith('l') ? 'out' : 'in'}" data-k="${k}"><i></i>${txt}</span>`).join('');
+    el.appendChild(bx);
     const o = new CSS2DObject(el); o.position.set(pos.x, pos.y, pos.z); scene.add(o);
-    labels.push({ el, chips: [...el.querySelectorAll('.c')].map(c => ({ el: c, k: c.dataset.k, on: null, hl: null })) });
+    const at = new THREE.Vector3(pos.x, pos.y, pos.z);
+    bx.addEventListener('click', () => focusOn(new THREE.Vector3(pos.x, Math.max(0.3, pos.y - 0.45), pos.z), 3.4));
+    labels.push({ el, box: bx, pos: at, w: 0, h: 0, dy: '0,0', dim: false, chips: [...bx.querySelectorAll('.c')].map(c => ({ el: c, k: c.dataset.k, on: null, hl: null })) });
+  }
+  // 이름표 겹침 정리: 가까운 이름표부터 자리를 잡고, 겹치면 위아래로 비켜 두고, 그래도 안 되면 흐리게
+  const _v = new THREE.Vector3();
+  let uiDirty = true, uiRects = [];
+  function declutter() {
+    const W = host.clientWidth, H = host.clientHeight; if (!W) return;
+    const items = [];
+    for (const l of labels) {
+      if (!l.w) { l.w = l.box.offsetWidth; l.h = l.box.offsetHeight; if (!l.w) continue; }
+      _v.copy(l.pos).project(camera);
+      if (_v.z > 1 || Math.abs(_v.x) > 1.15 || Math.abs(_v.y) > 1.15) continue;
+      items.push({ l, x: (_v.x + 1) / 2 * W, y: (1 - _v.y) / 2 * H, d: camera.position.distanceToSquared(l.pos) });
+    }
+    items.sort((a, b) => a.d - b.d);
+    if (uiDirty) {
+      uiDirty = false; const hr = host.getBoundingClientRect();
+      uiRects = [...ui.querySelectorAll('.p3opts, .p3views, .p3help, .p3pad')].map(e => e.getBoundingClientRect()).filter(r => r.width)
+        .map(r => ({ x: r.left - hr.left + r.width / 2, y: r.top - hr.top + r.height / 2, w: r.width, h: r.height }));
+    }
+    const placed = uiRects.slice();
+    const hit = (x, y, w, h) => placed.some(p => Math.abs(p.x - x) * 2 < p.w + w + 6 && Math.abs(p.y - y) * 2 < p.h + h + 2);
+    const TRY = [[0, 0], [0, -1], [0, 1], [-1, 0], [1, 0], [0, -2], [0, 2], [-1, -1], [1, -1], [-1, 1], [1, 1], [0, -3]];
+    for (const it of items) {
+      const l = it.l, sx = l.w * 0.55 + 4, sy = l.h * 0.62 + 3; let off = null;
+      for (const [a, b] of TRY) { const dx = Math.round(a * sx), dy = Math.round(b * sy); if (!hit(it.x + dx, it.y + dy, l.w, l.h)) { off = [dx, dy]; break; } }
+      const dim = !off;
+      if (dim) off = [0, 0]; else placed.push({ x: it.x + off[0], y: it.y + off[1], w: l.w, h: l.h });
+      const key = off[0] + ',' + off[1];
+      if (l.dy !== key) { l.dy = key; l.box.style.transform = key === '0,0' ? '' : `translate(${off[0]}px,${off[1]}px)`; }
+      if (l.dim !== dim) { l.dim = dim; l.box.classList.toggle('dim', dim); }
+    }
   }
   const D = k => api.sheetDev(PL.dev[k]);
   function buildTags() {
@@ -483,8 +675,10 @@ function build() {
     tag('저장 실린더', [['yStoF', `${D('yStoF')} 전진`], ['yStoB', `${D('yStoB')} 후진`], ['stoB', `${D('stoB')} 후진`], ['stoF', `${D('stoF')} 전진`]], { x: P(649, 0).x, y: H0 + 0.45, z: P(0, G.trayY).z });
     tag('저장 창고', [], { x: (rkA.x + rkB.x) / 2, y: RACK_LV[2] + 0.45, z: (rkA.z + rkB.z) / 2 });
     tag('서보 축', [['limU', `${D('limU')} 상한`], ['limL', `${D('limL')} 하한`], ['org', `${D('org')} 원점`]], { x: sv.x, y: 3.6, z: sv.z });
-    tag('스위치', [['pbStart', `${D('pbStart')} START`], ['pbStop', `${D('pbStop')} STOP`], ['pbReset', `${D('pbReset')} RESET`], ['pbEmg', `${D('pbEmg')} 비상`]], { x: -3.15, y: 0.55, z: ZB });
-    tag('램프', [['lR', `${D('lR')} 적색`], ['lY', `${D('lY')} 황색`], ['lG', `${D('lG')} 녹색`], ['lB', `${D('lB')} 청색`]], { x: 1.85, y: 0.55, z: ZB });
+    tag('스위치', [['pbStart', `${D('pbStart')} START`], ['pbStop', `${D('pbStop')} STOP`], ['pbReset', `${D('pbReset')} RESET`], ['pbEmg', `${D('pbEmg')} 비상`]], { x: -4.2, y: 0.6, z: ZB });
+    tag('램프', [['lR', `${D('lR')} 적색`], ['lY', `${D('lY')} 황색`], ['lG', `${D('lG')} 녹색`], ['lB', `${D('lB')} 청색`]], { x: 0.55, y: 0.6, z: ZB });
+    tag('PLC (Q03UDV)', [], { x: -3.0, y: 1.35, z: 3.78 });
+    tag('전자밸브', [], { x: (MVX(0) + MVX(VALVES.length - 1)) / 2, y: 0.7, z: MVZ });
     tag('취출함', [], { x: (ejBinBox.a.x + ejBinBox.b.x) / 2, y: 0.55, z: ejBinBox.b.z - 0.1 });
     tag('끝 상자', [], { x: (endBinBox.a.x + endBinBox.b.x) / 2, y: 0.55, z: endBinBox.b.z });
   }
@@ -494,39 +688,81 @@ function build() {
   // ── 시점
   const TARGET = new THREE.Vector3(0.2, 0.35, 0.55);
   const VIEWS = {
-    front: [0.2, 6.2, 12.8], back: [0.2, 6.2, -11.6], left: [-12.6, 6.2, 0.55], right: [12.6, 6.2, 0.55], top: [0.2, 15.5, 0.62],
-    fl: [-8.6, 8.4, 11.2], fr: [8.8, 8.4, 11.2], bl: [-8.6, 8.4, -9.8], br: [8.8, 8.4, -9.8],
+    front: [0.2, 7.4, 12.6], back: [0.2, 7.0, -11.6], left: [-12.6, 6.8, 0.55], right: [12.6, 6.8, 0.55], top: [0.2, 15.5, 0.62],
+    fl: [-7.9, 9.4, 10.6], fr: [8.1, 9.4, 10.6], bl: [-8.4, 8.6, -9.6], br: [8.6, 8.6, -9.6],
   };
-  let tween = null;
+  let tween = null, curView = 'fl', placed = false, follow = null;
+  // 세로로 긴 화면(휴대폰)에서는 조금 더 멀리서 봐야 설비 전체가 들어옴
+  const fitK = () => { const a = camera.aspect || 1.6; return a < 1.5 ? Math.min(2.1, Math.pow(1.5 / a, 0.85)) : 1; };
   function goView(v, instant) {
     const p = VIEWS[v]; if (!p) return;
-    const to = new THREE.Vector3(...p), tt = TARGET.clone();
-    if (instant) { camera.position.copy(to); controls.target.copy(tt); controls.update(); return; }
+    curView = v; setFollow(false);
+    const to = new THREE.Vector3(...p).sub(TARGET).multiplyScalar(fitK()).add(TARGET), tt = TARGET.clone();
+    if (instant) { tween = null; camera.position.copy(to); controls.target.copy(tt); controls.update(); return; }
     tween = { t0: performance.now(), dur: 650, p0: camera.position.clone(), p1: to, c0: controls.target.clone(), c1: tt };
   }
-  goView('fl', true);
+  function focusOn(pt, dist) {   // 그 자리로 다가가서 보기 (보는 방향은 그대로)
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    const d = Math.min(dist || 3.6, camera.position.distanceTo(controls.target));
+    tween = { t0: performance.now(), dur: 600, p0: camera.position.clone(), p1: pt.clone().add(dir.multiplyScalar(d)), c0: controls.target.clone(), c1: pt.clone() };
+  }
+  // 자재 따라가기: 공정이 가장 많이 진행된 자재를 카메라가 따라감
+  const STAGE = { rail: 1, slide: 2, belt: 3, eject: 4, cup: 5, tray: 6 };
+  function leadPiece() {
+    let best = null, bs = -1;
+    for (const p of PL.pieces) { const sc = (STAGE[p.st] || 0) * 2000 + p.x; if (sc > bs) { bs = sc; best = p; } }
+    return best;
+  }
+  function setFollow(on) {
+    follow = on ? { id: null } : null;
+    const b = uiRef && uiRef.querySelector('[data-act=follow]'); if (b) b.classList.toggle('active', !!on);
+  }
+  let uiRef = null;
 
   // ── 화면 위 조작 (시점 버튼 · 이름표 · 조작 버튼)
   const ui = document.createElement('div');
   ui.className = 'p3ui';
   ui.innerHTML = `
     <div class="p3views" role="group" aria-label="보는 방향">
-      <button data-v="bl" title="왼쪽 뒤 대각선">↖</button><button data-v="back" title="뒤에서">뒤</button><button data-v="br" title="오른쪽 뒤 대각선">↗</button>
-      <button data-v="left" title="왼쪽에서">왼쪽</button><button data-v="top" title="위에서">위</button><button data-v="right" title="오른쪽에서">오른쪽</button>
-      <button data-v="fl" title="왼쪽 앞 대각선">↙</button><button data-v="front" title="앞에서">앞</button><button data-v="fr" title="오른쪽 앞 대각선">↘</button>
+      <button data-v="bl" title="왼쪽 뒤 대각선 (설비 쪽)">↖</button><button data-v="back" title="뒤에서 (컨베이어·실린더 쪽)">뒤</button><button data-v="br" title="오른쪽 뒤 대각선 (설비 쪽)">↗</button>
+      <button data-v="left" title="왼쪽에서 (매거진 쪽)">왼쪽</button><button data-v="top" title="위에서">위</button><button data-v="right" title="오른쪽에서 (서보 쪽)">오른쪽</button>
+      <button data-v="fl" title="왼쪽 앞 대각선 (PLC 쪽)">↙</button><button data-v="front" title="앞에서 (PLC·스위치 쪽)">앞</button><button data-v="fr" title="오른쪽 앞 대각선 (PLC 쪽)">↘</button>
     </div>
-    <div class="p3opts" role="group" aria-label="이름표">이름표 <button data-tg="full">번호까지</button><button data-tg="name" class="active">이름만</button><button data-tg="off">끄기</button></div>
-    <div class="p3help">드래그: 돌리기 · 휠/두 손가락: 확대 · 오른쪽 드래그(Shift+드래그): 옮기기 · 버튼은 3D에서 눌러도 돼요</div>
+    <div class="p3opts" role="group" aria-label="3D 보기 설정"><span class="lbl">이름표</span><button data-tg="full">번호까지</button><button data-tg="name" class="active">이름만</button><button data-tg="off">끄기</button>
+      <span class="sep"></span><button data-act="follow" title="움직이는 자재를 카메라가 따라가요"><span class="ln">자재 </span>따라가기</button><button data-act="photo" title="지금 보이는 3D 화면을 그림 파일(PNG)로 저장">사진<span class="ln"> 저장</span></button><button data-act="views" class="vt" title="보는 방향 버튼 열기">시점</button><button data-act="help" title="조작 방법 보기">?</button></div>
+    <div class="p3help">드래그: 돌리기 · 휠/두 손가락: 확대 · 오른쪽 드래그(Shift+드래그): 옮기기 · 더블클릭이나 이름표 누르기: 가까이 보기 · 버튼은 3D에서 눌러도 돼요</div>
     <div class="p3pad">
       <button data-pb="pbStart" class="g">START</button><button data-pb="pbStop" class="r">STOP</button><button data-pb="pbReset" class="y">RESET</button><button data-pb="pbEmg" class="e">비상</button>
       <span class="lp" data-l="lR"></span><span class="lp" data-l="lY"></span><span class="lp" data-l="lG"></span><span class="lp" data-l="lB"></span>
     </div>`;
-  host.appendChild(ui);
-  ui.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => goView(b.dataset.v)));
+  host.appendChild(ui); uiRef = ui;
+  goView('fl', true);
+  ui.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => { goView(b.dataset.v); ui.classList.remove('vopen'); }));
+  ui.querySelector('[data-act=views]').addEventListener('click', () => ui.classList.toggle('vopen'));
+  ui.querySelector('[data-act=follow]').addEventListener('click', () => {
+    if (follow) { setFollow(false); return; }
+    setFollow(true);
+    const p = leadPiece();
+    if (p) { const q = P(p.x, p.y); focusOn(new THREE.Vector3(q.x, H0 + PH / 2, q.z), 4.2); }
+  });
+  ui.querySelector('[data-act=photo]').addEventListener('click', savePhoto);
+  // 조작 도움말: 처음에만 보이고, 한 번 돌려 보면 숨김 (? 버튼으로 다시 보기)
+  let helpSeen = false;
+  try { helpSeen = localStorage.getItem('q03udv-ladder:p3help') === '1'; } catch (e) { /* 기본값 */ }
+  const setHelp = on => { ui.classList.toggle('nohelp', !on); ui.querySelector('[data-act=help]').classList.toggle('active', on); uiDirty = true; };
+  setHelp(!helpSeen);
+  ui.querySelector('[data-act=help]').addEventListener('click', () => setHelp(ui.classList.contains('nohelp')));
+  renderer.domElement.addEventListener('pointerdown', () => {
+    if (helpSeen) return;
+    helpSeen = true; try { localStorage.setItem('q03udv-ladder:p3help', '1'); } catch (e) { /* 저장 안 됨 */ }
+    setTimeout(() => setHelp(false), 1200);
+  });
+  ui.querySelector('[data-act=views]').addEventListener('click', () => { uiDirty = true; });
   let tagMode = 'name';
   try { tagMode = localStorage.getItem('q03udv-ladder:p3tags') || 'name'; } catch (e) { /* 기본값 */ }
   function setTags(m) {
     tagMode = m;
+    labels.forEach(l => { l.w = 0; });
     try { localStorage.setItem('q03udv-ladder:p3tags', m); } catch (e) { /* 저장 안 됨 */ }
     labelR.domElement.style.display = m === 'off' ? 'none' : '';
     labelR.domElement.classList.toggle('nameonly', m === 'name');
@@ -563,6 +799,46 @@ function build() {
   renderer.domElement.addEventListener('pointercancel', up);
   renderer.domElement.addEventListener('pointermove', ev => { if (!pressing) renderer.domElement.style.cursor = hitBtn(ev) ? 'pointer' : 'grab'; });
 
+  renderer.domElement.addEventListener('dblclick', ev => {
+    const r = renderer.domElement.getBoundingClientRect();
+    mouse.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(mouse, camera);
+    const h = ray.intersectObjects(scene.children, true).find(o => o.object.visible && o.point.y > -0.5);
+    if (h) { setFollow(false); focusOn(h.point, 3.0); }
+  });
+
+  // ── 사진 저장 (3D 화면 + 이름표)
+  function savePhoto() {
+    update(); renderer.render(scene, camera);
+    const src = renderer.domElement, pr = src.width / host.clientWidth;
+    const c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+    const g = c.getContext('2d'); g.drawImage(src, 0, 0);
+    if (tagMode !== 'off') {
+      const hr = host.getBoundingClientRect();
+      g.font = `700 ${Math.round(11 * pr)}px "IBM Plex Sans KR","Malgun Gothic",sans-serif`; g.textBaseline = 'middle';
+      for (const l of labels) {
+        if (l.dim || l.el.style.display === 'none') continue;
+        const b = l.box.getBoundingClientRect(); if (!b.width) continue;
+        const t = l.box.querySelector('b').textContent, w = g.measureText(t).width + 12 * pr, h = 18 * pr;
+        const x = (b.left - hr.left + b.width / 2) * pr - w / 2, y = (b.top - hr.top) * pr;
+        g.fillStyle = 'rgba(255,255,255,.92)'; g.strokeStyle = '#c5ced9'; g.lineWidth = pr;
+        g.fillRect(x, y, w, h); g.strokeRect(x, y, w, h);
+        g.fillStyle = '#1d2733'; g.fillText(t, x + 6 * pr, y + h / 2 + pr * 0.5);
+      }
+    }
+    g.font = `600 ${Math.round(11 * pr)}px "IBM Plex Sans KR",sans-serif`; g.fillStyle = 'rgba(29,39,51,.7)'; g.textBaseline = 'alphabetic';
+    const d = new Date(), pad = n => String(n).padStart(2, '0');
+    g.fillText(`CT-4200M 가상 설비 (Q03UDV 래더 시뮬레이터) · ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`, 10 * pr, c.height - 10 * pr);
+    const name = `CT4200M_3D_${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.png`;
+    c.toBlob(blob => {
+      const a = document.createElement('a');
+      a.download = name; a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    }, 'image/png');
+    return name;
+  }
+
   // ── 크기
   function resize() {
     const w = host.clientWidth, h = host.clientHeight;
@@ -570,6 +846,8 @@ function build() {
     renderer.setSize(w, h, false); labelR.setSize(w, h);
     renderer.domElement.style.width = w + 'px'; renderer.domElement.style.height = h + 'px';
     camera.aspect = w / h; camera.updateProjectionMatrix();
+    ui.classList.toggle('narrow', w < 600); uiDirty = true;
+    if (!placed) { placed = true; goView(curView, true); }
   }
   new ResizeObserver(resize).observe(host);
 
@@ -601,6 +879,11 @@ function build() {
     for (const f of [fiberMag, fiberDis, fiberStp]) { const on = !!Sx[f.k]; f.beam.material.opacity = on ? 0.95 : 0.15; }
     for (const p of prox) { const on = !!Sx[p.k]; p.cap.material.emissiveIntensity = on ? 1.6 : 0; p.zone.material.opacity = on ? 0.85 : 0.25; }
     for (const l of lamps) { const on = Y(l.k); l.mat.emissiveIntensity = on ? 1.4 : 0; l.glow.material.opacity = on ? 0.28 : 0; }
+    let ledDirty = false;
+    boardLeds.forEach((l, i) => { const on = l.kind === 'in' ? !!api.XIN[l.n] : api.outY(l.n); if (on !== l.on) { l.on = on; ledIM.setColorAt(i, LED_C[l.kind][on ? 1 : 0]); ledDirty = true; } });
+    if (ledDirty) ledIM.instanceColor.needsUpdate = true;
+    const simOn = api.simOn();
+    cpuLed.material.emissiveIntensity = simOn ? 1.6 : 0;
     const blink = (performance.now() % 1000) < 600;
     const hl = api.hl();
     for (const b of buttons) {
@@ -649,30 +932,52 @@ function build() {
     ui.querySelectorAll('[data-pb]').forEach(b => b.classList.toggle('on', b.dataset.pb === 'pbEmg' ? PL.emg : X(b.dataset.pb)));
   }
 
-  let running = false, raf = 0;
+  let running = false, raf = 0, qN = 0, qT = 0, qLast = 0, qLevel = 0;
+  function lowerQuality() {
+    qLevel++;
+    if (qLevel === 1 && renderer.getPixelRatio() > 1) { renderer.setPixelRatio(1); resize(); }
+    else {
+      qLevel = 2; sun.castShadow = false; renderer.shadowMap.enabled = false;
+      scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); });
+    }
+    console.info('[3D] 화면이 느려서 화질을 낮췄어요 (단계 ' + qLevel + ')');
+  }
   function frame() {
     raf = 0;
     if (!running) return;
+    const now = performance.now();
     if (tween) {
-      const t = Math.min(1, (performance.now() - tween.t0) / tween.dur), e = ease(t);
+      const t = Math.min(1, (now - tween.t0) / tween.dur), e = ease(t);
       camera.position.lerpVectors(tween.p0, tween.p1, e); controls.target.lerpVectors(tween.c0, tween.c1, e);
       if (t >= 1) tween = null;
+    } else if (follow) {
+      let p = follow.id != null && PL.pieces.find(o => o.id === follow.id);
+      if (!p) { p = leadPiece(); follow.id = p ? p.id : null; }
+      if (p) {
+        const q = P(p.x, p.y), d = new THREE.Vector3(q.x, H0 + PH / 2, q.z).sub(controls.target).multiplyScalar(0.08);
+        controls.target.add(d); camera.position.add(d);
+      }
     }
     controls.update();
     update();
     renderer.render(scene, camera);
-    if (labelR.domElement.style.display !== 'none') labelR.render(scene, camera);
+    if (labelR.domElement.style.display !== 'none') { labelR.render(scene, camera); declutter(); }
+    // 느린 컴퓨터면 화질을 한 단계씩 낮춤 (해상도 → 그림자)
+    if (qLast && now - qLast < 2000) { qT += now - qLast; qN++; }
+    qLast = now;
+    if (qN >= 90 || (qN >= 12 && qT > 3000)) { const avg = qT / qN; qN = qT = 0; if (avg > 34 && qLevel < 2 && !window.__p3HQ) lowerQuality(); }
     raf = requestAnimationFrame(frame);
   }
   function start() { if (running) return; running = true; resize(); if (!raf) raf = requestAnimationFrame(frame); }
-  function stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+  function stop() { running = false; qLast = 0; if (raf) cancelAnimationFrame(raf); raf = 0; }
   document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else if (window.__plant3d.want) start(); });
 
   window.__plant3d = {
     ok: true, want: false,
     start() { this.want = true; start(); },
     stop() { this.want = false; stop(); },
-    view: goView,
+    view: goView, focus: (x, y, z, d) => focusOn(new THREE.Vector3(x, y, z), d), follow: on => setFollow(on), savePhoto,
+    get quality() { return qLevel; }, info: () => ({ calls: renderer.info.render.calls, tris: renderer.info.render.triangles, geos: renderer.info.memory.geometries }), labels: () => labels.map(l => ({ t: l.box.querySelector('b').textContent, dim: l.dim, dy: l.dy })),
     shot() { update(); renderer.render(scene, camera); labelR.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
     camera, controls,
     btnXY(k) {   // 버튼의 화면 좌표 (테스트용)
