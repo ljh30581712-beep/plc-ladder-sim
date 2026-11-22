@@ -191,11 +191,11 @@ function build() {
 
   // ── 자재
   const pcGeo = new THREE.CylinderGeometry(PR, PR, PH, 32);
-  const holeGeo = new THREE.CircleGeometry(PR * 0.32, 20); holeGeo.rotateX(-Math.PI / 2);
+  const holeGeo = new THREE.CircleGeometry(PR * 0.22, 20); holeGeo.rotateX(-Math.PI / 2);
   function makePiece() {
     const g = new THREE.Group();
     const body = new THREE.Mesh(pcGeo, M.whitePc); body.castShadow = true; body.receiveShadow = true; g.add(body);
-    const hole = new THREE.Mesh(holeGeo, M.hole); hole.position.y = PH / 2 + 0.002; g.add(hole);
+    const hole = new THREE.Mesh(holeGeo, M.hole); hole.position.set(G.dOff * S, PH / 2 + 0.002, 0); g.add(hole);   // 드릴 자리(중심에서 옆으로 비켜 있음)
     g.userData = { body, hole }; scene.add(g); return g;
   }
   function setPiece(g, kind, drilled) {
@@ -221,7 +221,7 @@ function build() {
   // ── 공급 실린더 (축 X)
   const sup = cylinderUnit({ axis: 'x', from: P(22, G.ry), len: 96 * S, y: H0 + PH / 2, back: 'supB', front: 'supF' });
   // ── 분배 실린더 (축 Z, 뒤 → 앞)
-  const dis = cylinderUnit({ axis: 'z', from: P(G.px, 12), len: 50 * S, y: H0 + PH / 2, back: 'disB', front: 'disF', plateW: (2 * R + 12) * S });
+  const dis = cylinderUnit({ axis: 'z', from: P(G.px, 12), len: 50 * S, y: H0 + PH / 2, back: 'disB', front: 'disF', plateW: (2 * R + 12) * S, slot: { x: G.dOff * S, w: 0.14 } });
   const fiberDis = fiberHead(P(G.px - R - 18, G.ry + R + 12), P(G.px, G.ry), 'dis');
   // ── 취출 실린더 (축 Z, 뒤 → 앞) + 가이드 봉
   const ej = cylinderUnit({ axis: 'z', from: P(G.xe, 90), len: 66 * S, y: H0 + PH / 2, back: 'ejB', front: 'ejF', plateW: (2 * R + 20) * S, guided: true });
@@ -255,7 +255,11 @@ function build() {
     }
     scene.add(shadowAll(body));
     u.rod = rodMesh(0.035, M.rod, o.axis);
-    u.plate = o.axis === 'x' ? box(0.06, 0.2, (2 * R + 6) * S, M.gray, 0, 0, 0) : box(o.plateW || 0.4, 0.2, 0.06, M.gray, 0, 0, 0);
+    if (o.slot) {   // 드릴 날이 지나가는 쪽을 비운 판 (로드 쪽 절반만 밂)
+      const x0 = -o.plateW / 2, s0 = o.slot.x - o.slot.w / 2;
+      u.plate = new THREE.Group(); scene.add(u.plate);
+      box(s0 - x0, 0.2, 0.06, M.gray, (x0 + s0) / 2, 0, 0, u.plate);
+    } else u.plate = o.axis === 'x' ? box(0.06, 0.2, (2 * R + 6) * S, M.gray, 0, 0, 0) : box(o.plateW || 0.4, 0.2, 0.06, M.gray, 0, 0, 0);
     if (o.guided) { u.g1 = rodMesh(0.02, M.rod, o.axis); u.g2 = rodMesh(0.02, M.rod, o.axis); }
     // tip: 2D 좌표의 푸셔 끝 (x 또는 y px)
     u.set = (tipPx) => {
@@ -285,7 +289,7 @@ function build() {
   }
 
   // ── 가공 (드릴): 기둥 + 위아래로 움직이는 헤드 + 모터
-  const dp = P(G.px, G.ry), dcol = P(G.px + 62, G.ry - 22);
+  const dp = P(G.px + G.dOff, G.ry), dcol = P(G.px + 62, G.ry - 22);   // 드릴은 분배 로드 길에서 옆으로 비켜 있음
   box(0.24, 2.05, 0.24, M.alu, dcol.x, 1.02, dcol.z);
   box(0.3, 0.06, 0.3, M.aluD, dcol.x, 0.03, dcol.z);
   cyl(0.09, 0.5, M.alu, 'y', dcol.x, 1.8, dcol.z + 0.17);           // 가공 실린더 (세로)
