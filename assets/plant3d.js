@@ -191,11 +191,11 @@ function build() {
 
   // ── 자재
   const pcGeo = new THREE.CylinderGeometry(PR, PR, PH, 32);
-  const holeGeo = new THREE.CircleGeometry(PR * 0.22, 20); holeGeo.rotateX(-Math.PI / 2);
+  const holeGeo = new THREE.CircleGeometry(PR * 0.3, 20); holeGeo.rotateX(-Math.PI / 2);
   function makePiece() {
     const g = new THREE.Group();
     const body = new THREE.Mesh(pcGeo, M.whitePc); body.castShadow = true; body.receiveShadow = true; g.add(body);
-    const hole = new THREE.Mesh(holeGeo, M.hole); hole.position.set(G.dOff * S, PH / 2 + 0.002, 0); g.add(hole);   // 드릴 자리(중심에서 옆으로 비켜 있음)
+    const hole = new THREE.Mesh(holeGeo, M.hole); hole.position.y = PH / 2 + 0.002; g.add(hole);
     g.userData = { body, hole }; scene.add(g); return g;
   }
   function setPiece(g, kind, drilled) {
@@ -221,7 +221,7 @@ function build() {
   // ── 공급 실린더 (축 X)
   const sup = cylinderUnit({ axis: 'x', from: P(22, G.ry), len: 96 * S, y: H0 + PH / 2, back: 'supB', front: 'supF' });
   // ── 분배 실린더 (축 Z, 뒤 → 앞)
-  const dis = cylinderUnit({ axis: 'z', from: P(G.px, 12), len: 50 * S, y: H0 + PH / 2, back: 'disB', front: 'disF', plateW: (2 * R + 12) * S, slot: { x: G.dOff * S, w: 0.14 } });
+  const dis = cylinderUnit({ axis: 'z', from: P(G.px, 12), len: 50 * S, y: H0 + PH / 2, back: 'disB', front: 'disF', plateW: (2 * R + 12) * S });
   const fiberDis = fiberHead(P(G.px - R - 18, G.ry + R + 12), P(G.px, G.ry), 'dis');
   // ── 취출 실린더 (축 Z, 뒤 → 앞) + 가이드 봉
   const ej = cylinderUnit({ axis: 'z', from: P(G.xe, 90), len: 66 * S, y: H0 + PH / 2, back: 'ejB', front: 'ejF', plateW: (2 * R + 20) * S, guided: true });
@@ -255,11 +255,7 @@ function build() {
     }
     scene.add(shadowAll(body));
     u.rod = rodMesh(0.035, M.rod, o.axis);
-    if (o.slot) {   // 드릴 날이 지나가는 쪽을 비운 판 (로드 쪽 절반만 밂)
-      const x0 = -o.plateW / 2, s0 = o.slot.x - o.slot.w / 2;
-      u.plate = new THREE.Group(); scene.add(u.plate);
-      box(s0 - x0, 0.2, 0.06, M.gray, (x0 + s0) / 2, 0, 0, u.plate);
-    } else u.plate = o.axis === 'x' ? box(0.06, 0.2, (2 * R + 6) * S, M.gray, 0, 0, 0) : box(o.plateW || 0.4, 0.2, 0.06, M.gray, 0, 0, 0);
+    u.plate = o.axis === 'x' ? box(0.06, 0.2, (2 * R + 6) * S, M.gray, 0, 0, 0) : box(o.plateW || 0.4, 0.2, 0.06, M.gray, 0, 0, 0);
     if (o.guided) { u.g1 = rodMesh(0.02, M.rod, o.axis); u.g2 = rodMesh(0.02, M.rod, o.axis); }
     // tip: 2D 좌표의 푸셔 끝 (x 또는 y px)
     u.set = (tipPx) => {
@@ -288,17 +284,17 @@ function build() {
     return { head: h, beam, k };
   }
 
-  // ── 가공 (드릴): 기둥 + 위아래로 움직이는 헤드 + 모터
-  const dp = P(G.px + G.dOff, G.ry), dcol = P(G.px + 62, G.ry - 22);   // 드릴은 분배 로드 길에서 옆으로 비켜 있음
+  // ── 가공 (드릴): 분배가 자재를 밀어 넣는 컨베이어 시작점 위 — 기둥은 컨베이어 앞쪽, 위아래로 움직이는 헤드 + 모터
+  const dp = P(G.drX, G.drY), dcol = P(G.drX, G.bb + 36);
   box(0.24, 2.05, 0.24, M.alu, dcol.x, 1.02, dcol.z);
   box(0.3, 0.06, 0.3, M.aluD, dcol.x, 0.03, dcol.z);
-  cyl(0.09, 0.5, M.alu, 'y', dcol.x, 1.8, dcol.z + 0.17);           // 가공 실린더 (세로)
-  cyl(0.03, 0.08, M.blueFit, 'x', dcol.x + 0.11, 1.95, dcol.z + 0.17);
-  reed(dcol.x - 0.14, 1.95, dcol.z + 0.17, 'drlU', 'z');
-  reed(dcol.x - 0.14, 1.62, dcol.z + 0.17, 'drlD', 'z');
+  cyl(0.09, 0.5, M.alu, 'y', dcol.x + 0.2, 1.8, dcol.z);            // 가공 실린더 (세로)
+  cyl(0.03, 0.08, M.blueFit, 'z', dcol.x + 0.2, 1.95, dcol.z + 0.11);
+  reed(dcol.x + 0.31, 1.95, dcol.z, 'drlU', 'x');
+  reed(dcol.x + 0.31, 1.62, dcol.z, 'drlD', 'x');
   const drill = new THREE.Group();
-  box(0.18, 0.22, 0.2, M.red, dcol.x - dp.x, 0, dcol.z - dp.z + 0.02, drill);      // 슬라이드 블록 (빨강)
-  box(Math.abs(dcol.x - dp.x), 0.1, 0.12, M.red, (dcol.x - dp.x) / 2, 0, 0, drill); // 팔
+  box(0.22, 0.22, 0.18, M.red, 0, 0, dcol.z - dp.z - 0.03, drill);                    // 슬라이드 블록 (빨강)
+  box(0.12, 0.1, Math.abs(dcol.z - dp.z), M.red, 0, 0, (dcol.z - dp.z) / 2, drill);   // 팔
   const spin = new THREE.Group(); drill.add(spin);
   cyl(0.13, 0.36, M.black, 'y', 0, 0.2, 0, spin);                    // 드릴 모터 (검정 캡)
   cyl(0.135, 0.04, M.black2, 'y', 0, 0.4, 0, spin);
@@ -604,7 +600,7 @@ function build() {
   // 공압 배관: 밸브 → 각 실린더 (파랑 = 전진/동작 쪽, 흰색 = 후진 쪽)
   const fitOf = {
     sup: sup.fits, dis: dis.fits, ej: ej.fits, sto: sto.fits,
-    drl: [V3(dcol.x + 0.11, 1.95, dcol.z + 0.17)], stp: [V3(sp.x + 0.14, 0.25, sp.z)],
+    drl: [V3(dcol.x + 0.2, 1.95, dcol.z + 0.15)], stp: [V3(sp.x + 0.14, 0.25, sp.z)],
     suc: [V3(sc.x, SUC_Y + 0.17, sc.z + 0.12), V3(sc.x, SUC_Y + 0.17, sc.z + suc.len - 0.12)], vac: [V3(vacBox.x - 0.11, 0.06, vacBox.z)],
   };
   for (const vp of valvePorts) {
