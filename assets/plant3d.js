@@ -642,7 +642,7 @@ function build() {
     items.sort((a, b) => a.d - b.d);
     if (uiDirty) {
       uiDirty = false; const hr = host.getBoundingClientRect();
-      uiRects = [...ui.querySelectorAll('.p3opts, .p3views, .p3help, .p3pad')].map(e => e.getBoundingClientRect()).filter(r => r.width)
+      uiRects = [...ui.querySelectorAll('.p3opts, .p3views, .p3help, .p3pad, .p3msg')].map(e => e.getBoundingClientRect()).filter(r => r.width)
         .map(r => ({ x: r.left - hr.left + r.width / 2, y: r.top - hr.top + r.height / 2, w: r.width, h: r.height }));
     }
     const placed = uiRects.slice();
@@ -730,12 +730,14 @@ function build() {
     </div>
     <div class="p3opts" role="group" aria-label="3D 보기 설정"><span class="lbl">이름표</span><button data-tg="full">번호까지</button><button data-tg="name" class="active">이름만</button><button data-tg="off">끄기</button>
       <span class="sep"></span><button data-act="follow" title="움직이는 자재를 카메라가 따라가요"><span class="ln">자재 </span>따라가기</button><button data-act="photo" title="지금 보이는 3D 화면을 그림 파일(PNG)로 저장">사진<span class="ln"> 저장</span></button><button data-act="views" class="vt" title="보는 방향 버튼 열기">시점</button><button data-act="help" title="조작 방법 보기">?</button></div>
+    <div class="p3msg" hidden role="status"></div>
     <div class="p3help">드래그: 돌리기 · 휠/두 손가락: 확대 · 오른쪽 드래그(Shift+드래그): 옮기기 · 더블클릭이나 이름표 누르기: 가까이 보기 · 버튼은 3D에서 눌러도 돼요</div>
     <div class="p3pad">
       <button data-pb="pbStart" class="g">START</button><button data-pb="pbStop" class="r">STOP</button><button data-pb="pbReset" class="y">RESET</button><button data-pb="pbEmg" class="e">비상</button>
       <span class="lp" data-l="lR"></span><span class="lp" data-l="lY"></span><span class="lp" data-l="lG"></span><span class="lp" data-l="lB"></span>
     </div>`;
   host.appendChild(ui); uiRef = ui;
+  const msgEl = ui.querySelector('.p3msg'); let lastMsg = null;
   goView('fl', true);
   ui.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => { goView(b.dataset.v); ui.classList.remove('vopen'); }));
   ui.querySelector('[data-act=views]').addEventListener('click', () => ui.classList.toggle('vopen'));
@@ -883,6 +885,9 @@ function build() {
     boardLeds.forEach((l, i) => { const on = l.kind === 'in' ? !!api.XIN[l.n] : api.outY(l.n); if (on !== l.on) { l.on = on; ledIM.setColorAt(i, LED_C[l.kind][on ? 1 : 0]); ledDirty = true; } });
     if (ledDirty) ledIM.instanceColor.needsUpdate = true;
     const simOn = api.simOn();
+    // 시뮬레이션 안내·경고 문구 (2D와 같은 내용)
+    const msg = api.msg && api.msg(), mt = msg ? msg.t : '';
+    if (mt !== lastMsg) { lastMsg = mt; msgEl.hidden = !msg; msgEl.textContent = mt; msgEl.classList.toggle('warn', !!(msg && msg.warn)); uiDirty = true; }
     cpuLed.material.emissiveIntensity = simOn ? 1.6 : 0;
     const blink = (performance.now() % 1000) < 600;
     const hl = api.hl();
