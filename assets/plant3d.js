@@ -191,7 +191,7 @@ function build() {
 
   // ── 자재
   const pcGeo = new THREE.CylinderGeometry(PR, PR, PH, 32);
-  const holeGeo = new THREE.CircleGeometry(PR * 0.3, 20); holeGeo.rotateX(-Math.PI / 2);
+  const holeGeo = new THREE.CircleGeometry(PR * 0.32, 20); holeGeo.rotateX(-Math.PI / 2);
   function makePiece() {
     const g = new THREE.Group();
     const body = new THREE.Mesh(pcGeo, M.whitePc); body.castShadow = true; body.receiveShadow = true; g.add(body);
@@ -284,17 +284,17 @@ function build() {
     return { head: h, beam, k };
   }
 
-  // ── 가공 (드릴): 분배가 자재를 밀어 넣는 컨베이어 시작점 위 — 기둥은 컨베이어 앞쪽, 위아래로 움직이는 헤드 + 모터
-  const dp = P(G.drX, G.drY), dcol = P(G.drX, G.bb + 36);
+  // ── 가공 (드릴): 기둥 + 위아래로 움직이는 헤드 + 모터
+  const dp = P(G.px, G.ry), dcol = P(G.px + 62, G.ry - 22);
   box(0.24, 2.05, 0.24, M.alu, dcol.x, 1.02, dcol.z);
   box(0.3, 0.06, 0.3, M.aluD, dcol.x, 0.03, dcol.z);
-  cyl(0.09, 0.5, M.alu, 'y', dcol.x + 0.2, 1.8, dcol.z);            // 가공 실린더 (세로)
-  cyl(0.03, 0.08, M.blueFit, 'z', dcol.x + 0.2, 1.95, dcol.z + 0.11);
-  reed(dcol.x + 0.31, 1.95, dcol.z, 'drlU', 'x');
-  reed(dcol.x + 0.31, 1.62, dcol.z, 'drlD', 'x');
+  cyl(0.09, 0.5, M.alu, 'y', dcol.x, 1.8, dcol.z + 0.17);           // 가공 실린더 (세로)
+  cyl(0.03, 0.08, M.blueFit, 'x', dcol.x + 0.11, 1.95, dcol.z + 0.17);
+  reed(dcol.x - 0.14, 1.95, dcol.z + 0.17, 'drlU', 'z');
+  reed(dcol.x - 0.14, 1.62, dcol.z + 0.17, 'drlD', 'z');
   const drill = new THREE.Group();
-  box(0.22, 0.22, 0.18, M.red, 0, 0, dcol.z - dp.z - 0.03, drill);                    // 슬라이드 블록 (빨강)
-  box(0.12, 0.1, Math.abs(dcol.z - dp.z), M.red, 0, 0, (dcol.z - dp.z) / 2, drill);   // 팔
+  box(0.18, 0.22, 0.2, M.red, dcol.x - dp.x, 0, dcol.z - dp.z + 0.02, drill);      // 슬라이드 블록 (빨강)
+  box(Math.abs(dcol.x - dp.x), 0.1, 0.12, M.red, (dcol.x - dp.x) / 2, 0, 0, drill); // 팔
   const spin = new THREE.Group(); drill.add(spin);
   cyl(0.13, 0.36, M.black, 'y', 0, 0.2, 0, spin);                    // 드릴 모터 (검정 캡)
   cyl(0.135, 0.04, M.black2, 'y', 0, 0.4, 0, spin);
@@ -600,7 +600,7 @@ function build() {
   // 공압 배관: 밸브 → 각 실린더 (파랑 = 전진/동작 쪽, 흰색 = 후진 쪽)
   const fitOf = {
     sup: sup.fits, dis: dis.fits, ej: ej.fits, sto: sto.fits,
-    drl: [V3(dcol.x + 0.2, 1.95, dcol.z + 0.15)], stp: [V3(sp.x + 0.14, 0.25, sp.z)],
+    drl: [V3(dcol.x + 0.11, 1.95, dcol.z + 0.17)], stp: [V3(sp.x + 0.14, 0.25, sp.z)],
     suc: [V3(sc.x, SUC_Y + 0.17, sc.z + 0.12), V3(sc.x, SUC_Y + 0.17, sc.z + suc.len - 0.12)], vac: [V3(vacBox.x - 0.11, 0.06, vacBox.z)],
   };
   for (const vp of valvePorts) {
